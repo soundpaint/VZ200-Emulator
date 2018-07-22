@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Name: emulator/vz200/
+Specification-Title: "VTech VZ200 Emulator"
+Specification-Version: "0.1"
+Specification-Vendor: ""
+Implementation-Title: "emulator.vz200" 
+Implementation-Version: "0.1"
+Implementation-Vendor: ""
+Class-Path: z80.jar
+Main-Class: emulator.vz200.VZ200

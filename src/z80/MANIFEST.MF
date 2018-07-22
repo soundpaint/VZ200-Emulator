@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Name: emulator/z80/
+Specification-Title: "Zilog Z80 Emulator"
+Specification-Version: "0.1"
+Specification-Vendor: ""
+Implementation-Title: "emulator.z80" 
+Implementation-Version: "0.1"
+Implementation-Vendor: ""
+Main-Class: emulator.z80.Z80
