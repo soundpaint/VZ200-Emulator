@@ -1,28 +1,40 @@
-include ../port.mak
+include ../common.mak
 
 SRC_DIR		=	$(PWD)/java
 PKG		=	emulator/z80
 SRC		=	$(wildcard $(SRC_DIR)/$(PKG)/*.java)
 PLAIN_SRC	=	$(subst $(SRC_DIR),.,$(SRC))
 OBJ		=	$(subst .java,.class,$(subst \
-				$(SRC_DIR),$(CLASSES_DIR),$(SRC)))
-TIMESTAMP	=	$(CLASSES_DIR)/$(PKG)/TIMESTAMP
-JAR_FILE	=	$(LIB_DIR)/z80.jar
+				$(SRC_DIR),$(BUILD_DIR),$(SRC)))
+TIMESTAMP	=	$(BUILD_DIR)/$(PKG)/TIMESTAMP
+JAR_FILE	=	$(JAR_DIR)/z80.jar
 MANIFEST	=	$(PWD)/MANIFEST.MF
-SRC_TGZ		=	$(TGZ_DIR)/z80-src.tgz
+SRC_TARBALL	=	$(TARBALL_DIR)/z80-src.bz2
 
 all: $(JAR_FILE)
 
+# compiled class files root directory
+# (run 'make classes' to generate)
+
+$(BUILD_DIR):
+	mkdir -p $@
+
+$(JAR_DIR):
+	mkdir -p $@
+
+$(TARBALL_DIR):
+	mkdir -p $@
+
 $(TIMESTAMP) : $(SRC)
-	cd $(SRC_DIR) ; $(JAVAC) -d $(CLASSES_DIR) $(PLAIN_SRC)
+	cd $(SRC_DIR) ; $(JAVAC) -d $(BUILD_DIR) $(PLAIN_SRC)
 	touch $@
 
-$(JAR_FILE) : $(TIMESTAMP)
-	cd $(CLASSES_DIR) ; $(JAR) cvfm $@ $(MANIFEST) \
+$(JAR_FILE) : $(JAR_DIR) $(TIMESTAMP)
+	cd $(BUILD_DIR) ; $(JAR) cvfm $@ $(MANIFEST) \
 		$(PKG)
 
 objclean:
-	rm -rf $(CLASSES_DIR)/$(PKG)
+	rm -rf $(BUILD_DIR)/$(PKG)
 
 libclean:
 	rm -f $(JAR_FILE)
@@ -32,7 +44,12 @@ bkpclean:
 
 clean: objclean libclean
 
-veryclean: clean bkpclean
+distclean: clean bkpclean
 
-tgz: bkpclean
-	cd .. ; tar -cvf - z80 | gzip --best > $(SRC_TGZ)
+tarball: distclean $(TARBALL_DIR)
+	cd .. ; tar -cvf - z80 | bzip2 --best > $(SRC_TARBALL)
+
+#  Local Variables:
+#    coding:utf-8
+#    mode:Makefile
+#  End:

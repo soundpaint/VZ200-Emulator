@@ -1,33 +1,45 @@
-include ../port.mak
+include ../common.mak
 
 SRC_DIR		=	$(PWD)/java
 PKG		=	emulator/vz200
 SRC		=	$(wildcard $(SRC_DIR)/$(PKG)/*.java)
 PLAIN_SRC	=	$(subst $(SRC_DIR),.,$(SRC))
 OBJ		=	$(subst .java,.class,$(subst \
-				$(SRC_DIR),$(CLASSES_DIR),$(SRC)))
+				$(SRC_DIR),$(BUILD_DIR),$(SRC)))
 ROM		=	$(wildcard $(SRC_DIR)/$(PKG)/*.rom)
 PLAIN_ROM	=	$(subst $(SRC_DIR),.,$(ROM))
-TIMESTAMP	=	$(CLASSES_DIR)/$(PKG)/TIMESTAMP
-JAR_FILE	=	$(LIB_DIR)/vz200.jar
+TIMESTAMP	=	$(BUILD_DIR)/$(PKG)/TIMESTAMP
+JAR_FILE	=	$(JAR_DIR)/vz200.jar
 MANIFEST	=	$(PWD)/MANIFEST.MF
-SRC_TGZ		=	$(TGZ_DIR)/vz200-src.tgz
-Z80_JAR		=	../../../lib/z80.jar
+SRC_TARBALL	=	$(TARBALL_DIR)/vz200-src.bz2
+Z80_JAR		=	$(JAR_DIR)/z80.jar
 
 all: $(JAR_FILE)
 
+# compiled class files root directory
+# (run 'make classes' to generate)
+
+$(BUILD_DIR):
+	mkdir -p $@
+
+$(JAR_DIR):
+	mkdir -p $@
+
+$(TARBALL_DIR):
+	mkdir -p $@
+
 $(TIMESTAMP) : $(SRC) $(ROM)
 	cd $(SRC_DIR) ; $(JAVAC) -classpath .:$(Z80_JAR) \
-		-d $(CLASSES_DIR) $(PLAIN_SRC)
-	cp -a $(ROM) $(CLASSES_DIR)/$(PKG)
+		-d $(BUILD_DIR) $(PLAIN_SRC)
+	cp -a $(ROM) $(BUILD_DIR)/$(PKG)
 	touch $@
 
-$(JAR_FILE) : $(TIMESTAMP)
-	cd $(CLASSES_DIR) ; $(JAR) cvfm $@ $(MANIFEST) \
+$(JAR_FILE) : $(JAR_DIR) $(TIMESTAMP)
+	cd $(BUILD_DIR) ; $(JAR) cvfm $@ $(MANIFEST) \
 		$(PKG)
 
 objclean:
-	rm -rf $(CLASSES_DIR)/$(PKG)
+	rm -rf $(BUILD_DIR)/$(PKG)
 
 libclean:
 	rm -f $(JAR_FILE)
@@ -37,7 +49,12 @@ bkpclean:
 
 clean: objclean libclean
 
-veryclean: clean bkpclean
+distclean: clean bkpclean
 
-tgz: bkpclean
-	cd .. ; tar -cvf - vz200 | gzip --best > $(SRC_TGZ)
+tarball: distclean $(TARBALL_DIR)
+	cd .. ; tar -cvf - vz200 | bzip2 --best > $(SRC_TARBALL)
+
+#  Local Variables:
+#    coding:utf-8
+#    mode:Makefile
+#  End:
