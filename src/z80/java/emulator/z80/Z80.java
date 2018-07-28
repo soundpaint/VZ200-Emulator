@@ -3544,7 +3544,7 @@ public class Z80 implements CPU {
   }
 
   private void doCP(int op1, int op2) {
-    doSBC8(op1, op2);
+    doSUB8(op1, op2);
   }
 
   private void doCPD() {
