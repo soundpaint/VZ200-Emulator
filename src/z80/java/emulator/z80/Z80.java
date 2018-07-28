@@ -3518,10 +3518,10 @@ public class Z80 implements CPU {
   private void doBIT(int op1, int op2) {
     // flagC unmodified
     flagN.set(false);
-    // flagPV unmodified
+    // flagPV unmodified ("unknown")
     flagH.set(true);
-    flagZ.set((op1 & SET_MASK[op2 & 0x7]) != 0x00);
-    // flagS unmodified
+    flagZ.set((op1 & SET_MASK[op2 & 0x7]) == 0x00);
+    // flagS unmodified ("unknown")
   }
 
   private void doCCF() {
