@@ -3895,13 +3895,15 @@ public class Z80 implements CPU {
   }
 
   private int doSBC8(int op1, int op2) {
-    int result = doADC8(op1 ^ 0xff, op2);
+    int result = doADC8(op1, 0x100 - op2);
+    flagC.set(!flagC.get());
     flagN.set(true);
     return result;
   }
 
   private int doSBC16(int op1, int op2) {
-    int result = doADC16(op1 ^ 0xffff, op2);
+    int result = doADC16(op1, 0x10000 - op2);
+    flagC.set(!flagC.get());
     flagN.set(true);
     return result;
   }
@@ -3960,15 +3962,15 @@ public class Z80 implements CPU {
   }
 
   private int doSUB8(int op1, int op2) {
-    flagC.set(true);
-    int result = doADD8(op1 ^ 0xff, op2);
+    int result = doADD8(op1, 0x100 - op2);
+    flagC.set(!flagC.get());
     flagN.set(true);
     return result;
   }
 
   private int doSUB16(int op1, int op2) {
-    flagC.set(true);
-    int result = doADD16(op1 ^ 0xffff, op2);
+    int result = doADD16(op1, 0x10000 - op2);
+    flagC.set(!flagC.get());
     flagN.set(true);
     return result;
   }
