@@ -3433,7 +3433,7 @@ public class Z80 implements CPU {
   private int doADC8(int op1, int op2) {
     int msb_op1 = op1 & 0x80;
     int msb_op2 = op2 & 0x80;
-    int sum = op1 + op2;
+    int sum = (op1 & 0xff) + (op2 & 0xff);
     boolean new_flag_h =
       ((sum & 0xf) < (op1 & 0xf)) ||
       (((sum & 0xf) == 0xf) && flagC.get());
@@ -3454,7 +3454,7 @@ public class Z80 implements CPU {
   private int doADC16(int op1, int op2) {
     int msb_op1 = op1 & 0x8000;
     int msb_op2 = op2 & 0x8000;
-    int sum = op1 + op2;
+    int sum = (op1 & 0xffff) + (op2 & 0xffff);
     boolean new_flag_h =
       ((sum & 0xff) < (op1 & 0xff)) ||
       (((sum & 0xff) == 0xff) && flagC.get());
@@ -3475,7 +3475,7 @@ public class Z80 implements CPU {
   private int doADD8(int op1, int op2) {
     int msb_op1 = op1 & 0x80;
     int msb_op2 = op2 & 0x80;
-    int sum = op1 + op2;
+    int sum = (op1 & 0xff) + (op2 & 0xff);
     boolean new_flag_h = (sum & 0xf) < (op1 & 0xf);
     boolean new_flag_c = (sum & 0x100) != 0;
     int msb_sum = sum & 0x80;
@@ -3491,7 +3491,7 @@ public class Z80 implements CPU {
   }
 
   private int doADD16(int op1, int op2) {
-    int sum = op1 + op2;
+    int sum = (op1 & 0xffff) + (op2 & 0xffff);
     boolean new_flag_h = (sum & 0xff) < (op1 & 0xff);
     boolean new_flag_c = (sum & 0x10000) != 0;
     sum &= 0xffff;
@@ -3505,7 +3505,7 @@ public class Z80 implements CPU {
   }
 
   private int doAND(int op1, int op2) {
-    int result = op1 & op2;
+    int result = (op1 & op2) & 0xff;
     flagC.set(false);
     flagN.set(false);
     flagPV.set(PARITY[result]);
@@ -3715,7 +3715,7 @@ public class Z80 implements CPU {
   }
 
   private int doOR(int op1, int op2) {
-    int result = op1 | op2;
+    int result = (op1 | op2) & 0xff;
     flagC.set(false);
     flagN.set(false);
     flagPV.set(PARITY[result]);
@@ -3974,7 +3974,7 @@ public class Z80 implements CPU {
   }
 
   private int doXOR(int op1, int op2) {
-    int result = op1 ^ op2;
+    int result = (op1 ^ op2) & 0xff;
     flagC.set(false);
     flagN.set(false);
     flagPV.set(PARITY[result]);
