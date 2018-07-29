@@ -157,7 +157,7 @@ public class Z80 implements CPU {
 
   // *** CPU REGISTERS ********************************************************
 
-  public interface Reg8 extends CPU.Register {} 
+  public interface Reg8 extends CPU.Register {}
 
   class GenericReg8 implements Reg8 {
     private int value;
@@ -250,7 +250,7 @@ public class Z80 implements CPU {
     }
   }
 
-  public interface Reg16 extends CPU.Register {} 
+  public interface Reg16 extends CPU.Register {}
 
   class GenericReg16 implements Reg16 {
     private int value;
@@ -524,10 +524,9 @@ public class Z80 implements CPU {
 
   private int intr_bus_data;
   private boolean irq_requested;
-  private boolean irq_serving;
+  private boolean irq_to_be_enabled;
   private boolean irq_enabled;
   private boolean nmi_requested;
-  private boolean nmi_serving;
 
   public void setInterruptResponseVector(int intr_bus_data) {
     this.intr_bus_data = intr_bus_data;
@@ -988,7 +987,7 @@ public class Z80 implements CPU {
 	    break;
 	}
       }
-      
+
       // Now that we have all args, check that they are not out of
       // range.
       for (int i = 0; i < varIndex.length; i++) {
@@ -1579,7 +1578,7 @@ public class Z80 implements CPU {
 	     4, 0);
       }
       public void execute0(Arguments args) {
-	irq_enabled = true;
+	irq_to_be_enabled = true;
       }
     },
     new GenericOperation() {
@@ -2670,7 +2669,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	regPC.setValue(doPOP());
-	irq_serving = false;
+	irq_requested = false;
       }
     },
     new GenericOperation() {
@@ -2681,7 +2680,6 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	regPC.setValue(doPOP());
-	nmi_serving = false;
       }
     },
     new GenericOperation() {
@@ -3424,10 +3422,9 @@ public class Z80 implements CPU {
     regIM.reset();
     intr_bus_data = 0x00;
     irq_requested = false;
-    irq_serving = false;
+    irq_to_be_enabled = false;
     irq_enabled = false;
     nmi_requested = false;
-    nmi_serving = false;
   }
 
   private int doADC8(int op1, int op2) {
@@ -3991,28 +3988,36 @@ public class Z80 implements CPU {
   private ConcreteOperation concreteOperation;
 
   public ConcreteOperation fetchNextOperation() throws CPU.MismatchException {
+    // TODO: Emulate Z80's IFF1 and IFF2 flip-flops in order to
+    // correctly handle NMIs.
     boolean workPending = false;
     do {
-      if (nmi_requested /* && !nmi_serving */) {
-	nmi_serving = true;
+      if (nmi_requested) {
 	nmi_requested = false;
 	doPUSH(regPC.getValue());
 	regPC.setValue(0x0066);
+        if (irq_to_be_enabled) {
+          irq_enabled = true;
+          irq_to_be_enabled = false;
+        }
 	workPending = true;
-      } else if (irq_requested && irq_enabled /* && !irq_serving */) {
-	irq_serving = true;
-	irq_requested = false;
-	doPUSH(regPC.getValue());
+      } else if (irq_requested && irq_enabled) {
+        irq_enabled = false;
 	switch (regIM.getValue()) {
 	  case INTR_MODE_0 :
 	    intrBusDataFetcher.setIntrBusData(intr_bus_data);
 	    decode(concreteOperation, intrBusDataFetcher);
+            // TODO: What about multi-byte operations on interrupt
+            // bus?
+	    workPending = false;
 	    break;
 	  case INTR_MODE_1 :
+            doPUSH(regPC.getValue());
 	    regPC.setValue(0x0038);
 	    workPending = true;
 	    break;
 	  case INTR_MODE_2 :
+            doPUSH(regPC.getValue());
 	    int vectorTableAddr =
 	      (regIV.getValue() << 8) | (intr_bus_data & 0xfe);
 	    regPC.setValue(memory.readShort(vectorTableAddr));
@@ -4026,6 +4031,11 @@ public class Z80 implements CPU {
 	int opCodeLength =
 	  concreteOperation.getConcreteOpCode().getLength();
 	regPC.setValue((regPC.getValue() + opCodeLength) & 0xffff);
+        if (irq_to_be_enabled) {
+          irq_enabled = true;
+          irq_to_be_enabled = false;
+        }
+        workPending = false;
       }
     } while (workPending);
     return concreteOperation;
