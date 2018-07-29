@@ -153,11 +153,31 @@ public class Monitor {
   private Number num1, num2;
   private Id id;
 
+  private String[] script;
+  private int scriptLineIndex;
+
+  private String readLine() throws IOException {
+    String cmdLine;
+    if ((script != null) && (scriptLineIndex < script.length)) {
+      cmdLine = script[scriptLineIndex++];
+      stdout.println("[" + cmdLine + "]");
+    } else {
+      cmdLine = readLine(stdin);
+    }
+    return cmdLine;
+  }
+
+  private int inputAvailable() throws IOException {
+    if ((script != null) && (scriptLineIndex < script.length))
+      return script[scriptLineIndex].length();
+    return stdin.available();
+  }
+
   private String enterCommand() {
     try {
       stdout.println();
       stdout.print("#"); stdout.flush();
-      return readLine(stdin);
+      return readLine();
     } catch (IOException e) {
       throw new InternalError(e.getMessage());
     }
@@ -332,7 +352,7 @@ public class Monitor {
 		}
 		break;
 	      case KBD_CHECK:
-		if (stdin.available() > 0) {
+		if (inputAvailable() > 0) {
 		  lag = getLag();
 		  pause = true;
 		} else {
@@ -363,8 +383,8 @@ public class Monitor {
       } catch (CPU.MismatchException e) {
 	System.err.println(e);
       }
-      if (stdin.available() > 0)
-	readLine(stdin);
+      if (inputAvailable() > 0)
+	readLine();
     } catch (IOException e) {
       throw new InternalError(e.getMessage());
     }
@@ -565,7 +585,7 @@ public class Monitor {
       stdout.print(Util.hexShortStr(startaddr) + "-   (" +
 		   Util.hexByteStr(memory.readByte(startaddr)) + ") ");
       try {
-	cmdLine = readLine(stdin);
+	cmdLine = readLine();
 	pos = 0;
       } catch (IOException e) {
 	throw new InternalError(e.getMessage());
@@ -698,7 +718,15 @@ public class Monitor {
     stdout.println();
   }
 
-  public void run(String preCmdLine) {
+  public void run(String script) {
+    if ((script != null) && (!script.isEmpty())) {
+      this.script = script.split("\r?\n");
+      scriptLineIndex = 0;
+    }
+    run();
+  }
+
+  private void run() {
     System.out.println("starting monitor...");
     stdin = new PushbackInputStream(System.in);
     stdout = System.out;
@@ -720,16 +748,12 @@ public class Monitor {
     registeraccess();
     do {
       try {
-	if (preCmdLine == null) {
-	  cmdLine = enterCommand();
-	} else {
-	  cmdLine = preCmdLine;
-	  preCmdLine = null;
-	  stdout.println("[" + cmdLine + "]");
-	}
-	parseCommand();
-	history.addEntry(cmdLine);
-	executeCommand();
+        cmdLine = enterCommand();
+        if (!cmdLine.isEmpty()) {
+          parseCommand();
+          history.addEntry(cmdLine);
+          executeCommand();
+        }
       } catch (ParseError e) {
 	stdout.print(" ");
 	for (int i = 0; i < pos; i++)
@@ -768,7 +792,7 @@ public class Monitor {
 			   cpuClassName + "': " + e);
 	System.exit(-1);
       }
-      new Monitor(cpu).run(null);
+      new Monitor(cpu).run();
     }
   }
 }
