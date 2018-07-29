@@ -72,17 +72,6 @@ public class ChainedMemory implements CPU.Memory {
       return 0;
   }
 
-  public int readInt(int address) {
-    if (memory == null)
-      throw new IllegalStateException("empty chained memory");
-    if (memory.isValidAddr(address))
-      return memory.readInt(address);
-    else if (next != null)
-      return next.readInt(address);
-    else
-      return 0;
-  }
-
   public void writeByte(int address, int value) {
     if (memory == null)
       throw new IllegalStateException("empty chained memory");
@@ -99,15 +88,6 @@ public class ChainedMemory implements CPU.Memory {
       memory.writeShort(address, value);
     else if (next != null)
       next.writeShort(address, value);
-  }
-
-  public void writeInt(int address, int value) {
-    if (memory == null)
-      throw new IllegalStateException("empty chained memory");
-    if (memory.isValidAddr(address))
-      memory.writeInt(address, value);
-    else if (next != null)
-      next.writeInt(address, value);
   }
 }
 

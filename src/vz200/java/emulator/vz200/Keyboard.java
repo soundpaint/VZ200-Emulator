@@ -31,17 +31,8 @@ public class Keyboard extends JFrame implements CPU.Memory {
       (readByte(address) << 8);
   }
 
-  public int readInt(int address) {
-    return
-      readByte(address++) |
-      (readByte(address++) << 8) |
-      (readByte(address++) << 16) |
-      (readByte(address) << 24);
-  }
-
   public void writeByte(int address, int value) {}
   public void writeShort(int address, int value) {}
-  public void writeInt(int address, int value) {}
 
   private Keyboard() {}
 

@@ -27,10 +27,6 @@ public class Video extends JFrame implements CPU.Memory {
     return videoRAM.readShort(address);
   }
 
-  public int readInt(int address) {
-    return videoRAM.readInt(address);
-  }
-
   public void writeByte(int address, int value) {
     videoRAM.writeByte(address, value);
     address -= baseAddress;
@@ -40,15 +36,6 @@ public class Video extends JFrame implements CPU.Memory {
   public void writeShort(int address, int value) {
     videoRAM.writeShort(address, value);
     address -= baseAddress;
-    panel.invalidate(address++);
-    panel.invalidate(address++);
-  }
-
-  public void writeInt(int address, int value) {
-    videoRAM.writeInt(address, value);
-    address -= baseAddress;
-    panel.invalidate(address++);
-    panel.invalidate(address++);
     panel.invalidate(address++);
     panel.invalidate(address++);
   }

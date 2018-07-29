@@ -57,14 +57,6 @@ public class IO implements CPU.Memory {
       (readByte(address) << 8);
   }
 
-  public int readInt(int address) {
-    return
-      readByte(address++) |
-      (readByte(address++) << 8) |
-      (readByte(address++) << 16) |
-      (readByte(address) << 24);
-  }
-
   public void writeByte(int address, int value) {
     setCassetteOutput((value >> 1) & 0x3);
     setSpeakerOutput(((value >> 5) & 0x1) - (value  & 0x1));
@@ -75,13 +67,6 @@ public class IO implements CPU.Memory {
   public void writeShort(int address, int value) {
     writeByte(address++, value & 0xff);
     writeByte(address, (value >> 8) & 0xff);
-  }
-
-  public void writeInt(int address, int value) {
-    writeByte(address++, value & 0xff);
-    writeByte(address++, (value >> 8) & 0xff);
-    writeByte(address++, (value >> 16) & 0xff);
-    writeByte(address, (value >> 24) & 0xff);
   }
 
   /**

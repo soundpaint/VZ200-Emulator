@@ -39,15 +39,6 @@ public class RAMMemory implements CPU.Memory {
       (ram[address] << 8);
   }
 
-  public int readInt(int address) {
-    address -= minAddr;
-    return
-      ram[address++] |
-      (ram[address++] << 8) |
-      (ram[address++] << 16) |
-      (ram[address] << 24);
-  }
-
   public void writeByte(int address, int value) {
     address -= minAddr;
     ram[address] = value & 0xff;
@@ -55,17 +46,6 @@ public class RAMMemory implements CPU.Memory {
 
   public void writeShort(int address, int value) {
     address -= minAddr;
-    ram[address++] = value & 0xff;
-    value >>>= 8;
-    ram[address] = value & 0xff;
-  }
-
-  public void writeInt(int address, int value) {
-    address -= minAddr;
-    ram[address++] = value & 0xff;
-    value >>>= 8;
-    ram[address++] = value & 0xff;
-    value >>>= 8;
     ram[address++] = value & 0xff;
     value >>>= 8;
     ram[address] = value & 0xff;

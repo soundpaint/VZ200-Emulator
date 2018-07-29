@@ -46,7 +46,6 @@ public class ROMMemory extends RAMMemory
 
   public void writeByte(int address, int value) {}
   public void writeShort(int address, int value) {}
-  public void writeInt(int address, int value) {}
 
   private int[] cloneByteArray(int[] array) {
     int[] clone = new int[array.length];

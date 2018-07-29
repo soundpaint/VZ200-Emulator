@@ -7,10 +7,8 @@ public interface CPU {
     public boolean isValidAddr(int address);
     public int readByte(int address);
     public int readShort(int address);
-    public int readInt(int address);
     public void writeByte(int address, int value);
     public void writeShort(int address, int value);
-    public void writeInt(int address, int value);
   }
 
   public interface NamedObject {
