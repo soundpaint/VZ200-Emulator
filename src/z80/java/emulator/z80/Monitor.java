@@ -392,9 +392,15 @@ public class Monitor {
 	op.execute();
 	registeraccess();
 	startaddr = regPC.getValue();
+        if (stdin.available() > 0) {
+          stdout.println("[stopped]");
+          break;
+        }
       }
     } catch (CPU.MismatchException e) {
       System.err.println(e);
+    } catch (IOException e) {
+      throw new InternalError(e.getMessage());
     }
     id.parsed = false;
     num1.parsed = false;
