@@ -291,9 +291,9 @@ public class Monitor {
 
   private void go(boolean callSub) {
     int savedRegSP = 0;
-    stdout.println("press <enter> to stop");
+    stdout.println("press <enter> to pause");
     if (callSub) {
-      stdout.println("[call sub: stopping as soon as " + regSP + "]");
+      stdout.println("[call sub: pausing upon break point " + regSP + "]");
       savedRegSP = regSP.getValue();
       cpu.doPUSH(regPC.getValue());
     }
@@ -303,7 +303,7 @@ public class Monitor {
     } else {
       // continue whereever regPC currently points to
     }
-    boolean stop = false;
+    boolean pause = false;
     long lag = 0;
     EventQueue eventQueue = new EventQueue();
     try {
@@ -317,7 +317,7 @@ public class Monitor {
 	eventQueue.add(cpuTime, EVENT_TYPE.CPU_CYCLE);
 	eventQueue.add(kbdCheckTime, EVENT_TYPE.KBD_CHECK);
 	eventQueue.add(fsTime, EVENT_TYPE.FS_ACTIVATE);
-	while (!stop) {
+	while (!pause) {
 	  if (eventQueue.isDue()) {
 	    switch (eventQueue.nextEvent()) {
 	      case CPU_CYCLE:
@@ -328,13 +328,13 @@ public class Monitor {
 		  eventQueue.add(cpuTime, EVENT_TYPE.CPU_CYCLE);
 		} else {
 		  lag = getLag();
-		  stop = true;
+		  pause = true;
 		}
 		break;
 	      case KBD_CHECK:
 		if (stdin.available() > 0) {
 		  lag = getLag();
-		  stop = true;
+		  pause = true;
 		} else {
 		  kbdCheckTime += CHECK_KBD_PERIOD;
 		  eventQueue.add(kbdCheckTime, EVENT_TYPE.KBD_CHECK);
@@ -368,7 +368,7 @@ public class Monitor {
     } catch (IOException e) {
       throw new InternalError(e.getMessage());
     }
-    stdout.println("[stopped]");
+    stdout.println("[paused]");
     stdout.println("[lag = " + lag + "ns]");
     stdout.println();
     id.parsed = false;
@@ -393,7 +393,7 @@ public class Monitor {
 	registeraccess();
 	startaddr = regPC.getValue();
         if (stdin.available() > 0) {
-          stdout.println("[stopped]");
+          stdout.println("[paused]");
           break;
         }
       }
