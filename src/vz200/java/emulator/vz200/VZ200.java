@@ -12,7 +12,7 @@ import emulator.z80.Z80;
 
 public class VZ200 {
   private final static int RAM_START = 0x7000;
-  private final static int RAM_LENGTH = 0x1000;
+  private final static int RAM_LENGTH = 0x2000;
   private final static String OS_RESOURCENAME = "os.rom";
   private final static int OS_START = 0x0000;
   private final static int OS_LENGTH = 0x4000;
