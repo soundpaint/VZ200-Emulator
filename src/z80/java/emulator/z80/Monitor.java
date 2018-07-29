@@ -601,9 +601,7 @@ public class Monitor {
 	stdout.print("    ");
       }
       CPU.Register register = registers[i];
-      // TODO: have to know bit width of register
-      stdout.print(" " + register.getName() + "=" +
-		   Util.hexShortStr(register.getValue()));
+      stdout.print(" " + register);
     }
     stdout.println();
   }
