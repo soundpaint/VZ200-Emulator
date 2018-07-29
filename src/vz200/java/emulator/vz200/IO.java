@@ -23,7 +23,7 @@ public class IO implements CPU.Memory {
 
   public Video getVideo() { return video; }
 
-  private void setCassetteOutput(boolean active) {
+  private void setCassetteOutput(int value) {
     // TODO
   }
 
@@ -66,10 +66,10 @@ public class IO implements CPU.Memory {
   }
 
   public void writeByte(int address, int value) {
-    setCassetteOutput((value & 0x4) != 0x0);
+    setCassetteOutput((value >> 1) & 0x3);
     setSpeakerOutput(((value >> 5) & 0x1) - (value  & 0x1));
+    video.setDisplayMode((value & 0x08) != 0x0);
     video.setColorMode((value & 0x10) != 0x0);
-    video.setDisplayMode((value & 0x20) != 0x0);
   }
 
   public void writeShort(int address, int value) {
