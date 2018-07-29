@@ -544,6 +544,15 @@ public class Monitor {
     return (ch >= 0x20) && (ch != 0x7f) && (ch <= 0x80);
   }
 
+  private static char renderDataByteAsChar(int dataByte) {
+    if (isPrintableChar(dataByte))
+      return (char)dataByte;
+    dataByte -= 0x80;
+    if (isPrintableChar(dataByte))
+      return (char)dataByte;
+    return '?';
+  }
+
   private void dump() {
     if (num1.parsed)
       startaddr = num1.value;
@@ -558,12 +567,9 @@ public class Monitor {
     StringBuffer sbNumeric = new StringBuffer(SPACE.substring(0, (currentaddr & 0xf) * 3));
     StringBuffer sbText = new StringBuffer(SPACE.substring(0, (currentaddr & 0xf) * 2));
     do {
-      int codeByte = memory.readByte(currentaddr++);
-      sbNumeric.append(" " + Util.hexByteStr(codeByte));
-      if (isPrintableChar(codeByte))
-	sbText.append(" " + (char)codeByte);
-      else
-	sbText.append(" ?");
+      int dataByte = memory.readByte(currentaddr++);
+      sbNumeric.append(" " + Util.hexByteStr(dataByte));
+      sbText.append(" " + renderDataByteAsChar(dataByte));
       if ((currentaddr & 0xf) == 0) {
 	stdout.println(sbNumeric + " " + sbText);
 	sbNumeric.setLength(0);
