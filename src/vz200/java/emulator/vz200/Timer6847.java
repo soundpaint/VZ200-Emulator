@@ -26,8 +26,7 @@ public class Timer6847 implements Runnable {
       } catch (InterruptedException e) {
 	// For the moment, ignored (TODO).
       }
-      //System.out.println(cpu.getProgramCounter());
-      //cpu.requestIRQ();
+      cpu.requestIRQ();
     }
   }
 }
