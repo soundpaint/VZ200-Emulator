@@ -13,6 +13,7 @@ import emulator.z80.RAMMemory;
 import emulator.z80.ROMMemory;
 
 public class VideoPanel extends JPanel {
+  private static final long serialVersionUID = 1223323375329148324L;
 
   private final static Color GREEN_FRAME_COLOR =
     Color.green.darker().darker().darker();
@@ -78,7 +79,8 @@ public class VideoPanel extends JPanel {
 
   public VideoPanel(int baseAddress) throws IOException {
     charset =
-      new ROMMemory(this.getClass(), CHARSET_RESOURCENAME,
+      new ROMMemory((Class<? extends Object>)VideoPanel.class,
+                    CHARSET_RESOURCENAME,
 		    0x0000, CHARSET_LENGTH).getByteArray();
     videoRAM = new RAMMemory(baseAddress, 0x0800);
     directVideoRAM = videoRAM.getByteArray();

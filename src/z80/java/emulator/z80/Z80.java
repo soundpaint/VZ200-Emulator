@@ -871,6 +871,10 @@ public class Z80 implements CPU {
 	  (obj instanceof MutableInteger) &&
 	  (((MutableInteger)obj).value == value);
       }
+
+      public int hashCode() {
+        return Integer.hashCode(value);
+      }
     }
 
     public void setGenericOpCode(String genericOpCode) {
@@ -890,7 +894,7 @@ public class Z80 implements CPU {
 		 (varName.charValue() <= 'z')) {
 	  genericOpCodeBits[i] = varName.charValue() - (int)'a' + 2;
 	  Integer key = new Integer(varName.charValue() - (int)'a');
-	  MutableInteger mutableInteger = (MutableInteger)vars.get(key);
+	  MutableInteger mutableInteger = vars.get(key);
 	  if (mutableInteger == null)
 	    vars.put(key, new MutableInteger(1));
 	  else
@@ -900,11 +904,11 @@ public class Z80 implements CPU {
       }
       varIndex = new int[vars.size()];
       varSize = new int[vars.size()];
-      Iterator indexIterator = vars.keySet().iterator();
+      Iterator<Integer> indexIterator = vars.keySet().iterator();
       for (int i = 0; i < vars.size(); i++) {
-	Integer index = (Integer)(indexIterator.next());
+	Integer index = indexIterator.next();
 	varIndex[i] = index.intValue();
-	varSize[i] = ((MutableInteger)vars.get(index)).value;
+	varSize[i] = (vars.get(index)).value;
       }
       this.genericOpCode = genericOpCode;
     }

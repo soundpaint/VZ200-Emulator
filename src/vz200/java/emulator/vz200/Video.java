@@ -7,6 +7,8 @@ import javax.swing.JFrame;
 import emulator.z80.CPU;
 
 public class Video extends JFrame implements CPU.Memory {
+  private static final long serialVersionUID = 8771293905230414438L;
+
   private final static int DEFAULT_BASE_ADDRESS = 0x7000;
   private VideoPanel panel;
   private CPU.Memory videoRAM;

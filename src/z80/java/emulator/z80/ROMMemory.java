@@ -18,13 +18,13 @@ public class ROMMemory extends RAMMemory
     this.maxAddr = minAddr + ram.length - 1;
   }
 
-  public ROMMemory(Class baseClass, String resourceName, int minAddr, int size)
+  public ROMMemory(Class<? extends Object> baseClass, String resourceName, int minAddr, int size)
     throws IOException
   {
     this(loadRom(baseClass, resourceName, size), minAddr);
   }
 
-  private static int[] loadRom(Class baseClass, String resourceName, int size)
+  private static int[] loadRom(Class<? extends Object> baseClass, String resourceName, int size)
     throws IOException
   {
     byte[] romBytes = new byte[size];

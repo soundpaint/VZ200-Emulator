@@ -24,6 +24,8 @@ public class Monitor {
   private PrintStream stdout, stderr;
 
   private static class ParseError extends Exception {
+    private static final long serialVersionUID = 6821628755472075263L;
+
     public ParseError(String s) { super(s); }
   }
 

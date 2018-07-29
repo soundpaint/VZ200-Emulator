@@ -22,7 +22,7 @@ public class Timer6847 implements Runnable {
   public void run() {
     while (true) {
       try {
-	Thread.currentThread().sleep(CYCLE_TIME);
+	Thread.sleep(CYCLE_TIME);
       } catch (InterruptedException e) {
 	// For the moment, ignored (TODO).
       }

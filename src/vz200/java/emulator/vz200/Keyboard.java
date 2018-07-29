@@ -8,6 +8,8 @@ import javax.swing.JFrame;
 import emulator.z80.CPU;
 
 public class Keyboard extends JFrame implements CPU.Memory {
+  private static final long serialVersionUID = -6642328202936155082L;
+
   private int baseAddress;
   private KeyboardPanel panel;
   private KeyboardMatrix matrix;

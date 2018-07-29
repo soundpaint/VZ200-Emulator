@@ -26,7 +26,8 @@ public class VZ200 {
     portMemory.prependMemory(new RAMMemory(0x00, 0x100));
     ChainedMemory mainMemory = new ChainedMemory();
     mainMemory.prependMemory(new RAMMemory(RAM_START, RAM_LENGTH));
-    mainMemory.prependMemory(new ROMMemory(this.getClass(), OS_RESOURCENAME,
+    mainMemory.prependMemory(new ROMMemory((Class<? extends Object>)VZ200.class,
+                                           OS_RESOURCENAME,
 					   OS_START, OS_LENGTH));
     mainMemory.prependMemory(io);
     mainMemory.prependMemory(video);

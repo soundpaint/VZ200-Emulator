@@ -19,12 +19,14 @@ import javax.swing.JPanel;
 import emulator.z80.RAMMemory;
 
 public class KeyboardPanel extends JPanel {
+  private static final long serialVersionUID = 7317835440086946160L;
+
   JButton buttons[][];
   KeyboardMatrix matrix;
 
   private class KeyListener extends KeyAdapter {
     public void keyPressed(KeyEvent e) {
-      KeyboardMatrix.Key key = matrix.getKeyByKeyCode(e.getKeyCode());
+      KeyboardMatrix.Key key = KeyboardMatrix.getKeyByKeyCode(e.getKeyCode());
       if (key != null) {
 	matrix.setSelected(key, true);
 	JButton button = buttons[key.getRow()][key.getColumn()];
@@ -36,7 +38,7 @@ public class KeyboardPanel extends JPanel {
     }
 
     public void keyReleased(KeyEvent e) {
-      KeyboardMatrix.Key key = matrix.getKeyByKeyCode(e.getKeyCode());
+      KeyboardMatrix.Key key = KeyboardMatrix.getKeyByKeyCode(e.getKeyCode());
       if (key != null) {
 	matrix.setSelected(key, false);
 	JButton button = buttons[key.getRow()][key.getColumn()];
@@ -187,9 +189,11 @@ public class KeyboardPanel extends JPanel {
 
   public KeyboardPanel(KeyboardMatrix matrix) throws IOException {
     this.matrix = matrix;
-    buttons = new JButton[matrix.getRowCount()][matrix.getColumnCount()];
+    int rowCount = KeyboardMatrix.getRowCount();
+    int columnCount = KeyboardMatrix.getColumnCount();
+    buttons = new JButton[rowCount][columnCount];
     addColorLabels();
-    Iterator<KeyboardMatrix.Key> keys = matrix.getKeyIterator();
+    Iterator<KeyboardMatrix.Key> keys = KeyboardMatrix.getKeyIterator();
     while (keys.hasNext()) {
       addKey(keys.next());
     }

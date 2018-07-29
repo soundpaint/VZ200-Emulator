@@ -53,6 +53,8 @@ public interface CPU {
   public long getTimePerClockPeriod();
 
   public class MismatchException extends Exception {
+    private static final long serialVersionUID = 3640134396555784341L;
+
     public MismatchException() { super(); }
     public MismatchException(String message) { super(message); }
   }
