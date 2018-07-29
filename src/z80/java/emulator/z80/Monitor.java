@@ -292,14 +292,17 @@ public class Monitor {
   private void go(boolean callSub) {
     int savedRegSP = 0;
     stdout.println("press <enter> to stop");
-    if (num1.parsed)
-      startaddr = num1.value;
     if (callSub) {
       stdout.println("[call sub: stopping as soon as " + regSP + "]");
       savedRegSP = regSP.getValue();
       cpu.doPUSH(regPC.getValue());
     }
-    regPC.setValue(startaddr);
+    if (num1.parsed) {
+      startaddr = num1.value;
+      regPC.setValue(startaddr);
+    } else {
+      // continue whereever regPC currently points to
+    }
     boolean stop = false;
     long lag = 0;
     EventQueue eventQueue = new EventQueue();
@@ -376,9 +379,9 @@ public class Monitor {
   }
 
   private void traceUntil() {
-    if (num1.parsed)
+    if (num1.parsed) {
       endaddr = num1.value;
-    regPC.setValue(startaddr);
+    }
     CPU.ConcreteOperation op;
     try {
       while (startaddr != endaddr) {
@@ -399,13 +402,16 @@ public class Monitor {
   }
 
   private void trace() {
-    if (num1.parsed)
+    if (num1.parsed) {
       startaddr = num1.value;
-    regPC.setValue(startaddr);
+      regPC.setValue(startaddr);
+    } else {
+      // continue whereever regPC currently points to
+    }
     CPU.ConcreteOperation op;
     try {
       // TODO: have to know that regPC is a short
-      stdout.print(Util.hexShortStr(startaddr) + "-  ");
+      stdout.print(Util.hexShortStr(regPC.getValue()) + "-  ");
       op = cpu.fetchNextOperation();
       printOperation(op);
       op.execute();
