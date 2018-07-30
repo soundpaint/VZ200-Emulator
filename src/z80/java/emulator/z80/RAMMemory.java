@@ -4,55 +4,38 @@ package emulator.z80;
 /**
  * Default implementation for RAM Memory.
  */
-public class RAMMemory implements CPU.Memory {
-  protected int[] ram;
-  protected int minAddr, maxAddr;
-
-  protected RAMMemory() {}
-
-  public RAMMemory(int minAddr, int size) {
+public class RAMMemory extends ROMMemory implements MemoryBus.Reader {
+  private static int[] createRAMData(int size) {
     if (size < 0)
       throw new IllegalArgumentException("size < 0");
-    if (minAddr < 0)
-      throw new IllegalArgumentException("minAddr < 0");
-    if (minAddr + size < 0)
-      throw new IllegalArgumentException("minAddr + size beyond MAX_INT");
-    ram = new int[size];
-    this.minAddr = minAddr;
-    this.maxAddr = minAddr + size - 1;
+    return new int[size];
   }
 
-  public boolean isValidAddr(int address) {
-    return (minAddr <= address) && (address <= maxAddr);
-  }
-
-  public int readByte(int address) {
-    address -= minAddr;
-    return
-      ram[address];
-  }
-
-  public int readShort(int address) {
-    address -= minAddr;
-    return
-      ram[address++] |
-      (ram[address] << 8);
+  public RAMMemory(int baseAddress, int size) {
+    super(baseAddress, createRAMData(size));
   }
 
   public void writeByte(int address, int value) {
-    address -= minAddr;
-    ram[address] = value & 0xff;
+    int addressOffset = (address - baseAddress) & 0xffff;
+    if (addressOffset < data.length) {
+      data[addressOffset] = value & 0xff;
+    }
   }
 
   public void writeShort(int address, int value) {
-    address -= minAddr;
-    ram[address++] = value & 0xff;
+    int addressOffset = (address - baseAddress) & 0xffff;
+    if (addressOffset < data.length) {
+      data[addressOffset] = value & 0xff;
+    }
+    addressOffset = (addressOffset + 1) & 0xffff;
     value >>>= 8;
-    ram[address] = value & 0xff;
+    if (addressOffset < data.length) {
+      data[addressOffset] = value & 0xff;
+    }
   }
 
   public int[] getByteArray() {
-    return ram;
+    return data;
   }
 }
 

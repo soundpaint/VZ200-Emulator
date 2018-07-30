@@ -15,6 +15,8 @@ import emulator.z80.ROMMemory;
 public class VideoPanel extends JPanel {
   private static final long serialVersionUID = 1223323375329148324L;
 
+  private final static int MEMORY_SIZE = 0x0800;
+
   private final static Color GREEN_FRAME_COLOR =
     Color.green.darker().darker().darker();
 
@@ -49,6 +51,7 @@ public class VideoPanel extends JPanel {
     Color.orange.darker(), Color.cyan, Color.magenta, Color.orange
   };
 
+  private int baseAddress;
   private RAMMemory videoRAM;
   private int[] directVideoRAM;
   private int[] charset; // use int rather than signed byte to save casts
@@ -78,6 +81,7 @@ public class VideoPanel extends JPanel {
   private final static int CHARSET_LENGTH = 3072;
 
   public VideoPanel(int baseAddress) throws IOException {
+    this.baseAddress = baseAddress;
     charset =
       new ROMMemory((Class<? extends Object>)VideoPanel.class,
                     CHARSET_RESOURCENAME,
@@ -95,7 +99,7 @@ public class VideoPanel extends JPanel {
     setDisplayMode(DISPLAY_MODE_TEXT);
   }
 
-  public CPU.Memory getVideoRAM() { return videoRAM; }
+  public RAMMemory getVideoRAM() { return videoRAM; }
 
   public void setZoom(int zoom) {
     this.zoom = zoom;
@@ -304,15 +308,18 @@ public class VideoPanel extends JPanel {
 
     public Invalidator() {
       scheduled = false;
-      dirtyCollect = new boolean[2048];
-      dirtyHandle = new boolean[2048];
+      dirtyCollect = new boolean[MEMORY_SIZE];
+      dirtyHandle = new boolean[MEMORY_SIZE];
     }
 
     public synchronized void invalidate(int address) {
-      dirtyCollect[address] = true;
-      if (!scheduled) {
-	SwingUtilities.invokeLater(this);
-	scheduled = true;
+      int addressOffset = (address - baseAddress) & 0xffff;
+      if (addressOffset < MEMORY_SIZE) {
+        dirtyCollect[addressOffset] = true;
+        if (!scheduled) {
+          SwingUtilities.invokeLater(this);
+          scheduled = true;
+        }
       }
     }
 
@@ -343,7 +350,7 @@ public class VideoPanel extends JPanel {
 	repaint();
       else
 	repaint(dirtyHandle);
-      for (int i = 0; i < 2048; i++)
+      for (int i = 0; i < MEMORY_SIZE; i++)
 	dirtyHandle[i] = false;
       allDirtyHandle = false;
     }

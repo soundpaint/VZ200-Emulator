@@ -3,9 +3,11 @@ package emulator.vz200;
 import java.io.IOException;
 
 import emulator.z80.CPU;
+import emulator.z80.MemoryBus;
 
-public class IO implements CPU.Memory {
+public class IO implements MemoryBus.Reader, MemoryBus.Writer {
   private final static int DEFAULT_BASE_ADDRESS = 0x6800;
+  private final static int MEMORY_SIZE = 0x0800;
 
   private int baseAddress;
   private Video video;
@@ -36,18 +38,18 @@ public class IO implements CPU.Memory {
     return false;
   }
 
-  public boolean isValidAddr(int address) {
-    return
-      (address >= baseAddress) &&
-      (address < baseAddress + 0x800);
-  }
-
   public int readByte(int address) {
-    int data = keyboard.readByte(address);
-    if (cassetteInputActive())
-      data |= 0x40;
-    if (video.fs())
-      data |= 0x80;
+    int addressOffset = (address - baseAddress) & 0xffff;
+    int data;
+    if (addressOffset < MEMORY_SIZE) {
+      data = keyboard.readByte(address);
+      if (cassetteInputActive())
+        data |= 0x40;
+      if (video.fs())
+        data |= 0x80;
+    } else {
+      data = BYTE_UNDEFINED;
+    }
     return data;
   }
 
@@ -58,10 +60,13 @@ public class IO implements CPU.Memory {
   }
 
   public void writeByte(int address, int value) {
-    setCassetteOutput((value >> 1) & 0x3);
-    setSpeakerOutput(((value >> 5) & 0x1) - (value  & 0x1));
-    video.setDisplayMode((value & 0x08) != 0x0);
-    video.setColorMode((value & 0x10) != 0x0);
+    int addressOffset = (address - baseAddress) & 0xffff;
+    if (addressOffset < MEMORY_SIZE) {
+      setCassetteOutput((value >> 1) & 0x3);
+      setSpeakerOutput(((value >> 5) & 0x1) - (value  & 0x1));
+      video.setDisplayMode((value & 0x08) != 0x0);
+      video.setColorMode((value & 0x10) != 0x0);
+    }
   }
 
   public void writeShort(int address, int value) {

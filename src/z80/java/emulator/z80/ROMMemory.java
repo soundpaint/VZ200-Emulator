@@ -8,23 +8,36 @@ import java.io.IOException;
 /**
  * Default implementation for ROM Memory.
  */
-public class ROMMemory extends RAMMemory
+public class ROMMemory implements MemoryBus.Writer
 {
-  private ROMMemory() {}
+  protected int baseAddress;
+  protected int[] data;
 
-  public ROMMemory(int[] rom, int minAddr) {
-    this.ram = cloneByteArray(rom);
-    this.minAddr = minAddr;
-    this.maxAddr = minAddr + ram.length - 1;
+  private ROMMemory() {
+    throw new UnsupportedOperationException("unsupported constructor");
   }
 
-  public ROMMemory(Class<? extends Object> baseClass, String resourceName, int minAddr, int size)
+  protected ROMMemory(int baseAddress, int[] data) {
+    if (baseAddress < 0)
+      throw new IllegalArgumentException("baseAddress < 0");
+    if (data == null)
+      throw new NullPointerException("data");
+    int size = data.length;
+    if (baseAddress + size < 0)
+      throw new IllegalArgumentException("baseAddress + size beyond MAX_INT");
+    this.baseAddress = baseAddress;
+    this.data = data;
+  }
+
+  public ROMMemory(Class<? extends Object> baseClass, String resourceName,
+                   int baseAddress, int size)
     throws IOException
   {
-    this(loadRom(baseClass, resourceName, size), minAddr);
+    this(baseAddress, loadROM(baseClass, resourceName, size));
   }
 
-  private static int[] loadRom(Class<? extends Object> baseClass, String resourceName, int size)
+  private static int[] loadROM(Class<? extends Object> baseClass,
+                               String resourceName, int size)
     throws IOException
   {
     byte[] romBytes = new byte[size];
@@ -38,24 +51,49 @@ public class ROMMemory extends RAMMemory
       throw new IOException("EOF expected: " + resourceName +
 			    " file too long");
     is.close();
-    int[] rom = new int[size];
+    int[] data = new int[size];
     for (int i = 0; i < size; i++)
-      rom[i] = romBytes[i] & 0xff;
-    return rom;
-  }
-
-  public void writeByte(int address, int value) {}
-  public void writeShort(int address, int value) {}
-
-  private int[] cloneByteArray(int[] array) {
-    int[] clone = new int[array.length];
-    for (int i = 0; i < array.length; i++)
-      clone[i] = array[i]; // TODO: use some kind of System.arrayCopy for int[]
-    return clone;
+      data[i] = romBytes[i] & 0xff;
+    return data;
   }
 
   public int[] getByteArray() {
-    return cloneByteArray(ram);
+    return data;
+  }
+
+  public int readByte(int address) {
+    int addressOffset = (address - baseAddress) & 0xffff;
+    int result;
+    if (addressOffset < data.length) {
+      result = data[addressOffset];
+    } else {
+      result = MemoryBus.Writer.BYTE_UNDEFINED;
+    }
+    return result;
+  }
+
+  public int readShort(int address) {
+    int addressOffset = (address - baseAddress) & 0xffff;
+    int resultLSB;
+    if (addressOffset < data.length) {
+      resultLSB = data[addressOffset];
+    } else {
+      resultLSB = MemoryBus.Writer.BYTE_UNDEFINED;
+    }
+    addressOffset = (addressOffset + 1) & 0xffff;
+    int resultMSB;
+    if (addressOffset < data.length) {
+      resultMSB = data[addressOffset];
+    } else {
+      resultMSB = MemoryBus.Writer.BYTE_UNDEFINED;
+    }
+    return (resultMSB << 8) | resultLSB;
+  }
+
+  public String toString()
+  {
+    return "ROM Memory[baseAddress=" + Util.hexShortStr(baseAddress) +
+      ", size=" + Util.hexShortStr(data.length) + "]";
   }
 }
 

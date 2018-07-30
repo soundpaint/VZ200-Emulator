@@ -5,19 +5,19 @@ import javax.swing.JPanel;
 import javax.swing.JFrame;
 
 import emulator.z80.CPU;
+import emulator.z80.MemoryBus;
+import emulator.z80.RAMMemory;
 
-public class Video extends JFrame implements CPU.Memory {
+public class Video extends JFrame
+  implements MemoryBus.Reader, MemoryBus.Writer
+{
   private static final long serialVersionUID = 8771293905230414438L;
 
   private final static int DEFAULT_BASE_ADDRESS = 0x7000;
   private VideoPanel panel;
-  private CPU.Memory videoRAM;
+  private RAMMemory videoRAM;
   private int baseAddress;
   private long startTime;
-
-  public boolean isValidAddr(int address) {
-    return videoRAM.isValidAddr(address);
-  }
 
   public int readByte(int address) {
     return videoRAM.readByte(address);
@@ -29,15 +29,13 @@ public class Video extends JFrame implements CPU.Memory {
 
   public void writeByte(int address, int value) {
     videoRAM.writeByte(address, value);
-    address -= baseAddress;
     panel.invalidate(address);
   }
 
   public void writeShort(int address, int value) {
     videoRAM.writeShort(address, value);
-    address -= baseAddress;
     panel.invalidate(address++);
-    panel.invalidate(address++);
+    panel.invalidate(address);
   }
 
   public boolean fs() {

@@ -4,7 +4,6 @@ package emulator.z80;
 
 public interface CPU {
   public interface Memory {
-    public boolean isValidAddr(int address);
     public int readByte(int address);
     public int readShort(int address);
     public void writeByte(int address, int value);

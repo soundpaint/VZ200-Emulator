@@ -4058,7 +4058,9 @@ public class Z80 implements CPU {
   }
 
   public Z80(int cpuFrequency) {
-    this(new RAMMemory(0, 65536), new RAMMemory(0, 256), cpuFrequency);
+    this(MemoryBus.createRAMMemoryBus(0, 65536),
+         MemoryBus.createRAMMemoryBus(0, 256),
+         cpuFrequency);
   }
 
   public Z80(CPU.Memory memory, CPU.Memory io) {

@@ -6,33 +6,41 @@ import javax.swing.JPanel;
 import javax.swing.JFrame;
 
 import emulator.z80.CPU;
+import emulator.z80.MemoryBus;
 
-public class Keyboard extends JFrame implements CPU.Memory {
+public class Keyboard extends JFrame implements MemoryBus.Writer {
   private static final long serialVersionUID = -6642328202936155082L;
+
+  private static final int MEMORY_SIZE = 0x0800;
 
   private int baseAddress;
   private KeyboardPanel panel;
   private KeyboardMatrix matrix;
 
-  public boolean isValidAddr(int address) {
-    return
-      (address >= baseAddress) &&
-      (address < baseAddress + 0x800);
-  }
-
   public int readByte(int address) {
-    address -= baseAddress;
-    return matrix.read(address);
+    int result;
+    int addressOffset = (address - baseAddress) & 0xffff;
+    if (addressOffset < MEMORY_SIZE)
+      result = matrix.read(addressOffset);
+    else
+      result = MemoryBus.Writer.BYTE_UNDEFINED;
+    return result;
   }
 
   public int readShort(int address) {
-    return
-      readByte(address++) |
-      (readByte(address) << 8);
+    int resultLSB, resultMSB;
+    int addressOffset = (address - baseAddress) & 0xffff;
+    if (addressOffset < MEMORY_SIZE)
+      resultLSB = matrix.read(addressOffset);
+    else
+      resultLSB = MemoryBus.Writer.BYTE_UNDEFINED;
+    addressOffset = (addressOffset + 1) & 0xffff;
+    if (addressOffset < MEMORY_SIZE)
+      resultMSB = matrix.read(addressOffset);
+    else
+      resultMSB = MemoryBus.Writer.BYTE_UNDEFINED;
+    return (resultMSB << 8) | resultLSB;
   }
-
-  public void writeByte(int address, int value) {}
-  public void writeShort(int address, int value) {}
 
   private Keyboard() {}
 
