@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import emulator.z80.CPU;
 import emulator.z80.MemoryBus;
+import emulator.z80.Util;
 
 public class IO implements MemoryBus.Reader, MemoryBus.Writer {
   private final static int DEFAULT_BASE_ADDRESS = 0x6800;
@@ -72,6 +73,12 @@ public class IO implements MemoryBus.Reader, MemoryBus.Writer {
   public void writeShort(int address, int value) {
     writeByte(address++, value & 0xff);
     writeByte(address, (value >> 8) & 0xff);
+  }
+
+  public String toString()
+  {
+    return "IO Memory[baseAddress=" + Util.hexShortStr(baseAddress) +
+      ", size=" + Util.hexShortStr(MEMORY_SIZE) + "]";
   }
 
   /**

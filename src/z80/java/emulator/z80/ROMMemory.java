@@ -90,6 +90,9 @@ public class ROMMemory implements MemoryBus.Writer
     return (resultMSB << 8) | resultLSB;
   }
 
+  public void writeByte(int address, int value) {}
+  public void writeShort(int address, int value) {}
+
   public String toString()
   {
     return "ROM Memory[baseAddress=" + Util.hexShortStr(baseAddress) +

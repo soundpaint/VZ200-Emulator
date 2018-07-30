@@ -7,6 +7,7 @@ import javax.swing.JFrame;
 
 import emulator.z80.CPU;
 import emulator.z80.MemoryBus;
+import emulator.z80.Util;
 
 public class Keyboard extends JFrame implements MemoryBus.Writer {
   private static final long serialVersionUID = -6642328202936155082L;
@@ -53,6 +54,12 @@ public class Keyboard extends JFrame implements MemoryBus.Writer {
     getContentPane().add(panel, BorderLayout.CENTER);
     pack();
     setVisible(true);
+  }
+
+  public String toString()
+  {
+    return "Keyboard[baseAddress=" + Util.hexShortStr(baseAddress) +
+      ", size=" + Util.hexShortStr(MEMORY_SIZE) + "]";
   }
 
   /**

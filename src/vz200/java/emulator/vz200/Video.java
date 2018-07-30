@@ -7,6 +7,7 @@ import javax.swing.JFrame;
 import emulator.z80.CPU;
 import emulator.z80.MemoryBus;
 import emulator.z80.RAMMemory;
+import emulator.z80.Util;
 
 public class Video extends JFrame
   implements MemoryBus.Reader, MemoryBus.Writer
@@ -64,6 +65,12 @@ public class Video extends JFrame
     videoRAM = panel.getVideoRAM();
     pack();
     setVisible(true);
+  }
+
+  public String toString()
+  {
+    return "Video[baseAddress=" + Util.hexShortStr(baseAddress) +
+      ", videoRAM=" + videoRAM + "]";
   }
 
   /**

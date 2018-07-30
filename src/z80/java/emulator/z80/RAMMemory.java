@@ -37,6 +37,12 @@ public class RAMMemory extends ROMMemory implements MemoryBus.Reader {
   public int[] getByteArray() {
     return data;
   }
+
+  public String toString()
+  {
+    return "RAM Memory[baseAddress=" + Util.hexShortStr(baseAddress) +
+      ", size=" + Util.hexShortStr(data.length) + "]";
+  }
 }
 
 /*
