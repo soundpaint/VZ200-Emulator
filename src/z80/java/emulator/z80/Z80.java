@@ -704,9 +704,9 @@ public class Z80 implements CPU {
       args[index] = value;
     }
 
-    public void reset() {
+    public void copyFrom(Arguments other) {
       for (int index = 0; index < ARGS_LENGTH; index++) {
-	args[index] = 0;
+	args[index] = other.args[index];
       }
     }
   }
@@ -743,11 +743,6 @@ public class Z80 implements CPU {
 	genericOperation.altClockPeriods;
     }
 
-    public void reset() {
-      args.reset();
-      concreteOpCode.reset();
-    }
-
     /**
      * Tries to match the concrete code as delivered from the code
      * fetcher with this operation's generic opcode pattern.  The
@@ -761,16 +756,25 @@ public class Z80 implements CPU {
      * @see #getArg
      */
     public void instantiate(GenericOperation genericOperation,
+                            Arguments precompiledArgs,
+                            int precompiledBytes,
 			    CodeFetcher codeFetcher)
       throws CPU.MismatchException
     {
-      reset();
+      concreteOpCode.reset();
+      args.copyFrom(precompiledArgs);
       int concreteOpCodeByte = 0x00;
       this.genericOperation = genericOperation;
+
       codeFetcher.restart();
+      for (int i = 0; i < precompiledBytes; i++) {
+        concreteOpCodeByte = codeFetcher.fetchNextByte();
+        concreteOpCode.addByte(concreteOpCodeByte);
+      }
 
       // compute concrete op-code and args
-      for (int i = 0; i < genericOperation.genericOpCodeBits.length; i++) {
+      for (int i = 0x8 * precompiledBytes;
+           i < genericOperation.genericOpCodeBits.length; i++) {
 	if ((i & 0x7) == 0) {
 	  concreteOpCodeByte = codeFetcher.fetchNextByte();
 	  concreteOpCode.addByte(concreteOpCodeByte);
@@ -957,7 +961,7 @@ public class Z80 implements CPU {
      *
      * @param code The starting byte(s) of some op-code.
      */
-    public boolean mightMatch(int[] code) {
+    public Arguments tryMatch(int[] code) {
       Arguments args = new Arguments();
       int codeIndex = 0;
       int concreteOpCodeByte = 0;
@@ -967,18 +971,18 @@ public class Z80 implements CPU {
 	  if (codeIndex < code.length)
 	    concreteOpCodeByte = code[codeIndex++];
 	  else // no more bits in code to verify
-	    return true; // TODO: check: resolution != null
+	    return args; // TODO: check: resolution != null
         int genericOpCodeBit = genericOpCodeBits[i];
 	int concreteOpCodeBit = concreteOpCodeByte & SET_MASK[7 - (i & 0x7)];
 	switch (genericOpCodeBit) {
 	  case 0: // '0'
 	    if (concreteOpCodeBit != 0) {
-	      return false;
+	      return null;
 	    }
 	    break;
 	  case 1: // '1'
 	    if (concreteOpCodeBit == 0) {
-	      return false;
+	      return null;
 	    }
 	    break;
 	  default: // 'a'..'z'
@@ -997,12 +1001,16 @@ public class Z80 implements CPU {
       for (int i = 0; i < varIndex.length; i++) {
 	int argValue = args.getArg(varIndex[i]);
 	if (createConcreteMnemonic(args) == null) {
-	  return false;
+	  return null;
 	}
       }
 
       // no more bits in genericOpCodeBits to verify
-      return codeIndex++ == code.length;
+      boolean matched = codeIndex++ == code.length;
+      if (matched) {
+        return args;
+      }
+      return null;
     }
 
     protected int getArg(Arguments args, char argName) {
@@ -3287,13 +3295,27 @@ public class Z80 implements CPU {
 
   private static class PrecompiledGenericOperation implements DecodeTableEntry {
     GenericOperation genericOperation;
+    Arguments args;
+    int precompiledBytes;
 
-    public PrecompiledGenericOperation(GenericOperation genericOperation) {
+    public PrecompiledGenericOperation(GenericOperation genericOperation,
+                                       Arguments args,
+                                       int precompiledBytes) {
       this.genericOperation = genericOperation;
+      this.args = args;
+      this.precompiledBytes = precompiledBytes;
     }
 
     public GenericOperation getGenericOperation() {
       return genericOperation;
+    }
+
+    public Arguments getArguments() {
+      return args;
+    }
+
+    public int getPrecompiledBytes() {
+      return precompiledBytes;
     }
 
     public PrecompiledGenericOperation
@@ -3333,9 +3355,13 @@ public class Z80 implements CPU {
       for (int i = 0; i < 256; i++) {
 	matchingSet.setSize(0);
 	code[code.length - 1] = i;
-	for (int j = 0; j < availableOperations.length; j++) {
-	  if (availableOperations[j].mightMatch(code))
-	    matchingSet.addElement(availableOperations[j]);
+        Arguments matchedArgs = null;
+	for (GenericOperation genericOperation : availableOperations) {
+          Arguments args = genericOperation.tryMatch(code);
+	  if (args != null) {
+            if (matchedArgs == null) matchedArgs = args;
+	    matchingSet.addElement(genericOperation);
+          }
 	}
 	if (matchingSet.size() == 0) {
 	  // no matching mnemonic found => this is an unsupported opcode
@@ -3348,7 +3374,8 @@ public class Z80 implements CPU {
 	} else if (matchingSet.size() == 1) {
 	  // exactly one matching mnemonic found => gotcha!
           PrecompiledGenericOperation entry =
-            new PrecompiledGenericOperation(matchingSet.elementAt(0));
+            new PrecompiledGenericOperation(matchingSet.elementAt(0),
+                                            matchedArgs, code.length);
 	  entries[i] = entry;
           if (DEBUG_OPERATIONS) {
             System.out.print("MATCHING OP: ");
@@ -3369,7 +3396,8 @@ public class Z80 implements CPU {
 	     * We print a warning.
 	     */
             PrecompiledGenericOperation entry =
-              new PrecompiledGenericOperation(matchingSet.elementAt(0));
+              new PrecompiledGenericOperation(matchingSet.elementAt(0),
+                                              matchedArgs, code.length);
 	    entries[i] = entry;
             if (DEBUG_OPERATIONS) {
               System.out.print("MATCHING OP: ");
@@ -3416,7 +3444,12 @@ public class Z80 implements CPU {
     if (precompiledGenericOperation != null) {
       GenericOperation genericOperation =
         precompiledGenericOperation.getGenericOperation();
-      concreteOperation.instantiate(genericOperation, codeFetcher);
+      Arguments args =
+        precompiledGenericOperation.getArguments();
+      int precompiledBytes =
+        precompiledGenericOperation.getPrecompiledBytes();
+      concreteOperation.instantiate(genericOperation, args,
+                                    precompiledBytes, codeFetcher);
     } else {
       /* invalid opcode */
       throw
