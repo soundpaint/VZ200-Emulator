@@ -1,8 +1,10 @@
 package emulator.z80;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 public class Z80 implements CPU {
@@ -48,6 +50,8 @@ public class Z80 implements CPU {
   private interface CodeFetcher {
     public int fetchNextByte();
 
+    public int fetchByte(int index);
+
     /**
      * Clear all fetched data.
      */
@@ -83,6 +87,17 @@ public class Z80 implements CPU {
       cache[pos++] = result;
       size = pos;
       return result;
+    }
+
+    public int fetchByte(int index) {
+      if (size <= index) {
+        pos = size;
+        while (pos <= index) {
+          fetchNextByte();
+        }
+      }
+      pos = index;
+      return cache[pos++];
     }
 
     public void restart() {
@@ -127,8 +142,7 @@ public class Z80 implements CPU {
       return result;
     }
 
-    public int getFetchedByte(int index) {
-      assert index < count : "not that many bytes fetched";
+    public int fetchByte(int index) {
       return index == 0 ? intr_bus_data : 0;
     }
 
@@ -703,12 +717,6 @@ public class Z80 implements CPU {
 	throw new IndexOutOfBoundsException("index");
       args[index] = value;
     }
-
-    public void copyFrom(Arguments other) {
-      for (int index = 0; index < ARGS_LENGTH; index++) {
-	args[index] = other.args[index];
-      }
-    }
   }
 
   public class ConcreteOperation implements CPU.ConcreteOperation {
@@ -755,16 +763,16 @@ public class Z80 implements CPU {
      *
      * @see #getArg
      */
-    public void instantiate(GenericOperation genericOperation,
-                            Arguments precompiledArgs,
-                            int precompiledBytes,
+    public void instantiate(PrecompiledGenericOperation precompiledGenericOperation,
 			    CodeFetcher codeFetcher)
       throws CPU.MismatchException
     {
+      int precompiledBytes = precompiledGenericOperation.getPrecompiledBytes();
       concreteOpCode.reset();
-      args.copyFrom(precompiledArgs);
+      precompiledGenericOperation.apply(codeFetcher, args);
+      genericOperation =
+        precompiledGenericOperation.getGenericOperation();
       int concreteOpCodeByte = 0x00;
-      this.genericOperation = genericOperation;
 
       codeFetcher.restart();
       for (int i = 0; i < precompiledBytes; i++) {
@@ -955,14 +963,22 @@ public class Z80 implements CPU {
       }
     }
 
+    private void addActionsForArgs(DecodeCompletionActions actions,
+                                   HashMap<Integer, Integer> args) {
+      for (Integer varIndex : args.keySet()) {
+        actions.addConstant(varIndex, args.get(varIndex));
+      }
+    }
+
     /**
      * This is used during initialization to compute the decode tables
      * for fast operation lookup.
      *
      * @param code The starting byte(s) of some op-code.
      */
-    public Arguments tryMatch(int[] code) {
-      Arguments args = new Arguments();
+    public DecodeCompletionActions tryMatch(int[] code) {
+      DecodeCompletionActions actions = new DecodeCompletionActions();
+      HashMap<Integer, Integer> args = new HashMap<Integer, Integer>();
       int codeIndex = 0;
       int concreteOpCodeByte = 0;
 
@@ -970,8 +986,10 @@ public class Z80 implements CPU {
 	if ((i & 0x7) == 0)
 	  if (codeIndex < code.length)
 	    concreteOpCodeByte = code[codeIndex++];
-	  else // no more bits in code to verify
-	    return args; // TODO: check: resolution != null
+	  else { // no more bits in code to verify
+            addActionsForArgs(actions, args);
+	    return actions; // TODO: check: resolution != null
+          }
         int genericOpCodeBit = genericOpCodeBits[i];
 	int concreteOpCodeBit = concreteOpCodeByte & SET_MASK[7 - (i & 0x7)];
 	switch (genericOpCodeBit) {
@@ -986,11 +1004,16 @@ public class Z80 implements CPU {
 	    }
 	    break;
 	  default: // 'a'..'z'
-	    int argValue = args.getArg(genericOpCodeBit - 2);
+	    int argValue;
+            if (args.containsKey(genericOpCodeBit - 2)) {
+              argValue = args.get(genericOpCodeBit - 2);
+            } else {
+              argValue = 0;
+            }
 	    argValue <<= 1;
 	    if (concreteOpCodeBit != 0)
 	      argValue |= 0x1;
-	    args.setArg(genericOpCodeBit - 2, argValue);
+	    args.put(genericOpCodeBit - 2, argValue);
 	    // continue
 	    break;
 	}
@@ -999,18 +1022,25 @@ public class Z80 implements CPU {
       // Now that we have all args, check that they are not out of
       // range.
       for (int i = 0; i < varIndex.length; i++) {
-	int argValue = args.getArg(varIndex[i]);
-	if (createConcreteMnemonic(args) == null) {
-	  return null;
-	}
+        if (!args.containsKey(varIndex[i])) {
+          return null;
+        }
       }
 
-      // no more bits in genericOpCodeBits to verify
-      boolean matched = codeIndex++ == code.length;
-      if (matched) {
-        return args;
+      /* TODO: Assertion:
+      if (createConcreteMnemonic(args) == null) {
+        return null;
       }
-      return null;
+      */
+
+      // no more bits in genericOpCodeBits to verify
+      boolean matchesLength = codeIndex++ == code.length;
+      if (!matchesLength) {
+        return null;
+      }
+
+      addActionsForArgs(actions, args);
+      return actions; // TODO: check: resolution != null
     }
 
     protected int getArg(Arguments args, char argName) {
@@ -3289,20 +3319,113 @@ public class Z80 implements CPU {
     }
   };
 
+  private static class DecodeCompletionActions {
+    private static interface Action {
+      public void apply(CodeFetcher codeFetcher, Arguments args);
+    }
+
+    private static class ConstantAction implements Action {
+      private int varIndex;
+      private int value;
+
+      public ConstantAction(int varIndex, int value) {
+        this.varIndex = varIndex;
+        this.value = value;
+      }
+
+      public void apply(CodeFetcher codeFetcher, Arguments args) {
+        args.setArg(varIndex, value);
+      }
+    }
+
+    private static class BitsShiftLeftAction implements Action {
+      private int varIndex;
+      private int opCodeByteIndex;
+      private int shift;
+      private int mask;
+
+      public BitsShiftLeftAction(int varIndex, int opCodeByteIndex,
+                                 int shift, int mask) {
+        this.varIndex = varIndex;
+        this.opCodeByteIndex = opCodeByteIndex;
+        this.shift = shift;
+        this.mask = mask;
+      }
+
+      public void apply(CodeFetcher codeFetcher, Arguments args) {
+        int value = codeFetcher.fetchByte(opCodeByteIndex);
+        value <<= shift;
+        value &= mask;
+        args.setArg(varIndex, value);
+      }
+    }
+
+    private static class BitsShiftRightAction implements Action {
+      private int varIndex;
+      private int opCodeByteIndex;
+      private int shift;
+      private int mask;
+
+      public BitsShiftRightAction(int varIndex, int opCodeByteIndex,
+                                  int shift, int mask) {
+        this.varIndex = varIndex;
+        this.opCodeByteIndex = opCodeByteIndex;
+        this.shift = shift;
+        this.mask = mask;
+      }
+
+      public void apply(CodeFetcher codeFetcher, Arguments args) {
+        int value = codeFetcher.fetchByte(opCodeByteIndex);
+        value >>>= shift;
+        value &= mask;
+        args.setArg(varIndex, value);
+      }
+    }
+
+    private List<Action> actions;
+
+    private DecodeCompletionActions() {
+      actions = new ArrayList<Action>();
+    }
+
+    public void addConstant(int varIndex, int value) {
+      actions.add(new ConstantAction(varIndex, value));
+    }
+
+    public void addBitsShiftLeft(int varIndex, int opCodeByteIndex,
+                                 int shift, int mask) {
+      actions.add(new BitsShiftLeftAction(varIndex, opCodeByteIndex,
+                                          shift, mask));
+    }
+
+    public void addBitsShiftRight(int varIndex, int opCodeByteIndex,
+                                  int shift, int mask) {
+      actions.add(new BitsShiftRightAction(varIndex, opCodeByteIndex,
+                                           shift, mask));
+    }
+
+    public void apply(CodeFetcher codeFetcher, Arguments args)
+    {
+      for (Action action : actions) {
+        action.apply(codeFetcher, args);
+      }
+    }
+  }
+
   private static interface DecodeTableEntry {
     PrecompiledGenericOperation findGenericOperation(CodeFetcher codeFetcher);
   }
 
   private static class PrecompiledGenericOperation implements DecodeTableEntry {
     GenericOperation genericOperation;
-    Arguments args;
+    DecodeCompletionActions actions;
     int precompiledBytes;
 
     public PrecompiledGenericOperation(GenericOperation genericOperation,
-                                       Arguments args,
+                                       DecodeCompletionActions actions,
                                        int precompiledBytes) {
       this.genericOperation = genericOperation;
-      this.args = args;
+      this.actions = actions;
       this.precompiledBytes = precompiledBytes;
     }
 
@@ -3310,8 +3433,9 @@ public class Z80 implements CPU {
       return genericOperation;
     }
 
-    public Arguments getArguments() {
-      return args;
+    public void apply(CodeFetcher codeFetcher, Arguments args)
+    {
+      actions.apply(codeFetcher, args);
     }
 
     public int getPrecompiledBytes() {
@@ -3355,11 +3479,11 @@ public class Z80 implements CPU {
       for (int i = 0; i < 256; i++) {
 	matchingSet.setSize(0);
 	code[code.length - 1] = i;
-        Arguments matchedArgs = null;
+        DecodeCompletionActions matchedActions = null;
 	for (GenericOperation genericOperation : availableOperations) {
-          Arguments args = genericOperation.tryMatch(code);
-	  if (args != null) {
-            if (matchedArgs == null) matchedArgs = args;
+          DecodeCompletionActions actions = genericOperation.tryMatch(code);
+	  if (actions != null) {
+            if (matchedActions == null) matchedActions = actions;
 	    matchingSet.addElement(genericOperation);
           }
 	}
@@ -3375,7 +3499,7 @@ public class Z80 implements CPU {
 	  // exactly one matching mnemonic found => gotcha!
           PrecompiledGenericOperation entry =
             new PrecompiledGenericOperation(matchingSet.elementAt(0),
-                                            matchedArgs, code.length);
+                                            matchedActions, code.length);
 	  entries[i] = entry;
           if (DEBUG_OPERATIONS) {
             System.out.print("MATCHING OP: ");
@@ -3397,7 +3521,7 @@ public class Z80 implements CPU {
 	     */
             PrecompiledGenericOperation entry =
               new PrecompiledGenericOperation(matchingSet.elementAt(0),
-                                              matchedArgs, code.length);
+                                              matchedActions, code.length);
 	    entries[i] = entry;
             if (DEBUG_OPERATIONS) {
               System.out.print("MATCHING OP: ");
@@ -3442,14 +3566,7 @@ public class Z80 implements CPU {
     PrecompiledGenericOperation precompiledGenericOperation =
       decodeTable.findGenericOperation(codeFetcher);
     if (precompiledGenericOperation != null) {
-      GenericOperation genericOperation =
-        precompiledGenericOperation.getGenericOperation();
-      Arguments args =
-        precompiledGenericOperation.getArguments();
-      int precompiledBytes =
-        precompiledGenericOperation.getPrecompiledBytes();
-      concreteOperation.instantiate(genericOperation, args,
-                                    precompiledBytes, codeFetcher);
+      concreteOperation.instantiate(precompiledGenericOperation, codeFetcher);
     } else {
       /* invalid opcode */
       throw
