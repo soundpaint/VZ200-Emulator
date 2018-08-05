@@ -3281,14 +3281,36 @@ public class Z80 implements CPU {
     }
   };
 
-  private static class DecodeTable {
+  private static interface DecodeTableEntry {
+    PrecompiledGenericOperation findGenericOperation(CodeFetcher codeFetcher);
+  }
+
+  private static class PrecompiledGenericOperation implements DecodeTableEntry {
+    GenericOperation genericOperation;
+
+    public PrecompiledGenericOperation(GenericOperation genericOperation) {
+      this.genericOperation = genericOperation;
+    }
+
+    public GenericOperation getGenericOperation() {
+      return genericOperation;
+    }
+
+    public PrecompiledGenericOperation
+      findGenericOperation(CodeFetcher codeFetcher)
+    {
+      return this;
+    }
+  }
+
+  private static class DecodeTable implements DecodeTableEntry {
     /**
      * For each op-code byte 0..255, this table contains the according
      * GenericOperation or, if there is no unique GenericOperation for
      * the op-code byte, a nested DecodeTable object that also
      * encounters the subsequent op-code byte.
      */
-    private Object[] entries;
+    private DecodeTableEntry[] entries;
 
     private static final boolean DEBUG_OPERATIONS = false;
 
@@ -3306,7 +3328,7 @@ public class Z80 implements CPU {
       int[] code = new int[codePrefix.length + 1];
       for (int i = 0; i < codePrefix.length; i++)
 	code[i] = codePrefix[i];
-      entries = new Object[256];
+      entries = new DecodeTableEntry[256];
       Vector<GenericOperation> matchingSet = new Vector<GenericOperation>();
       for (int i = 0; i < 256; i++) {
 	matchingSet.setSize(0);
@@ -3325,7 +3347,9 @@ public class Z80 implements CPU {
           }
 	} else if (matchingSet.size() == 1) {
 	  // exactly one matching mnemonic found => gotcha!
-	  entries[i] = matchingSet.elementAt(0);
+          PrecompiledGenericOperation entry =
+            new PrecompiledGenericOperation(matchingSet.elementAt(0));
+	  entries[i] = entry;
           if (DEBUG_OPERATIONS) {
             System.out.print("MATCHING OP: ");
             System.out.print(opCodeAsHexBytes(code));
@@ -3344,7 +3368,9 @@ public class Z80 implements CPU {
 	     * than the other ones, and thus it is the correct one.
 	     * We print a warning.
 	     */
-	    entries[i] = matchingSet.elementAt(0);
+            PrecompiledGenericOperation entry =
+              new PrecompiledGenericOperation(matchingSet.elementAt(0));
+	    entries[i] = entry;
             if (DEBUG_OPERATIONS) {
               System.out.print("MATCHING OP: ");
               System.out.print(opCodeAsHexBytes(code));
@@ -3364,15 +3390,13 @@ public class Z80 implements CPU {
       }
     }
 
-    public GenericOperation findGenericOperation(CodeFetcher codeFetcher) {
+    public PrecompiledGenericOperation
+      findGenericOperation(CodeFetcher codeFetcher)
+    {
       int codeByte = codeFetcher.fetchNextByte();
-      Object operationOrTable = entries[codeByte];
-      if (operationOrTable instanceof GenericOperation)
-	return (GenericOperation)operationOrTable;
-      if (operationOrTable == null)
-	return null; /* invalid opcode */
-      DecodeTable decodeTable = (DecodeTable)operationOrTable;
-      return decodeTable.findGenericOperation(codeFetcher);
+      DecodeTableEntry entry = entries[codeByte];
+      if (entry == null) return null; /* invalid opcode */
+      return entry.findGenericOperation(codeFetcher);
     }
   }
 
@@ -3387,11 +3411,13 @@ public class Z80 implements CPU {
     throws CPU.MismatchException
   {
     codeFetcher.reset();
-    GenericOperation genericOperation =
+    PrecompiledGenericOperation precompiledGenericOperation =
       decodeTable.findGenericOperation(codeFetcher);
-    if (genericOperation != null)
+    if (precompiledGenericOperation != null) {
+      GenericOperation genericOperation =
+        precompiledGenericOperation.getGenericOperation();
       concreteOperation.instantiate(genericOperation, codeFetcher);
-    else {
+    } else {
       /* invalid opcode */
       throw
 	new CPU.MismatchException("no matching operation found [" +
