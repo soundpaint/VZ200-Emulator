@@ -780,11 +780,11 @@ public class Z80 implements CPU {
 	switch (genericOpCodeBit = genericOperation.genericOpCodeBits[i]) {
 	  case 0:
 	    if (concreteOpCodeBit != 0)
-	      throw new CPU.MismatchException();
+	      throw new CPU.MismatchException("bit 0 expected @" + i);
 	    break;
 	  case 1:
 	    if (concreteOpCodeBit == 0)
-	      throw new CPU.MismatchException();
+	      throw new CPU.MismatchException("bit 1 expected @" + i);
 	    break;
 	  default:
 	    int argValue = args.getArg(genericOpCodeBit - 2);
@@ -3281,7 +3281,7 @@ public class Z80 implements CPU {
     }
   };
 
-  private class DecodeTable {
+  private static class DecodeTable {
     /**
      * For each op-code byte 0..255, this table contains the according
      * GenericOperation or, if there is no unique GenericOperation for
@@ -3289,6 +3289,16 @@ public class Z80 implements CPU {
      * encounters the subsequent op-code byte.
      */
     private Object[] operations;
+
+    private static final boolean DEBUG_OPERATIONS = false;
+
+    private static String opCodeAsHexBytes(int[] code)
+    {
+      StringBuffer s = new StringBuffer();
+      for (int j = 0; j < code.length; j++)
+        s.append(Util.hexByteStr(code[j]) + " ");
+      return String.format("%1$-16s", s);
+    }
 
     public DecodeTable(GenericOperation[] availableOperations,
 		       int[] codePrefix)
@@ -3306,20 +3316,23 @@ public class Z80 implements CPU {
 	    matchingSet.addElement(availableOperations[j]);
 	}
 	if (matchingSet.size() == 0) {
-	  // no matching mnemonic found => this is an invalid opcode
+	  // no matching mnemonic found => this is an unsupported opcode
 	  operations[i] = null;
-	  //for (int j = 0; j < code.length; j++)
-	  //  System.out.print(Util.hexByteStr(code[j]) + " ");
-	  //System.out.println("no matching mnemonic found");
+          if (DEBUG_OPERATIONS) {
+            System.out.print("MATCHING OP: ");
+            System.out.print(opCodeAsHexBytes(code));
+            System.out.println("-- INFO: no matching mnemonic found");
+          }
 	} else if (matchingSet.size() == 1) {
 	  // exactly one matching mnemonic found => gotcha!
 	  operations[i] = matchingSet.elementAt(0);
-	  //for (int j = 0; j < code.length; j++)
-	  //  System.out.print(Util.hexByteStr(code[j]) + " ");
-	  //System.out.println(operations[i]);
+          if (DEBUG_OPERATIONS) {
+            System.out.print("MATCHING OP: ");
+            System.out.print(opCodeAsHexBytes(code));
+            System.out.println(operations[i]);
+          }
 	} else {
 	  //multiple matching mnemonics found
-
 	  GenericOperation[] matchingSetArray =
 	    matchingSet.toArray(new GenericOperation[0]);
 	  if (code.length * 8 == matchingSetArray[0].genericOpCodeBits.length) {
@@ -3332,13 +3345,16 @@ public class Z80 implements CPU {
 	     * We print a warning.
 	     */
 	    operations[i] = matchingSet.elementAt(0);
-	    for (int j = 0; j < code.length; j++)
-	      System.out.print(Util.hexByteStr(code[j]) + " ");
-	    System.out.println("WARNING: Multiple matches: {");
-	    for (int j = 0; j < matchingSetArray.length; j++)
-	      System.out.println(matchingSetArray[j]);
-	    System.out.println("}");
-	    System.out.println("Preferring " + matchingSetArray[0]);
+            if (DEBUG_OPERATIONS) {
+              System.out.print("MATCHING OP: ");
+              System.out.print(opCodeAsHexBytes(code));
+              System.out.println("-- ERROR: Multiple matches: {");
+              for (GenericOperation genericOperation : matchingSetArray)
+                System.out.println(genericOperation);
+              System.out.println("}");
+              System.out.println("Please the set of operation codes!");
+              System.out.println("Preferring " + matchingSetArray[0]);
+            }
 	  } else {
 	    // need to examine another byte of code differentiate
 	    // between remaining mnemonics
