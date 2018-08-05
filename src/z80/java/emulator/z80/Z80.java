@@ -3288,7 +3288,7 @@ public class Z80 implements CPU {
      * the op-code byte, a nested DecodeTable object that also
      * encounters the subsequent op-code byte.
      */
-    private Object[] operations;
+    private Object[] entries;
 
     private static final boolean DEBUG_OPERATIONS = false;
 
@@ -3306,7 +3306,7 @@ public class Z80 implements CPU {
       int[] code = new int[codePrefix.length + 1];
       for (int i = 0; i < codePrefix.length; i++)
 	code[i] = codePrefix[i];
-      operations = new Object[256];
+      entries = new Object[256];
       Vector<GenericOperation> matchingSet = new Vector<GenericOperation>();
       for (int i = 0; i < 256; i++) {
 	matchingSet.setSize(0);
@@ -3317,7 +3317,7 @@ public class Z80 implements CPU {
 	}
 	if (matchingSet.size() == 0) {
 	  // no matching mnemonic found => this is an unsupported opcode
-	  operations[i] = null;
+	  entries[i] = null;
           if (DEBUG_OPERATIONS) {
             System.out.print("MATCHING OP: ");
             System.out.print(opCodeAsHexBytes(code));
@@ -3325,11 +3325,11 @@ public class Z80 implements CPU {
           }
 	} else if (matchingSet.size() == 1) {
 	  // exactly one matching mnemonic found => gotcha!
-	  operations[i] = matchingSet.elementAt(0);
+	  entries[i] = matchingSet.elementAt(0);
           if (DEBUG_OPERATIONS) {
             System.out.print("MATCHING OP: ");
             System.out.print(opCodeAsHexBytes(code));
-            System.out.println(operations[i]);
+            System.out.println(entries[i]);
           }
 	} else {
 	  //multiple matching mnemonics found
@@ -3344,7 +3344,7 @@ public class Z80 implements CPU {
 	     * than the other ones, and thus it is the correct one.
 	     * We print a warning.
 	     */
-	    operations[i] = matchingSet.elementAt(0);
+	    entries[i] = matchingSet.elementAt(0);
             if (DEBUG_OPERATIONS) {
               System.out.print("MATCHING OP: ");
               System.out.print(opCodeAsHexBytes(code));
@@ -3358,7 +3358,7 @@ public class Z80 implements CPU {
 	  } else {
 	    // need to examine another byte of code differentiate
 	    // between remaining mnemonics
-	    operations[i] = new DecodeTable(matchingSetArray, code);
+	    entries[i] = new DecodeTable(matchingSetArray, code);
 	  }
 	}
       }
@@ -3366,7 +3366,7 @@ public class Z80 implements CPU {
 
     public GenericOperation findGenericOperation(CodeFetcher codeFetcher) {
       int codeByte = codeFetcher.fetchNextByte();
-      Object operationOrTable = operations[codeByte];
+      Object operationOrTable = entries[codeByte];
       if (operationOrTable instanceof GenericOperation)
 	return (GenericOperation)operationOrTable;
       if (operationOrTable == null)
