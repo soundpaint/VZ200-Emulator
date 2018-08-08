@@ -90,7 +90,7 @@ public class Z80 implements CPU {
     }
 
     public int fetchByte(int index) {
-      if (size <= index) {
+      if (index >= size) {
         pos = size;
         while (pos <= index) {
           fetchNextByte();
@@ -767,45 +767,16 @@ public class Z80 implements CPU {
 			    CodeFetcher codeFetcher)
       throws CPU.MismatchException
     {
-      int precompiledBytes = precompiledGenericOperation.getPrecompiledBytes();
       concreteOpCode.reset();
       precompiledGenericOperation.apply(codeFetcher, args);
-      genericOperation =
-        precompiledGenericOperation.getGenericOperation();
-      int concreteOpCodeByte = 0x00;
-
+      genericOperation = precompiledGenericOperation.getGenericOperation();
       codeFetcher.restart();
-      for (int i = 0; i < precompiledBytes; i++) {
-        concreteOpCodeByte = codeFetcher.fetchNextByte();
+      //int precompiledBytes = precompiledGenericOperation.getPrecompiledBytes();
+      for (int i = 0; //precompiledBytes + 1;
+           i < genericOperation.genericOpCodeBits.length >>> 3;
+           i++) {
+        int concreteOpCodeByte = codeFetcher.fetchNextByte();
         concreteOpCode.addByte(concreteOpCodeByte);
-      }
-
-      // compute concrete op-code and args
-      for (int i = 0x8 * precompiledBytes;
-           i < genericOperation.genericOpCodeBits.length; i++) {
-	if ((i & 0x7) == 0) {
-	  concreteOpCodeByte = codeFetcher.fetchNextByte();
-	  concreteOpCode.addByte(concreteOpCodeByte);
-	}
-	int concreteOpCodeBit = concreteOpCodeByte & SET_MASK[7 - (i & 0x7)];
-	int genericOpCodeBit;
-	switch (genericOpCodeBit = genericOperation.genericOpCodeBits[i]) {
-	  case 0:
-	    if (concreteOpCodeBit != 0)
-	      throw new CPU.MismatchException("bit 0 expected @" + i);
-	    break;
-	  case 1:
-	    if (concreteOpCodeBit == 0)
-	      throw new CPU.MismatchException("bit 1 expected @" + i);
-	    break;
-	  default:
-	    int argValue = args.getArg(genericOpCodeBit - 2);
-	    argValue <<= 1;
-	    if (concreteOpCodeBit != 0)
-	      argValue |= 0x1;
-	    args.setArg(genericOpCodeBit - 2, argValue);
-	    break;
-	}
       }
       genericOperation.swapEndiansOnAllArgs(args);
     }
@@ -1041,6 +1012,60 @@ public class Z80 implements CPU {
 
       addActionsForArgs(actions, args);
       return actions; // TODO: check: resolution != null
+    }
+
+    public void compileDynArgsDecoding(DecodeCompletionActions actions,
+                                       int precompiledBytes) {
+      int genericOpCodeBytes = genericOpCodeBits.length / 8;
+      for (int instructionByte = precompiledBytes;
+           instructionByte < genericOpCodeBytes; instructionByte++) {
+        compileDynArgsDecodingForByte(actions, instructionByte);
+      }
+    }
+
+    private void compileDynArgsDecodingForByte(DecodeCompletionActions actions,
+                                               int instructionByte) {
+      int bitStart = instructionByte * 8;
+      int bitEnd = bitStart + 8;
+      int prevGenericOpCodeBit = 0;
+      int contiguousArgBits = 0;
+      for (int bit = bitStart; bit < bitEnd; bit++) {
+        int genericOpCodeBit = genericOpCodeBits[bit];
+	switch (genericOpCodeBit) {
+	  case 0: // '0'
+	  case 1: // '1'
+            contiguousArgBits = 0;
+            break; // not a dynamic argument bit => skip
+	  default: // 'a'..'z'
+            if (contiguousArgBits == 0) {
+              contiguousArgBits++;
+            } else if (prevGenericOpCodeBit == genericOpCodeBit) {
+              contiguousArgBits++;
+            } else {
+              addDynArgsDecodingAction(actions, instructionByte,
+                                       genericOpCodeBit - 2,
+                                       bit & 0x7,
+                                       contiguousArgBits);
+              contiguousArgBits = 0;
+            }
+        }
+        prevGenericOpCodeBit = genericOpCodeBit;
+      }
+      if (contiguousArgBits > 0) {
+        addDynArgsDecodingAction(actions, instructionByte,
+                                 prevGenericOpCodeBit - 2,
+                                 0x7,
+                                 contiguousArgBits);
+      }
+    }
+
+    private void addDynArgsDecodingAction(DecodeCompletionActions actions,
+                                          int opCodeByteIndex,
+                                          int varIndex,
+                                          int bitEnd, int bitSize) {
+      int opCodeByteShiftRight = 7 - bitEnd;
+      actions.appendBitsToVar(varIndex, bitSize, opCodeByteIndex,
+                              opCodeByteShiftRight);
     }
 
     protected int getArg(Arguments args, char argName) {
@@ -3336,49 +3361,43 @@ public class Z80 implements CPU {
       public void apply(CodeFetcher codeFetcher, Arguments args) {
         args.setArg(varIndex, value);
       }
+
+      public String toString() {
+        return "ConstantAction{var='" + (char)(varIndex + 'a') +
+          "', value=" + value + "}";
+      }
     }
 
-    private static class BitsShiftLeftAction implements Action {
+    private static class AppendBitsToVarAction implements Action {
       private int varIndex;
+      private int bitSize;
       private int opCodeByteIndex;
-      private int shift;
-      private int mask;
+      private int opCodeByteShiftRight;
 
-      public BitsShiftLeftAction(int varIndex, int opCodeByteIndex,
-                                 int shift, int mask) {
+      private static int[] MASK = { 0x00, 0x01, 0x03, 0x07,
+                                    0x0f, 0x1f, 0x3f, 0x7f, 0xff };
+
+      public AppendBitsToVarAction(int varIndex, int bitSize,
+                                   int opCodeByteIndex,
+                                   int opCodeByteShiftRight) {
         this.varIndex = varIndex;
+        this.bitSize = bitSize;
         this.opCodeByteIndex = opCodeByteIndex;
-        this.shift = shift;
-        this.mask = mask;
+        this.opCodeByteShiftRight = opCodeByteShiftRight;
       }
 
       public void apply(CodeFetcher codeFetcher, Arguments args) {
         int value = codeFetcher.fetchByte(opCodeByteIndex);
-        value <<= shift;
-        value &= mask;
-        args.setArg(varIndex, value);
-      }
-    }
-
-    private static class BitsShiftRightAction implements Action {
-      private int varIndex;
-      private int opCodeByteIndex;
-      private int shift;
-      private int mask;
-
-      public BitsShiftRightAction(int varIndex, int opCodeByteIndex,
-                                  int shift, int mask) {
-        this.varIndex = varIndex;
-        this.opCodeByteIndex = opCodeByteIndex;
-        this.shift = shift;
-        this.mask = mask;
+        int arg = args.getArg(varIndex);
+        arg = arg <<= bitSize;
+        arg |= (value >>>= opCodeByteShiftRight) & MASK[bitSize];
+        args.setArg(varIndex, arg);
       }
 
-      public void apply(CodeFetcher codeFetcher, Arguments args) {
-        int value = codeFetcher.fetchByte(opCodeByteIndex);
-        value >>>= shift;
-        value &= mask;
-        args.setArg(varIndex, value);
+      public String toString() {
+        return "AppendBitsToVarAction{var='" + (char)(varIndex + 'a') +
+          "', bitSize=" + bitSize + ", byteIndex=" + opCodeByteIndex +
+          ", shift-right=" + opCodeByteShiftRight + "}";
       }
     }
 
@@ -3392,16 +3411,13 @@ public class Z80 implements CPU {
       actions.add(new ConstantAction(varIndex, value));
     }
 
-    public void addBitsShiftLeft(int varIndex, int opCodeByteIndex,
-                                 int shift, int mask) {
-      actions.add(new BitsShiftLeftAction(varIndex, opCodeByteIndex,
-                                          shift, mask));
-    }
-
-    public void addBitsShiftRight(int varIndex, int opCodeByteIndex,
-                                  int shift, int mask) {
-      actions.add(new BitsShiftRightAction(varIndex, opCodeByteIndex,
-                                           shift, mask));
+    public void appendBitsToVar(int varIndex, int bitCount,
+                                int opCodeByteIndex,
+                                int opCodeByteShiftRight)
+    {
+      actions.add(new AppendBitsToVarAction(varIndex, bitCount,
+                                            opCodeByteIndex,
+                                            opCodeByteShiftRight));
     }
 
     public void apply(CodeFetcher codeFetcher, Arguments args)
@@ -3409,6 +3425,17 @@ public class Z80 implements CPU {
       for (Action action : actions) {
         action.apply(codeFetcher, args);
       }
+    }
+
+    public String toString() {
+      StringBuffer s = new StringBuffer();
+      for (Action action : actions) {
+        if (s.length() > 0) {
+          s.append(", ");
+        }
+        s.append(action);
+      }
+      return "DecodeCompleteActions={" + s + "}";
     }
   }
 
@@ -3497,8 +3524,10 @@ public class Z80 implements CPU {
           }
 	} else if (matchingSet.size() == 1) {
 	  // exactly one matching mnemonic found => gotcha!
+          GenericOperation genericOperation = matchingSet.elementAt(0);
+          genericOperation.compileDynArgsDecoding(matchedActions, code.length);
           PrecompiledGenericOperation entry =
-            new PrecompiledGenericOperation(matchingSet.elementAt(0),
+            new PrecompiledGenericOperation(genericOperation,
                                             matchedActions, code.length);
 	  entries[i] = entry;
           if (DEBUG_OPERATIONS) {
