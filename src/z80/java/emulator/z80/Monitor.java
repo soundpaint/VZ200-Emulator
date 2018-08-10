@@ -244,72 +244,24 @@ public class Monitor {
       throw new ParseError("end of line expected");
   }
 
+  private static final int KBD_CHECK_COUNT_LIMIT = 1024;
+
   /**
-   * The time (as returned by java.lang.System.nanoTime()) when the next
-   * CPU cycle starts.
+   * Turn off, if you want to get less CPU load.  Turn on, if you
+   * require high precision in the point of time of CPU instruction
+   * execution.
    */
-  private long time;
+  private static final boolean BUSY_WAIT = true;
 
-  private void resetTiming() {
-    time = System.nanoTime();
-  }
-
-  private long getLag() {
-    return System.nanoTime() - time;
-  }
-
-  private final static long CHECK_KBD_PERIOD = 50000000; // [ns]
-  private final static long FS_UP_PERIOD =     19000000; // [ns]
-  private final static long FS_DOWN_PERIOD =    1000000; // [ns]
-
-  private static enum
-    EVENT_TYPE {CPU_CYCLE, KBD_CHECK, FS_ACTIVATE, FS_DEACTIVATE};
-
-  private static class EventQueue {
-    private final static int MAX_LENGTH = 10;
-
-    private long[] time;
-    private EVENT_TYPE[] type;
-    private int size;
-
-    public EventQueue() {
-      time = new long[MAX_LENGTH];
-      type = new EVENT_TYPE[MAX_LENGTH];
-      size = 0;
-    }
-
-    public boolean isDue() {
-      return
-	size > 0 &&
-	System.nanoTime() >= time[size - 1];
-    }
-
-    public void add(long time_, EVENT_TYPE type_) {
-      //System.out.println("add " + time_ + " / " + type_);
-      assert size < MAX_LENGTH : "queue overflow";
-      time[size] = time_;
-      type[size] = type_;
-      for (int i = size - 1; i >= 0; i--) {
-	if (time[i + 1] > time[i]) {
-	  time_ = time[i]; time[i] = time[i + 1]; time[i + 1] = time_;
-	  type_ = type[i]; type[i] = type[i + 1]; type[i + 1] = type_;
-	} else {
-	  break;
-	}
-      }
-      size++;
-    }
-
-    public EVENT_TYPE nextEvent() {
-      //System.out.println("remove " + time[size - 1] + " / " + type[size - 1]);
-      assert size > 0 : "queue underflow";
-      return type[--size];
-    }
-
-    public void clear() {
-      size = 0;
-    }
-  }
+  /**
+   * If BUSY_WAIT is turned on, use BUSY_WAIT_TIME to fine-control
+   * timing precision.  The lower the value, the higher the CPU load,
+   * but the better timing precision.  If BUSY_WAIT is turned off,
+   * this variable is unused.  Note that the precision of the idle
+   * statistics, that is printed after executing code, also increases
+   * with increasing the busy wait time value.
+   */
+  private static final long BUSY_WAIT_TIME = 1000;
 
   private void go(boolean callSub) {
     int savedRegSP = 0;
@@ -325,61 +277,43 @@ public class Monitor {
     } else {
       // continue whereever regPC currently points to
     }
-    boolean pause = false;
+    boolean done = false;
+    int kbdCheckCount = 0;
+    long startTime = System.nanoTime();
+    long cpuTime = startTime;
+    long idleTime = 0;
+    long busyTime = 0;
     long lag = 0;
-    EventQueue eventQueue = new EventQueue();
     try {
       try {
 	CPU.ConcreteOperation op;
-	eventQueue.clear();
-	resetTiming();
-	long cpuTime = time;
-	long kbdCheckTime = time;
-	long fsTime = time;
-	eventQueue.add(cpuTime, EVENT_TYPE.CPU_CYCLE);
-	eventQueue.add(kbdCheckTime, EVENT_TYPE.KBD_CHECK);
-	eventQueue.add(fsTime, EVENT_TYPE.FS_ACTIVATE);
-	while (!pause) {
-	  if (eventQueue.isDue()) {
-	    switch (eventQueue.nextEvent()) {
-	      case CPU_CYCLE:
-		op = cpu.fetchNextOperation();
-		op.execute();
-		if (!callSub || (regSP.getValue() != savedRegSP)) {
-		  cpuTime += op.getClockPeriods() * cpu.getTimePerClockPeriod();
-		  eventQueue.add(cpuTime, EVENT_TYPE.CPU_CYCLE);
-		} else {
-		  lag = getLag();
-		  pause = true;
-		}
-		break;
-	      case KBD_CHECK:
-		if (inputAvailable() > 0) {
-		  lag = getLag();
-		  pause = true;
-		} else {
-		  kbdCheckTime += CHECK_KBD_PERIOD;
-		  eventQueue.add(kbdCheckTime, EVENT_TYPE.KBD_CHECK);
-		}
-		break;
-	      case FS_ACTIVATE:
-		fsTime += FS_UP_PERIOD;
-		eventQueue.add(fsTime, EVENT_TYPE.FS_DEACTIVATE);
-		break;
-	      case FS_DEACTIVATE:
-		fsTime += FS_DOWN_PERIOD;
-		eventQueue.add(fsTime, EVENT_TYPE.FS_ACTIVATE);
-		break;
-	    }
+	while (!done) {
+          long nowTime = System.nanoTime();
+	  if (nowTime - cpuTime > 0) {
+            op = cpu.fetchNextOperation();
+            op.execute();
+            cpuTime += op.getClockPeriods() * cpu.getTimePerClockPeriod();
+            if (callSub && (regSP.getValue() == savedRegSP)) {
+              done = true;
+            }
+            if (kbdCheckCount++ >= KBD_CHECK_COUNT_LIMIT) {
+              done |= inputAvailable() > 0;
+              kbdCheckCount = 0;
+            }
+            lag = System.nanoTime() - cpuTime;
+            busyTime += System.nanoTime() - nowTime;
 	  } else {
-	    /*
-	    try {
-	      Thread.currentThread().sleep(1);
-	    } catch (InterruptedException e) {
-	      // ignore
-	    }
-	    //Thread.currentThread().yield();
-	    */
+            // busy wait
+            if (BUSY_WAIT) {
+              while (System.nanoTime() - nowTime < BUSY_WAIT_TIME);
+            } else {
+              try {
+                Thread.sleep(1);
+              } catch (InterruptedException e) {
+                // ignore
+              }
+            }
+            idleTime += System.nanoTime() - nowTime;
 	  }
 	}
       } catch (CPU.MismatchException e) {
@@ -391,7 +325,10 @@ public class Monitor {
       throw new InternalError(e.getMessage());
     }
     stdout.println("[paused]");
+    stdout.println("[busy_wait = " + BUSY_WAIT + "]");
     stdout.println("[lag = " + lag + "ns]");
+    stdout.printf("[idle = %3.2f%%]",
+                  100 * (idleTime / ((float)idleTime + busyTime)));
     stdout.println();
     id.parsed = false;
     num1.parsed = false;
