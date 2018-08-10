@@ -1,12 +1,15 @@
 package emulator.vz200;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Iterator;
@@ -21,8 +24,21 @@ import emulator.z80.RAMMemory;
 public class KeyboardPanel extends JPanel {
   private static final long serialVersionUID = 7317835440086946160L;
 
-  JButton buttons[][];
+  Button buttons[][];
   KeyboardMatrix matrix;
+
+  private class Button extends JButton {
+    private KeyboardMatrix.Key key;
+
+    public Button(ImageIcon icon, KeyboardMatrix.Key key) {
+      super(icon);
+      this.key = key;
+    }
+
+    public KeyboardMatrix.Key getKey() {
+      return key;
+    }
+  }
 
   private class KeyListener extends KeyAdapter {
     public void keyPressed(KeyEvent e) {
@@ -31,9 +47,6 @@ public class KeyboardPanel extends JPanel {
 	matrix.setSelected(key, true);
 	JButton button = buttons[key.getRow()][key.getColumn()];
 	button.setSelected(true);
-	// System.out.println("select " + key.labelKey); // DEBUG
-      } else {
-	// System.out.println("no VZ200 key for " + e.getKeyCode()); // DEBUG
       }
     }
 
@@ -43,8 +56,32 @@ public class KeyboardPanel extends JPanel {
 	matrix.setSelected(key, false);
 	JButton button = buttons[key.getRow()][key.getColumn()];
 	button.setSelected(false);
-      } else {
-	// System.out.println("no VZ200 key for " + e.getKeyCode()); // DEBUG
+      }
+    }
+  }
+
+  private class MouseListener extends MouseAdapter {
+    public void mousePressed(MouseEvent e) {
+      if (e.getButton() == MouseEvent.BUTTON1) {
+        Component component = e.getComponent();
+        if (component instanceof Button) {
+          Button button = (Button)component;
+          KeyboardMatrix.Key key = button.getKey();
+          matrix.setSelected(key, true);
+          button.setSelected(true);
+        }
+      }
+    }
+
+    public void mouseReleased(MouseEvent e) {
+      if (e.getButton() == MouseEvent.BUTTON1) {
+        Component component = e.getComponent();
+        if (component instanceof Button) {
+          Button button = (Button)component;
+          KeyboardMatrix.Key key = button.getKey();
+          matrix.setSelected(key, false);
+          button.setSelected(false);
+        }
       }
     }
   }
@@ -132,12 +169,12 @@ public class KeyboardPanel extends JPanel {
     }
   }
 
-  private void addKey(KeyboardMatrix.Key key) {
+  private void addKey(KeyboardMatrix.Key key, MouseListener mouseListener) {
     if (key != null) {
       Dimension size = new Dimension(Math.round(50 * key.getWidth()), 50);
       Image defaultImage = createKeyImage(key, size, false);
       Image selectedImage = createKeyImage(key, size, true);
-      JButton button = new JButton(new ImageIcon(defaultImage));
+      Button button = new Button(new ImageIcon(defaultImage), key);
       button.setSelectedIcon(new ImageIcon(selectedImage));
       buttons[key.getRow()][key.getColumn()] = button;
       button.setForeground(LABEL_FG_COLOR);
@@ -146,6 +183,7 @@ public class KeyboardPanel extends JPanel {
       button.setAlignmentY(0.13f + (float)key.getYPos() / 5.0f);
       button.setPreferredSize(size);
       button.setFocusable(false);
+      button.addMouseListener(mouseListener);
       add(button);
 
       JLabel topLabel;
@@ -191,11 +229,12 @@ public class KeyboardPanel extends JPanel {
     this.matrix = matrix;
     int rowCount = KeyboardMatrix.getRowCount();
     int columnCount = KeyboardMatrix.getColumnCount();
-    buttons = new JButton[rowCount][columnCount];
+    buttons = new Button[rowCount][columnCount];
     addColorLabels();
+    MouseListener mouseListener = new MouseListener();
     Iterator<KeyboardMatrix.Key> keys = KeyboardMatrix.getKeyIterator();
     while (keys.hasNext()) {
-      addKey(keys.next());
+      addKey(keys.next(), mouseListener);
     }
     setBackground(PANEL_BG_COLOR);
     ProportionalLayout layout = new ProportionalLayout(this);
