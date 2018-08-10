@@ -12,8 +12,6 @@ import java.io.PushbackInputStream;
 import java.io.IOException;
 
 public class Monitor {
-  private final static boolean DEBUG = false;
-
   private CPU cpu;
   private CPU.Memory memory;
   private CPU.Memory io;
@@ -30,7 +28,7 @@ public class Monitor {
   }
 
   // monitor status
-  private int startaddr, endaddr;
+  private int startaddr;
 
   // command line
   private History history;
@@ -39,13 +37,13 @@ public class Monitor {
   private char command;
 
   private class Number {
-    boolean parsed;
-    int value;
+    private boolean parsed;
+    private int value;
   }
 
-  private class Id {
-    boolean parsed;
-    String value;
+  private class Text {
+    private boolean parsed;
+    private String value;
   }
 
   private static boolean isWhiteSpace(char ch) {
@@ -53,10 +51,36 @@ public class Monitor {
   }
 
   private static boolean isPrintableChar(char ch) {
-    return ((ch >= ' ') && (ch <= '~'));
+    return (ch >= ' ') && (ch <= '~');
   }
 
-  private void skip() {
+  private static boolean isAsciiLetter(char ch) {
+    return
+      ((ch >= 'A') && (ch <= 'Z')) ||
+      ((ch >= 'a') && (ch <= 'z'));
+  }
+
+  private static boolean isDigit(char ch) {
+    return (ch >= '0') && (ch <= '9');
+  }
+
+  private static boolean isFileNameChar(char ch) {
+    return
+      isAsciiLetter(ch) ||
+      isDigit(ch) ||
+      (ch == '_') ||
+      (ch == '-') ||
+      (ch == '.');
+  }
+
+  private static boolean isRegNameChar(char ch) {
+    return
+      isAsciiLetter(ch) ||
+      isDigit(ch) ||
+      (ch == '\'');
+  }
+
+  private void skipWhiteSpace() {
     boolean stop = false;
     while ((pos < cmdLine.length()) && !stop) {
       if (isWhiteSpace(cmdLine.charAt(pos)))
@@ -67,12 +91,35 @@ public class Monitor {
   }
 
   private boolean eof() {
-    skip();
+    skipWhiteSpace();
     return pos >= cmdLine.length();
   }
 
-  private void parseNumber(Number num) throws ParseError {
-    skip();
+  private void parseEof() throws ParseError {
+    if (!eof())
+      throw new ParseError("end of line expected");
+  }
+
+  private static final String SYMBOL_ASSIGN = "=";
+  private static final String SYMBOL_TO = "-";
+
+  private void parseSymbol(String symbol) throws ParseError {
+    skipWhiteSpace();
+    if (symbol.isEmpty()) {
+      return;
+    }
+    int symbolPos;
+    for (symbolPos = 0; symbolPos < symbol.length(); symbolPos++) {
+      if (pos >= cmdLine.length()) break;
+      if (symbol.charAt(symbolPos) != cmdLine.charAt(pos)) break;
+      pos++;
+    }
+    if (symbolPos < symbol.length())
+      throw new ParseError("symbol '" + symbol + "' expected");
+  }
+
+  private boolean tryParseNumber(Number num) {
+    skipWhiteSpace();
     int value = 0;
     boolean stop = false;
     boolean parsed = false;
@@ -86,20 +133,26 @@ public class Monitor {
 	stop = true;
       }
     }
-    if (!parsed)
-      throw new ParseError("number expected");
-    num.value = value;
-    num.parsed = true;
+    if (parsed) {
+      num.value = value;
+      num.parsed = true;
+    }
+    return parsed;
   }
 
-  private void parseId(Id id) throws ParseError {
-    skip();
+  private void parseNumber(Number num) throws ParseError {
+    if (!tryParseNumber(num))
+      throw new ParseError("number expected");
+  }
+
+  private void parseRegName(Text regName) throws ParseError {
+    skipWhiteSpace();
     int startpos = pos;
     boolean stop = false;
     boolean parsed = false;
     while ((pos < cmdLine.length()) && !stop) {
       char ch = cmdLine.charAt(pos);
-      if (isPrintableChar(ch) && !isWhiteSpace(ch)) {
+      if (isRegNameChar(ch) && !isWhiteSpace(ch)) {
 	parsed = true;
 	pos++;
       }	else {
@@ -107,9 +160,29 @@ public class Monitor {
       }
     }
     if (!parsed)
-      throw new ParseError("id expected");
-    id.value = cmdLine.substring(startpos, pos);
-    id.parsed = true;
+      throw new ParseError("register name expected");
+    regName.value = cmdLine.substring(startpos, pos);
+    regName.parsed = true;
+  }
+
+  private void parseFileName(Text fileName) throws ParseError {
+    skipWhiteSpace();
+    int startpos = pos;
+    boolean stop = false;
+    boolean parsed = false;
+    while ((pos < cmdLine.length()) && !stop) {
+      char ch = cmdLine.charAt(pos);
+      if (isFileNameChar(ch) && !isWhiteSpace(ch)) {
+	parsed = true;
+	pos++;
+      }	else {
+	stop = true;
+      }
+    }
+    if (!parsed)
+      throw new ParseError("file name expected");
+    fileName.value = cmdLine.substring(startpos, pos);
+    fileName.parsed = true;
   }
 
   private char lineBuffer[];
@@ -153,7 +226,7 @@ public class Monitor {
   }
 
   private Number num1, num2;
-  private Id id;
+  private Text fileName, regName;
 
   private String[] script;
   private int scriptLineIndex;
@@ -193,45 +266,60 @@ public class Monitor {
     pos = 1;
     num1.parsed = false;
     num2.parsed = false;
-    id.parsed = false;
+    fileName.parsed = false;
+    regName.parsed = false;
     switch (command) {
       case 'g' :
-      case 'c' :
-      case 'b' :
       case 't' :
+      case 'd' :
+      case 'u' :
+	if (!eof()) {
+	  tryParseNumber(num1);
+	  if (!eof()) {
+            parseSymbol(SYMBOL_TO);
+            parseNumber(num2);
+          }
+	}
+        parseEof();
+	break;
+      case 'i' :
+      case 'o' :
       case 'e' :
       case 'a' :
-	if (!eof())
-	  parseNumber(num1);
-	break;
-      case 'u' :
-      case 'd' :
-	if (!eof()) {
-	  parseNumber(num1);
-	  if (!eof())
-	    parseNumber(num2);
-	}
+	if (!eof()) parseNumber(num1);
+        parseEof();
 	break;
       case 's' :
+	parseFileName(fileName);
+        parseSymbol(SYMBOL_ASSIGN);
 	parseNumber(num1);
+        parseSymbol(SYMBOL_TO);
 	parseNumber(num2);
-	parseId(id);
+        parseEof();
 	break;
       case 'l' :
 	parseNumber(num1);
-	parseId(id);
+        parseSymbol(SYMBOL_ASSIGN);
+	parseFileName(fileName);
+        parseEof();
 	break;
       case 'p' :
 	parseNumber(num1);
-	if (!eof())
+	if (!eof()) {
+          parseSymbol(SYMBOL_ASSIGN);
 	  parseNumber(num2);
+        }
+        parseEof();
 	break;
       case 'r' :
 	if (!eof()) {
-	  parseId(id);
-	  if (!eof())
-	    parseNumber(num1);
+	  parseRegName(regName);
+	  if (!eof()) {
+            parseSymbol(SYMBOL_ASSIGN);
+            parseNumber(num1);
+          }
 	}
+        parseEof();
 	break;
       case 'h' :
       case 'q' :
@@ -240,8 +328,7 @@ public class Monitor {
 	pos = 0;
 	throw new ParseError("invalid command");
     }
-    if (!eof())
-      throw new ParseError("end of line expected");
+    parseEof();
   }
 
   private static final int KBD_CHECK_COUNT_LIMIT = 1024;
@@ -263,44 +350,75 @@ public class Monitor {
    */
   private static final long BUSY_WAIT_TIME = 1000;
 
-  private void go(boolean callSub) {
-    int savedRegSP = 0;
-    stdout.println("press <enter> to pause");
-    if (callSub) {
-      stdout.println("[call sub: pausing upon break point " + regSP + "]");
-      savedRegSP = regSP.getValue();
-      cpu.doPUSH(regPC.getValue());
+  private void go(boolean trace, boolean singleStep, boolean stepOver) {
+    if (!singleStep) {
+      stdout.println("press <enter> to pause");
     }
+
     if (num1.parsed) {
       startaddr = num1.value;
       regPC.setValue(startaddr);
     } else {
       // continue whereever regPC currently points to
     }
+
+    boolean haveBreakPoint;
+    int breakPoint;
+    if (num2.parsed) {
+      haveBreakPoint = true;
+      breakPoint = num2.value;
+    } else if (singleStep) {
+      haveBreakPoint = true;
+      breakPoint = 0; // will be set later
+    } else {
+      haveBreakPoint = false;
+      breakPoint = 0; // unused
+    }
+
     boolean done = false;
     int kbdCheckCount = 0;
-    long startTime = System.nanoTime();
-    long cpuTime = startTime;
+    long startTime = 0;
+    long stopTime = 0;
+    long cpuTime = 0;
     long idleTime = 0;
     long busyTime = 0;
-    long lag = 0;
+    long jitter = 0;
+    long totalClockPeriods = 0;
     try {
       try {
-	CPU.ConcreteOperation op;
+	CPU.ConcreteOperation op = null;
+        startTime = System.nanoTime();
+        cpuTime = startTime;
 	while (!done) {
           long nowTime = System.nanoTime();
 	  if (nowTime - cpuTime > 0) {
             op = cpu.fetchNextOperation();
-            op.execute();
-            cpuTime += op.getClockPeriods() * cpu.getTimePerClockPeriod();
-            if (callSub && (regSP.getValue() == savedRegSP)) {
+            if (singleStep) {
+              if (stepOver) {
+                breakPoint = regPC.getValue();
+                op.execute();
+              } else {
+                op.execute();
+                breakPoint = regPC.getValue();
+              }
+            } else {
+              op.execute();
+            }
+            if (trace) {
+              printOperation(op, 0);
+              registeraccess();
+            }
+            int clockPeriods = op.getClockPeriods();
+            totalClockPeriods += clockPeriods;
+            cpuTime += clockPeriods * cpu.getTimePerClockPeriod();
+            if (haveBreakPoint && (regPC.getValue() == breakPoint)) {
               done = true;
             }
             if (kbdCheckCount++ >= KBD_CHECK_COUNT_LIMIT) {
               done |= inputAvailable() > 0;
               kbdCheckCount = 0;
             }
-            lag = System.nanoTime() - cpuTime;
+            jitter = System.nanoTime() - cpuTime;
             busyTime += System.nanoTime() - nowTime;
 	  } else {
             // busy wait
@@ -316,6 +434,11 @@ public class Monitor {
             idleTime += System.nanoTime() - nowTime;
 	  }
 	}
+        stopTime = System.nanoTime();
+        if (haveBreakPoint && !trace) {
+          printOperation(op, 0);
+          registeraccess();
+        }
       } catch (CPU.MismatchException e) {
 	System.err.println(e);
       }
@@ -324,76 +447,26 @@ public class Monitor {
     } catch (IOException e) {
       throw new InternalError(e.getMessage());
     }
-    stdout.println("[paused]");
-    stdout.println("[busy_wait = " + BUSY_WAIT + "]");
-    stdout.println("[lag = " + lag + "ns]");
-    stdout.printf("[idle = %3.2f%%]",
-                  100 * (idleTime / ((float)idleTime + busyTime)));
-    stdout.println();
-    id.parsed = false;
-    num1.parsed = false;
-    num2.parsed = false;
-    registeraccess();
-    startaddr = regPC.getValue();
-  }
-
-  private void traceUntil() {
-    if (num1.parsed) {
-      endaddr = num1.value;
-    }
-    CPU.ConcreteOperation op;
-    try {
-      while (startaddr != endaddr) {
-	// TODO: have to know that regPC is a short
-	stdout.print(Util.hexShortStr(startaddr) + "-  ");
-	op = cpu.fetchNextOperation();
-	printOperation(op);
-	op.execute();
-	registeraccess();
-	startaddr = regPC.getValue();
-        if (stdin.available() > 0) {
-          stdout.println("[paused]");
-          break;
-        }
+    if (!singleStep && !trace) {
+      stdout.printf("[paused]%n");
+      stdout.printf("[avg_speed = %.3fMhz]%n",
+                    1000.0 * totalClockPeriods / (stopTime - startTime));
+      stdout.printf("[busy_wait = %b]%n", BUSY_WAIT);
+      if (BUSY_WAIT) {
+        stdout.printf("[busy_wait_time = %.2fµs]%n", 0.001 * BUSY_WAIT_TIME);
       }
-    } catch (CPU.MismatchException e) {
-      System.err.println(e);
-    } catch (IOException e) {
-      throw new InternalError(e.getMessage());
+      stdout.printf("[latest_jitter = %.2fµs]%n", 0.001 * jitter);
+      stdout.printf("[avg_thread_load = %3.2f%%]%n",
+                    100 * (busyTime / ((float)idleTime + busyTime)));
+      registeraccess();
     }
-    id.parsed = false;
-    num1.parsed = false;
-    num2.parsed = false;
-  }
-
-  private void trace() {
-    if (num1.parsed) {
-      startaddr = num1.value;
-      regPC.setValue(startaddr);
-    } else {
-      // continue whereever regPC currently points to
-    }
-    CPU.ConcreteOperation op;
-    try {
-      // TODO: have to know that regPC is a short
-      stdout.print(Util.hexShortStr(regPC.getValue()) + "-  ");
-      op = cpu.fetchNextOperation();
-      printOperation(op);
-      op.execute();
-    } catch (CPU.MismatchException e) {
-      System.err.println(e);
-    }
-    id.parsed = false;
-    num1.parsed = false;
-    num2.parsed = false;
-    registeraccess();
     startaddr = regPC.getValue();
   }
 
   private void save() {
     try {
       OutputStream os =
-	new BufferedOutputStream(new FileOutputStream(id.value));
+	new BufferedOutputStream(new FileOutputStream(fileName.value));
       int addr = num1.value;
       do {
 	int value = memory.readByte(addr);
@@ -401,6 +474,9 @@ public class Monitor {
 	addr++;
       } while (addr != num2.value);
       os.close();
+      stdout.printf("wrote %s bytes to file %s%n",
+                    Util.hexShortStr((num2.value - num1.value) & 0xffff),
+                    fileName.value);
     } catch (IOException e) {
       stderr.println(e.getMessage());
     }
@@ -409,7 +485,7 @@ public class Monitor {
   private void load() {
     try {
       InputStream is =
-	new BufferedInputStream(new FileInputStream(id.value));
+	new BufferedInputStream(new FileInputStream(fileName.value));
       startaddr = num1.value;
       int addr = startaddr;
       int value;
@@ -422,57 +498,70 @@ public class Monitor {
       }
       while (value >= 0);
       is.close();
+      stdout.printf("loaded %s bytes from file %s%n",
+                    Util.hexShortStr((addr - num1.value) & 0xffff),
+                    fileName.value);
     } catch (IOException e) {
       stderr.println(e.getMessage());
     }
   }
 
-  private int printOperation(CPU.ConcreteOperation op) {
-    CPU.ConcreteOpCode opCode = op.createOpCode();
-    int length = opCode.getLength();
-    for (int i = 0; i < length; i++) {
-      stdout.print(" " + Util.hexByteStr(opCode.getByte(i)));
+  private int printOperation(CPU.ConcreteOperation op, int fallbackAddress) {
+    // TODO: have to know that regPC is a short
+    if (op.isSynthesizedCode()) {
+      stdout.print("INTR:");
+    } else {
+      stdout.print(Util.hexShortStr(op.getAddress()) + "-");
     }
-    for (int i = 0; i < (6 - length); i++) {
-      stdout.print("   ");
+    stdout.print("  ");
+    int length;
+    if (op != null) {
+      CPU.ConcreteOpCode opCode = op.createOpCode();
+      length = opCode.getLength();
+      for (int i = 0; i < length; i++) {
+        stdout.print(" " + Util.hexByteStr(opCode.getByte(i)));
+      }
+      for (int i = 0; i < (6 - length); i++) {
+        stdout.print("   ");
+      }
+      stdout.println(op.getConcreteMnemonic());
+    } else {
+      stdout.println(" " + Util.hexByteStr(memory.readByte(fallbackAddress)) +
+                     "               ???");
+      length = 1;
     }
-    stdout.println(op.getConcreteMnemonic());
     return length;
   }
+
+  private static final int DEFAULT_UNASSEMBLE_LINES = 16;
 
   private void unassemble() {
     if (num1.parsed)
       startaddr = num1.value;
+    int endAddr = 0;
     if (num2.parsed)
-      endaddr = num2.value;
-    else
-      endaddr = (startaddr + 0x10) & 0xffff; // TODO: 0xffff is z80 specific
-    if (endaddr < startaddr)
-      endaddr += 0x10000; // TODO: 0x10000 is z80 specific
+      endAddr = num2.value;
     int regPCValue = regPC.getValue();
     int currentaddr = startaddr;
     CPU.ConcreteOperation op;
+    int lineCount = 0;
     do {
-      // TODO: have to know that regPC is a short
-      stdout.print(Util.hexShortStr(currentaddr) + "-  ");
-
-      regPC.setValue(currentaddr & 0xffff); // TODO: 0xffff is z80 specific
+      regPC.setValue(currentaddr);
       try {
 	op = cpu.fetchNextOperationNoInterrupts();
-	currentaddr += printOperation(op);
       } catch (CPU.MismatchException e) {
-	stdout.println(" " + Util.hexByteStr(memory.readByte(currentaddr)) +
-		       "               ???");
-	currentaddr++;
+        op = null;
       }
-    } while (currentaddr <= endaddr);
-    startaddr = currentaddr & 0xffff; // TODO: 0xffff is z80 specific
-    endaddr = startaddr;
+      currentaddr += printOperation(op, currentaddr);
+      currentaddr &= 0xffff; // TODO: 0xffff is z80 specific
+    } while ((num2.parsed && (currentaddr <= endAddr)) ||
+             (++lineCount < DEFAULT_UNASSEMBLE_LINES));
+    startaddr = currentaddr;
     regPC.setValue(regPCValue);
   }
 
   private void assemble() {
-    stderr.println("'a[ <addr>]': not yet implemented");
+    stderr.println("'a[<addr>]': not yet implemented");
   }
 
   private final static String SPACE =
@@ -491,37 +580,42 @@ public class Monitor {
     return '?';
   }
 
+  private static final int DEFAULT_DUMP_BYTES = 0x100;
+
   private void dump() {
     if (num1.parsed)
       startaddr = num1.value;
+    int stopAddr;
     if (num2.parsed)
-      endaddr = num2.value;
+      stopAddr = num2.value;
     else
-      endaddr = (startaddr + 0x3f) & 0xffff; // TODO: 0xffff is z80 specific
-    if (endaddr < startaddr)
-      endaddr += 0x10000; // TODO: 0x10000 is z80 specific
+      stopAddr = (startaddr + DEFAULT_DUMP_BYTES) &
+        ~0xf & 0xffff; // TODO: 0xffff is z80 specific
     int currentaddr = startaddr;
     stdout.print(Util.hexShortStr(currentaddr) + "-  ");
-    StringBuffer sbNumeric = new StringBuffer(SPACE.substring(0, (currentaddr & 0xf) * 3));
-    StringBuffer sbText = new StringBuffer(SPACE.substring(0, (currentaddr & 0xf) * 2));
+    StringBuffer sbNumeric =
+      new StringBuffer(SPACE.substring(0, (currentaddr & 0xf) * 3));
+    StringBuffer sbText =
+      new StringBuffer(SPACE.substring(0, currentaddr & 0xf));
     do {
       int dataByte = memory.readByte(currentaddr++);
+      currentaddr &= 0xffff;
       sbNumeric.append(" " + Util.hexByteStr(dataByte));
-      sbText.append(" " + renderDataByteAsChar(dataByte));
+      sbText.append(renderDataByteAsChar(dataByte));
       if ((currentaddr & 0xf) == 0) {
-	stdout.println(sbNumeric + " " + sbText);
+	stdout.println(sbNumeric + "   " + sbText);
 	sbNumeric.setLength(0);
 	sbText.setLength(0);
-	if (currentaddr <= endaddr)
+	if (currentaddr != stopAddr)
 	  stdout.print(Util.hexShortStr(currentaddr) + "-  ");
       }
-    } while (currentaddr <= endaddr);
+    } while (currentaddr != stopAddr);
     if ((currentaddr & 0xf) != 0) {
       sbNumeric.append(SPACE.substring(0, (0x10 - currentaddr & 0xf) * 3));
-      sbText.append(SPACE.substring(0, (0x10 - currentaddr & 0xf) * 2));
-      stdout.println(sbNumeric + " " + sbText);
+      sbText.append(SPACE.substring(0, 0x10 - currentaddr & 0xf));
+      stdout.println(sbNumeric + "   " + sbText);
     }
-    startaddr = (endaddr + 1) & 0xffff; // TODO: 0xffff is z80 specific
+    startaddr = stopAddr;
   }
 
   private void enter() throws ParseError {
@@ -573,50 +667,80 @@ public class Monitor {
   }
 
   private void registeraccess() {
-    if (id.parsed) {
-      String regName = id.value;
+    if (regName.parsed) {
+      CPU.Register matchedRegister = null;
+      for (CPU.Register register : registers) {
+        if (register.getName().equalsIgnoreCase(regName.value)) {
+          matchedRegister = register;
+          break;
+        }
+      }
+      if (matchedRegister == null) {
+	stderr.printf("no such register: '%s'%n", regName.value);
+        return;
+      }
       if (num1.parsed) {
 	int data = num1.value;
-	stderr.println("'r <name> <data>': not yet implemented");
-      } else {
-	stderr.println("'r <name>': not yet implemented");
+        try {
+          matchedRegister.setValue(num1.value);
+        } catch (Exception e) {
+          stderr.printf("failed setting register %s: %s%n",
+                        regName.value, e.getMessage());
+        }
       }
+      stdout.printf("     %s%n", matchedRegister);
     } else {
       printRegisters();
     }
   }
 
   private void help() {
-    stdout.println("Commands:");
-    stdout.println("g[ <addr>]                   go");
-    stdout.println("c[ <addr>]                   call");
-    stdout.println("t[ <addr>]                   trace");
-    stdout.println("b[ <addr>]                   trace until pc=addr");
-    stdout.println("s <addr1> <addr2> <name>     save data to disk");
-    stdout.println("l <addr> <name>              load data from disk");
-    stdout.println("u[ <addr1>[ <addr2>]]        unassemble");
-    stdout.println("a[ <addr>]                   assemble");
-    stdout.println("d[ <addr1>[ <addr2>]]        dump data");
-    stdout.println("e[ <addr>]                   enter data");
-    stdout.println("p <addr>[ <data>]            port access");
-    stdout.println("r[ <name>[ <data>]]          register access");
-    stdout.println("h                            help (this page)");
-    stdout.println("q                            quit");
+    stdout.println("Commands");
+    stdout.println("========");
+    stdout.println();
+    stdout.println("Code Execution");
+    stdout.println("  g[<startaddr>][-<stopaddr>]      go [until]");
+    stdout.println("  t[<startaddr>][-<stopaddr>]      trace [until]");
+    stdout.println("  i[<addr>]                        single step into");
+    stdout.println("  o[<addr>]                        step over");
+    stdout.println();
+    stdout.println("Code / Data Listing");
+    stdout.println("  u[<startaddr>][-<stopaddr>]      unassemble");
+    stdout.println("  d[<startaddr>][-<stopaddr>]      dump data");
+    stdout.println();
+    stdout.println("Code / Data Entry");
+    stdout.println("  a[<addr>]                        assemble");
+    stdout.println("  e[<addr>]                        enter data");
+    stdout.println();
+    stdout.println("I/O");
+    stdout.println("  p<addr>[=<data>]                 port access");
+    stdout.println();
+    stdout.println("CPU Status");
+    stdout.println("  r[<name>[=<data>]]               register access");
+    stdout.println();
+    stdout.println("Load / Save");
+    stdout.println("  s<name>=<startaddr>-<stopaddr>   save data to disk");
+    stdout.println("  l<startaddr>=<name>              load data from disk");
+    stdout.println();
+    stdout.println("Miscelleanous");
+    stdout.println("  h                                help (this page)");
+    stdout.println("  q                                quit");
   }
 
   private void executeCommand() throws ParseError {
     switch (command) {
       case 'g' :
-	go(false);
-	break;
-      case 'c' :
-	go(true);
-	break;
-      case 'b' :
-	traceUntil();
+	go(false, false, false);
 	break;
       case 't' :
-	trace();
+	go(true, false, false);
+	break;
+      case 'i' :
+	go(false, true, false);
+	break;
+      case 'o' :
+	// go(false, true, true); // does not yet work correctly
+        stderr.println("'o[<addr>]': not yet implemented");
 	break;
       case 's' :
 	save();
@@ -683,14 +807,15 @@ public class Monitor {
     regPC = cpu.getProgramCounter();
     regSP = cpu.getStackPointer();
     startaddr = 0x0000;
-    endaddr = 0x0000;
     welcome();
     num1 = new Number();
     num2 = new Number();
-    id = new Id();
+    fileName = new Text();
+    regName = new Text();
     num1.parsed = false;
     num2.parsed = false;
-    id.parsed = false;
+    fileName.parsed = false;
+    regName.parsed = false;
     registeraccess();
     do {
       try {

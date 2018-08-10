@@ -324,13 +324,34 @@ public class Z80 implements CPU {
     }
   }
 
+  class RegIM extends GenericReg8 {
+    public RegIM() {
+      super("IM");
+    }
+
+    public void setValue(int value) {
+      if ((value < 0) || (value > 2)) {
+        throw new IndexOutOfBoundsException("only values 0, 1, 2 are valid");
+      }
+      super.setValue(value);
+    }
+
+    public boolean increment() {
+      throw new UnsupportedOperationException("can not increment value of IM");
+    }
+
+    public boolean decrement() {
+      throw new UnsupportedOperationException("can not decrement value of IM");
+    }
+  }
+
   private Reg8 regA, regF, regB, regC, regD, regE, regH, regL;
   private RegPair regAF, regBC, regDE, regHL;
   private Reg16 regIX, regIY;
   private Reg8 regIV, regR;
   private Reg16 regSP, regPC;
   private Reg16 regAF_, regBC_, regDE_, regHL_;
-  private Reg8 regIM;
+  private RegIM regIM;
 
   /** pseudo register (HL) */
   private Reg8 indirectRegHL;
@@ -385,7 +406,7 @@ public class Z80 implements CPU {
     regBC_ = new GenericReg16("BC'");
     regDE_ = new GenericReg16("DE'");
     regHL_ = new GenericReg16("HL'");
-    regIM = new GenericReg8("IM");
+    regIM = new RegIM();
     indirectRegHL = new IndirectReg8(memory, regHL);
     indirectIXDisp8 = new IndirectReg8Disp8(memory, regIX);
     indirectIYDisp8 = new IndirectReg8Disp8(memory, regIY);
@@ -724,6 +745,8 @@ public class Z80 implements CPU {
     private String concreteMnemonic;
     private GenericOperation genericOperation;
     private CodeFetcher codeFetcher;
+    private int address;
+    private boolean isSynthesizedCode;
 
     public ConcreteOperation() {
       args = new Arguments();
@@ -733,6 +756,14 @@ public class Z80 implements CPU {
 
     public String getConcreteMnemonic() {
       return genericOperation.createConcreteMnemonic(args);
+    }
+
+    public int getAddress() {
+      return address;
+    }
+
+    public boolean isSynthesizedCode() {
+      return isSynthesizedCode;
     }
 
     public ConcreteOpCode createOpCode() {
@@ -3593,9 +3624,11 @@ public class Z80 implements CPU {
    * @return The length of the operation in bytes.
    */
   private int decode(ConcreteOperation concreteOperation,
-                     CodeFetcher codeFetcher)
+                     CodeFetcher codeFetcher, boolean isSynthesizedCode)
     throws CPU.MismatchException
   {
+    concreteOperation.address = regPC.getValue();
+    concreteOperation.isSynthesizedCode = isSynthesizedCode;
     codeFetcher.reset();
     PrecompiledGenericOperation precompiledGenericOperation =
       decodeTable.findGenericOperation(codeFetcher);
@@ -4237,7 +4270,7 @@ public class Z80 implements CPU {
 	switch (regIM.getValue()) {
 	  case INTR_MODE_0 :
 	    intrBusDataFetcher.setIntrBusData(intr_bus_data);
-	    decode(concreteOperation, intrBusDataFetcher);
+	    decode(concreteOperation, intrBusDataFetcher, true);
             // TODO: What about multi-byte operations on interrupt
             // bus?
 	    workPending = false;
@@ -4258,7 +4291,7 @@ public class Z80 implements CPU {
 	    throw new InternalError("illegal interrupt mode");
 	}
       } else {
-	int opCodeLength = decode(concreteOperation, memoryCodeFetcher);
+	int opCodeLength = decode(concreteOperation, memoryCodeFetcher, false);
 	regPC.setValue((regPC.getValue() + opCodeLength) & 0xffff);
         if (irq_to_be_enabled) {
           irq_enabled = true;
@@ -4273,7 +4306,7 @@ public class Z80 implements CPU {
   public ConcreteOperation fetchNextOperationNoInterrupts()
     throws CPU.MismatchException
   {
-    int opCodeLength = decode(concreteOperation, memoryCodeFetcher);
+    int opCodeLength = decode(concreteOperation, memoryCodeFetcher, false);
     regPC.setValue((regPC.getValue() + opCodeLength) & 0xffff);
     return concreteOperation;
   }

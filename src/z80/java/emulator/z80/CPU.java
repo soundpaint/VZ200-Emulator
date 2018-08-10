@@ -30,6 +30,8 @@ public interface CPU {
 
   public interface ConcreteOperation {
     public String getConcreteMnemonic();
+    public int getAddress();
+    public boolean isSynthesizedCode();
     public void execute();
     public int getClockPeriods();
     public ConcreteOpCode createOpCode();
