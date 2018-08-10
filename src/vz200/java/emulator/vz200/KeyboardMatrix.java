@@ -84,106 +84,106 @@ public class KeyboardMatrix {
 
   private final static Key[][] KEYS = {
     {
-      new Key("R", "▟", "LEFT $ (", "RETURN",
-	      15, 1, 1.0f, true, KeyEvent.VK_R),
-      new Key("Q", "▛", "FOR", "CHR $ (",
-	      3, 1, 1.0f, true, KeyEvent.VK_Q),
-      new Key("E", "▙", "NEXT", "LEN",
-	      11, 1, 1.0f, true, KeyEvent.VK_E),
-      null,
+      new Key("T", "▀", "THEN", "MID $ (",
+	      19, 1, 1.0f, true, KeyEvent.VK_T),
       new Key("W", "▜", "TO", "VAL (",
 	      7, 1, 1.0f, true, KeyEvent.VK_W),
-      new Key("T", "▀", "THEN", "MID $ (",
-	      19, 1, 1.0f, true, KeyEvent.VK_T)
+      null,
+      new Key("E", "▙", "NEXT", "LEN",
+	      11, 1, 1.0f, true, KeyEvent.VK_E),
+      new Key("Q", "▛", "FOR", "CHR $ (",
+	      3, 1, 1.0f, true, KeyEvent.VK_Q),
+      new Key("R", "▟", "LEFT $ (", "RETURN",
+	      15, 1, 1.0f, true, KeyEvent.VK_R)
     }, {
-      new Key("F", "▘", "GOSUB", "RND (",
-	      16, 2, 1.0f, true, KeyEvent.VK_F),
-      new Key("A", "▗", "MODE (", "ASC (",
-	      4, 2, 1.0f, true, KeyEvent.VK_A),
-      new Key("D", "▝", "DIM", "RESTORE",
-	      12, 2, 1.0f, true, KeyEvent.VK_D),
-      new Key("CTRL", null, "", "",
-	      0, 2, 1.0f, false, KeyEvent.VK_CONTROL),
+      new Key("G", "▚", "GOTO", "STOP",
+	      20, 2, 1.0f, true, KeyEvent.VK_G),
       new Key("S", "▖", "STEP", "STR$ (",
 	      8, 2, 1.0f, true, KeyEvent.VK_S),
-      new Key("G", "▚", "GOTO", "STOP",
-	      20, 2, 1.0f, true, KeyEvent.VK_G)
+      new Key("CTRL", null, "", "",
+	      0, 2, 1.0f, false, KeyEvent.VK_CONTROL),
+      new Key("D", "▝", "DIM", "RESTORE",
+	      12, 2, 1.0f, true, KeyEvent.VK_D),
+      new Key("A", "▗", "MODE (", "ASC (",
+	      4, 2, 1.0f, true, KeyEvent.VK_A),
+      new Key("F", "▘", "GOSUB", "RND (",
+	      16, 2, 1.0f, true, KeyEvent.VK_F)
     }, {
-      new Key("V", "", "LPRINT", "USR",
-	      18, 3, 1.0f, false, KeyEvent.VK_V),
-      new Key("Z", "", "PEEK (", "INP",
-	      6, 3, 1.0f, false, KeyEvent.VK_Z),
-      new Key("C", "", "CONT", "COPY",
-	      14, 3, 1.0f, false, KeyEvent.VK_C),
-      new Key("SHIFT", null, "", "",
-	      0, 3, 2.0f, false, KeyEvent.VK_SHIFT),
+      new Key("B", "", "LLIST", "SOUND",
+	      22, 3, 1.0f, false, KeyEvent.VK_B),
       new Key("X", "", "POKE", "OUT",
 	      10, 3, 1.0f, false, KeyEvent.VK_X),
-      new Key("B", "", "LLIST", "SOUND",
-	      22, 3, 1.0f, false, KeyEvent.VK_B)
+      new Key("SHIFT", null, "", "",
+	      0, 3, 2.0f, false, KeyEvent.VK_SHIFT),
+      new Key("C", "", "CONT", "COPY",
+	      14, 3, 1.0f, false, KeyEvent.VK_C),
+      new Key("Z", "", "PEEK (", "INP",
+	      6, 3, 1.0f, false, KeyEvent.VK_Z),
+      new Key("V", "", "LPRINT", "USR",
+	      18, 3, 1.0f, false, KeyEvent.VK_V)
     }, {
-      new Key("4", "$", "VERIFY", "ATN (",
-	      13, 0, 1.0f, false, KeyEvent.VK_4),
-      new Key("1", "!", "C SAVE", "SIN (",
-	      1, 0, 1.0f, false, KeyEvent.VK_1),
-      new Key("3", "#", "C RUN", "TAN (",
-	      9, 0, 1.0f, false, KeyEvent.VK_3),
-      null,
+      new Key("5", "%", "LIST", "LOG (",
+	      17, 0, 1.0f, false, KeyEvent.VK_5),
       new Key("2", "\"", "C LOAD", "COS (",
 	      5, 0, 1.0f, false, KeyEvent.VK_2),
-      new Key("5", "%", "LIST", "LOG (",
-	      17, 0, 1.0f, false, KeyEvent.VK_5)
-    }, {
-      new Key("M", "\\", "_⬅", "",
-	      30, 3, 1.0f, false, KeyEvent.VK_M),
-      new Key("SPACE", null, "_⬇", "",
-	      42, 3, 2.0f, false, KeyEvent.VK_SPACE),
-      new Key(",", "<", "_➡", "",
-	      34, 3, 1.0f, false, KeyEvent.VK_COMMA),
       null,
+      new Key("3", "#", "C RUN", "TAN (",
+	      9, 0, 1.0f, false, KeyEvent.VK_3),
+      new Key("1", "!", "C SAVE", "SIN (",
+	      1, 0, 1.0f, false, KeyEvent.VK_1),
+      new Key("4", "$", "VERIFY", "ATN (",
+              13, 0, 1.0f, false, KeyEvent.VK_4)
+    }, {
+      new Key("N", "^", "COLOR", "USING",
+	      26, 3, 1.0f, false, KeyEvent.VK_N),
       new Key(".", ">", "_⬆", "",
 	      38, 3, 1.0f, false, KeyEvent.VK_PERIOD),
-      new Key("N", "^", "COLOR", "USING",
-	      26, 3, 1.0f, false, KeyEvent.VK_N)
+      null,
+      new Key(",", "<", "_➡", "",
+	      34, 3, 1.0f, false, KeyEvent.VK_COMMA),
+      new Key("SPACE", null, "_⬇", "",
+	      42, 3, 2.0f, false, KeyEvent.VK_SPACE),
+      new Key("M", "\\", "_⬅", "",
+	      30, 3, 1.0f, false, KeyEvent.VK_M)
     }, {
-      new Key("7", "'", "END", "SGN (",
-	      25, 0, 1.0f, false, KeyEvent.VK_7),
-      new Key("0", "@", "DATA", "INT (",
-	      37, 0, 1.0f, false, KeyEvent.VK_0),
-      new Key("8", "(", "NEW", "SQR (",
-	      29, 0, 1.0f, false, KeyEvent.VK_8),
-      new Key("-", "=", "_ BREAK ", "",
-	      41, 0, 1.0f, false, KeyEvent.VK_MINUS),
+      new Key("6", "&", "RUN", "EXP (",
+	      21, 0, 1.0f, false, KeyEvent.VK_6),
       new Key("9", ")", "READ", "ABS (",
 	      33, 0, 1.0f, false, KeyEvent.VK_9),
-      new Key("6", "&", "RUN", "EXP (",
-	      21, 0, 1.0f, false, KeyEvent.VK_6)
+      new Key("-", "=", "_ BREAK ", "",
+	      41, 0, 1.0f, false, KeyEvent.VK_MINUS),
+      new Key("8", "(", "NEW", "SQR (",
+	      29, 0, 1.0f, false, KeyEvent.VK_8),
+      new Key("0", "@", "DATA", "INT (",
+	      37, 0, 1.0f, false, KeyEvent.VK_0),
+      new Key("7", "'", "END", "SGN (",
+	      25, 0, 1.0f, false, KeyEvent.VK_7)
     }, {
-      new Key("U", "▌", "IF", "INKEY $",
-	      27, 1, 1.0f, true, KeyEvent.VK_U),
-      new Key("P", "]", "PRINT", "NOT",
-	      39, 1, 1.0f, false, KeyEvent.VK_P),
-      new Key("I", "▐", "INPUT", "AND",
-	      31, 1, 1.0f, true, KeyEvent.VK_I),
-      new Key("RETURN", null, "_ FUNCTION ", "",
-	      43, 1, 1.5f, false, KeyEvent.VK_ENTER),
+      new Key("Y", "▄", "ELSE", "RIGHT$ (",
+	      23, 1, 1.0f, true, KeyEvent.VK_Y),
       new Key("O", "[", "LET", "OR",
 	      35, 1, 1.0f, false, KeyEvent.VK_O),
-      new Key("Y", "▄", "ELSE", "RIGHT$ (",
-	      23, 1, 1.0f, true, KeyEvent.VK_Y)
+      new Key("RETURN", null, "_ FUNCTION ", "",
+	      43, 1, 1.5f, false, KeyEvent.VK_ENTER),
+      new Key("I", "▐", "INPUT", "AND",
+	      31, 1, 1.0f, true, KeyEvent.VK_I),
+      new Key("P", "]", "PRINT", "NOT",
+	      39, 1, 1.0f, false, KeyEvent.VK_P),
+      new Key("U", "▌", "IF", "INKEY $",
+	      27, 1, 1.0f, true, KeyEvent.VK_U)
     }, {
-      new Key("J", "█", "REM", "RESET",
-	      28, 2, 1.0f, true, KeyEvent.VK_J),
-      new Key(";", "+", "_ RUBOUT ", "",
-	      40, 2, 1.0f, false, KeyEvent.VK_SEMICOLON),
-      new Key("K", "/", "TAB (", "POINT",
-	      32, 2, 1.0f, false, KeyEvent.VK_K),
-      new Key(":", "*", "_ INVERSE ", "",
-	      44, 2, 1.0f, false, KeyEvent.VK_COLON),
+      new Key("H", "▞", "CLS", "SET",
+	      24, 2, 1.0f, true, KeyEvent.VK_H),
       new Key("L", "?", "_ INSERT ", "",
 	      36, 2, 1.0f, false, KeyEvent.VK_L),
-      new Key("H", "▞", "CLS", "SET",
-	      24, 2, 1.0f, true, KeyEvent.VK_H)
+      new Key(":", "*", "_ INVERSE ", "",
+	      44, 2, 1.0f, false, KeyEvent.VK_COLON),
+      new Key("K", "/", "TAB (", "POINT",
+	      32, 2, 1.0f, false, KeyEvent.VK_K),
+      new Key(";", "+", "_ RUBOUT ", "",
+	      40, 2, 1.0f, false, KeyEvent.VK_SEMICOLON),
+      new Key("J", "█", "REM", "RESET",
+	      28, 2, 1.0f, true, KeyEvent.VK_J)
     }
   };
 
@@ -261,9 +261,9 @@ public class KeyboardMatrix {
 
   public void setSelected(Key key, boolean selected) {
     if (selected) {
-      rows[key.row] |= 2 << key.column;
+      rows[key.row] |= 1 << key.column;
     } else {
-      rows[key.row] &= ~(2 << key.column);
+      rows[key.row] &= ~(1 << key.column);
     }
   }
 
