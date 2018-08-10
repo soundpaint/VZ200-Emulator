@@ -721,13 +721,12 @@ public class Z80 implements CPU {
 
   public class ConcreteOperation implements CPU.ConcreteOperation {
     private Arguments args;
-    private ConcreteOpCode concreteOpCode;
     private String concreteMnemonic;
     private GenericOperation genericOperation;
+    private CodeFetcher codeFetcher;
 
     public ConcreteOperation() {
       args = new Arguments();
-      concreteOpCode = new ConcreteOpCode();
     }
 
     public Arguments getArguments() { return args; }
@@ -736,7 +735,13 @@ public class Z80 implements CPU {
       return genericOperation.createConcreteMnemonic(args);
     }
 
-    public ConcreteOpCode getConcreteOpCode() {
+    public ConcreteOpCode createOpCode() {
+      codeFetcher.restart();
+      ConcreteOpCode concreteOpCode = new ConcreteOpCode();
+      for (int i = 0; i < genericOperation.byteLength; i++) {
+        int concreteOpCodeByte = codeFetcher.fetchNextByte();
+        concreteOpCode.addByte(concreteOpCodeByte);
+      }
       return concreteOpCode;
     }
 
@@ -758,27 +763,18 @@ public class Z80 implements CPU {
      * with the concrete code are stored and can be accessed via the
      * <code>getArg()</code> method.
      *
-     * @return A concrete operation or null, if the code from the code
-     *    fetcher does not match this operation's opcode.
+     * @return The length of the matched operation in bytes.
      *
      * @see #getArg
      */
-    public void instantiate(PrecompiledGenericOperation precompiledGenericOperation,
-			    CodeFetcher codeFetcher)
+    public int instantiate(PrecompiledGenericOperation precompiledGenericOperation,
+                           CodeFetcher codeFetcher)
       throws CPU.MismatchException
     {
-      concreteOpCode.reset();
-      precompiledGenericOperation.apply(codeFetcher, args);
+      this.codeFetcher = codeFetcher;
+      precompiledGenericOperation.fillArgs(codeFetcher, args);
       genericOperation = precompiledGenericOperation.getGenericOperation();
-      codeFetcher.restart();
-      //int precompiledBytes = precompiledGenericOperation.getPrecompiledBytes();
-      for (int i = 0; //precompiledBytes + 1;
-           i < genericOperation.genericOpCodeBits.length >>> 3;
-           i++) {
-        int concreteOpCodeByte = codeFetcher.fetchNextByte();
-        concreteOpCode.addByte(concreteOpCodeByte);
-      }
-      genericOperation.swapEndiansOnAllArgs(args);
+      return genericOperation.byteLength;
     }
   }
 
@@ -798,6 +794,12 @@ public class Z80 implements CPU {
      * </PRE>
      */
     private int[] genericOpCodeBits;
+
+    /**
+     * Length of this operation's underlying op code
+     * as number of bytes.
+     */
+    private int byteLength;
 
     /**
      * Lists all generic variables (by means of their character code
@@ -894,6 +896,7 @@ public class Z80 implements CPU {
 	varSize[i] = (vars.get(index)).value;
       }
       this.genericOpCode = genericOpCode;
+      byteLength = genericOpCode.length() >>> 3;
     }
 
     public void setDefaultClockPeriods(int defaultClockPeriods) {
@@ -3460,9 +3463,10 @@ public class Z80 implements CPU {
       return genericOperation;
     }
 
-    public void apply(CodeFetcher codeFetcher, Arguments args)
+    public void fillArgs(CodeFetcher codeFetcher, Arguments args)
     {
       actions.apply(codeFetcher, args);
+      genericOperation.swapEndiansOnAllArgs(args);
     }
 
     public int getPrecompiledBytes() {
@@ -3586,16 +3590,18 @@ public class Z80 implements CPU {
   /**
    * Fills in concreteOperation for code that is delivered from the
    * code fetcher.
+   * @return The length of the operation in bytes.
    */
-  private void decode(ConcreteOperation concreteOperation,
-		      CodeFetcher codeFetcher)
+  private int decode(ConcreteOperation concreteOperation,
+                     CodeFetcher codeFetcher)
     throws CPU.MismatchException
   {
     codeFetcher.reset();
     PrecompiledGenericOperation precompiledGenericOperation =
       decodeTable.findGenericOperation(codeFetcher);
     if (precompiledGenericOperation != null) {
-      concreteOperation.instantiate(precompiledGenericOperation, codeFetcher);
+      return
+        concreteOperation.instantiate(precompiledGenericOperation, codeFetcher);
     } else {
       /* invalid opcode */
       throw
@@ -4252,9 +4258,7 @@ public class Z80 implements CPU {
 	    throw new InternalError("illegal interrupt mode");
 	}
       } else {
-	decode(concreteOperation, memoryCodeFetcher);
-	int opCodeLength =
-	  concreteOperation.getConcreteOpCode().getLength();
+	int opCodeLength = decode(concreteOperation, memoryCodeFetcher);
 	regPC.setValue((regPC.getValue() + opCodeLength) & 0xffff);
         if (irq_to_be_enabled) {
           irq_enabled = true;
@@ -4263,6 +4267,14 @@ public class Z80 implements CPU {
         workPending = false;
       }
     } while (workPending);
+    return concreteOperation;
+  }
+
+  public ConcreteOperation fetchNextOperationNoInterrupts()
+    throws CPU.MismatchException
+  {
+    int opCodeLength = decode(concreteOperation, memoryCodeFetcher);
+    regPC.setValue((regPC.getValue() + opCodeLength) & 0xffff);
     return concreteOperation;
   }
 

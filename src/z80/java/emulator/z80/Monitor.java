@@ -427,15 +427,17 @@ public class Monitor {
     }
   }
 
-  private void printOperation(CPU.ConcreteOperation op) {
-    CPU.ConcreteOpCode opCode = op.getConcreteOpCode();
-    for (int i = 0; i < opCode.getLength(); i++) {
+  private int printOperation(CPU.ConcreteOperation op) {
+    CPU.ConcreteOpCode opCode = op.createOpCode();
+    int length = opCode.getLength();
+    for (int i = 0; i < length; i++) {
       stdout.print(" " + Util.hexByteStr(opCode.getByte(i)));
     }
-    for (int i = 0; i < (6 - opCode.getLength()); i++) {
+    for (int i = 0; i < (6 - length); i++) {
       stdout.print("   ");
     }
     stdout.println(op.getConcreteMnemonic());
+    return length;
   }
 
   private void unassemble() {
@@ -456,9 +458,8 @@ public class Monitor {
 
       regPC.setValue(currentaddr & 0xffff); // TODO: 0xffff is z80 specific
       try {
-	op = cpu.fetchNextOperation();
-	printOperation(op);
-	currentaddr += op.getConcreteOpCode().getLength();
+	op = cpu.fetchNextOperationNoInterrupts();
+	currentaddr += printOperation(op);
       } catch (CPU.MismatchException e) {
 	stdout.println(" " + Util.hexByteStr(memory.readByte(currentaddr)) +
 		       "               ???");

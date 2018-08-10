@@ -30,9 +30,9 @@ public interface CPU {
 
   public interface ConcreteOperation {
     public String getConcreteMnemonic();
-    public ConcreteOpCode getConcreteOpCode();
     public void execute();
     public int getClockPeriods();
+    public ConcreteOpCode createOpCode();
   }
 
   public int doPOP();
@@ -44,6 +44,8 @@ public interface CPU {
   public Register getProgramCounter();
   public Register getStackPointer();
   public ConcreteOperation fetchNextOperation() throws MismatchException;
+  public ConcreteOperation fetchNextOperationNoInterrupts()
+    throws MismatchException;
 
   public void requestIRQ();
   public void requestNMI();
