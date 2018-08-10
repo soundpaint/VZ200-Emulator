@@ -1,6 +1,7 @@
 package emulator.vz200;
 
 import java.awt.event.KeyEvent;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -187,9 +188,12 @@ public class KeyboardMatrix {
     }
   };
 
-  public static int getRowCount() { return KEYS.length; }
+  private static final int ROW_COUNT = KEYS.length;
+  private static final int COLUMN_COUNT = KEYS[0].length;
 
-  public static int getColumnCount() { return KEYS[0].length; }
+  public static int getRowCount() { return ROW_COUNT; }
+
+  public static int getColumnCount() { return COLUMN_COUNT; }
 
   private static class KeyIterator implements Iterator<Key> {
     private int row, column;
@@ -205,10 +209,10 @@ public class KeyboardMatrix {
     private void forward() {
       assert column >= 0 : "illegal state of indices";
       column++;
-      if (column >= KEYS[0].length) {
+      if (column >= COLUMN_COUNT) {
 	column = 0;
 	row++;
-	if (row >= KEYS.length) {
+	if (row >= ROW_COUNT) {
 	  column = -1;
 	}
       }
@@ -241,8 +245,8 @@ public class KeyboardMatrix {
 
   static {
     keyCode2Key = new HashMap<Integer, Key>();
-    for (int row = 0; row < KEYS.length; row++) {
-      for (int column = 0; column < KEYS[row].length; column++) {
+    for (int row = 0; row < ROW_COUNT; row++) {
+      for (int column = 0; column < COLUMN_COUNT; column++) {
 	Key key = KEYS[row][column];
 	if (key != null) {
 	  key.row = row;
@@ -261,23 +265,24 @@ public class KeyboardMatrix {
 
   public void setSelected(Key key, boolean selected) {
     if (selected) {
-      rows[key.row] |= 1 << key.column;
-    } else {
       rows[key.row] &= ~(1 << key.column);
+    } else {
+      rows[key.row] |= 1 << key.column;
     }
   }
 
   public int read(int address) {
     int data = ~0x0;
-    for (int row = 0; row < getRowCount(); row++) {
+    for (int row = 0; row < ROW_COUNT; row++) {
       if (((address >> row) & 0x1) == 0x0)
-	data &= ~rows[row];
+	data &= rows[row];
     }
     return data;
   }
 
   public KeyboardMatrix() {
-    rows = new int[KEYS.length];
+    rows = new int[ROW_COUNT];
+    Arrays.fill(rows, 0xff);
   }
 }
 
