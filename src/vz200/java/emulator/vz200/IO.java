@@ -22,6 +22,7 @@ public class IO implements MemoryBus.Reader, MemoryBus.Writer {
     this.baseAddress = baseAddress;
     keyboard = new Keyboard(baseAddress);
     video = new Video();
+    video.addKeyListener(keyboard.getKeyListener());
   }
 
   public Video getVideo() { return video; }

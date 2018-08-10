@@ -24,10 +24,11 @@ import emulator.z80.RAMMemory;
 public class KeyboardPanel extends JPanel {
   private static final long serialVersionUID = 7317835440086946160L;
 
-  Button buttons[][];
-  KeyboardMatrix matrix;
+  private Button buttons[][];
+  private KeyboardMatrix matrix;
+  private KeyListener keyListener;
 
-  private class Button extends JButton {
+  private static class Button extends JButton {
     private KeyboardMatrix.Key key;
 
     public Button(ImageIcon icon, KeyboardMatrix.Key key) {
@@ -109,6 +110,10 @@ public class KeyboardPanel extends JPanel {
 
   private Dimension preferredSize;
   private int zoom;
+
+  public KeyAdapter getKeyListener() {
+    return keyListener;
+  }
 
   private Image createKeyImage(KeyboardMatrix.Key key,
 			       Dimension size, boolean selected) {
@@ -227,6 +232,7 @@ public class KeyboardPanel extends JPanel {
 
   public KeyboardPanel(KeyboardMatrix matrix) throws IOException {
     this.matrix = matrix;
+    keyListener = new KeyListener();
     int rowCount = KeyboardMatrix.getRowCount();
     int columnCount = KeyboardMatrix.getColumnCount();
     buttons = new Button[rowCount][columnCount];
@@ -240,7 +246,7 @@ public class KeyboardPanel extends JPanel {
     ProportionalLayout layout = new ProportionalLayout(this);
     setLayout(layout);
     setPreferredSize(new Dimension(1200, 900));
-    addKeyListener(new KeyListener());
+    addKeyListener(keyListener);
     setFocusable(true);
   }
 }

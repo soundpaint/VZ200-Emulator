@@ -1,6 +1,7 @@
 package emulator.vz200;
 
 import java.awt.BorderLayout;
+import java.awt.event.KeyListener;
 import java.io.IOException;
 import javax.swing.JPanel;
 import javax.swing.JFrame;
@@ -54,6 +55,10 @@ public class Keyboard extends JFrame implements MemoryBus.Writer {
     getContentPane().add(panel, BorderLayout.CENTER);
     pack();
     setVisible(true);
+  }
+
+  public KeyListener getKeyListener() {
+    return panel.getKeyListener();
   }
 
   public String toString()
