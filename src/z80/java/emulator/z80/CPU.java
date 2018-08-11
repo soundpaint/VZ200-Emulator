@@ -51,7 +51,20 @@ public interface CPU {
 
   public void requestIRQ();
   public void requestNMI();
-  public long getTimePerClockPeriod();
+
+  public long getTimePerClockCycle();
+
+  /**
+   * Returns the total number of instruction cycles of all
+   * instructions performed since CPU start.
+   */
+  public long getWallClockCycles();
+
+  /**
+   * Returns the total number of time in ns of all instructions
+   * performed since CPU start.
+   */
+  public long getWallClockTime();
 
   public class MismatchException extends Exception {
     private static final long serialVersionUID = 3640134396555784341L;

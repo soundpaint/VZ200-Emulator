@@ -377,21 +377,23 @@ public class Monitor {
 
     boolean done = false;
     int kbdCheckCount = 0;
-    long startTime = 0;
-    long stopTime = 0;
-    long cpuTime = 0;
+    long systemStartTime = 0;
+    long systemStopTime = 0;
+    long startCycle = cpu.getWallClockCycles();
     long idleTime = 0;
     long busyTime = 0;
     long jitter = 0;
-    long totalClockPeriods = 0;
     try {
       try {
 	CPU.ConcreteOperation op = null;
-        startTime = System.nanoTime();
-        cpuTime = startTime;
+        systemStartTime = System.nanoTime();
+        long cpuStartTime = cpu.getWallClockTime();
+        long deltaStartTime = cpuStartTime - systemStartTime;
 	while (!done) {
-          long nowTime = System.nanoTime();
-	  if (nowTime - cpuTime > 0) {
+          long systemTime = System.nanoTime();
+          long cpuTime = cpu.getWallClockTime();
+          jitter = systemTime - cpuTime + deltaStartTime;
+	  if (jitter > 0) {
             op = cpu.fetchNextOperation();
             if (singleStep) {
               if (stepOver) {
@@ -408,9 +410,6 @@ public class Monitor {
               printOperation(op, 0);
               registeraccess();
             }
-            int clockPeriods = op.getClockPeriods();
-            totalClockPeriods += clockPeriods;
-            cpuTime += clockPeriods * cpu.getTimePerClockPeriod();
             if (haveBreakPoint && (regPC.getValue() == breakPoint)) {
               done = true;
             }
@@ -418,12 +417,11 @@ public class Monitor {
               done |= inputAvailable() > 0;
               kbdCheckCount = 0;
             }
-            jitter = System.nanoTime() - cpuTime;
-            busyTime += System.nanoTime() - nowTime;
+            busyTime += System.nanoTime() - systemTime;
 	  } else {
             // busy wait
             if (BUSY_WAIT) {
-              while (System.nanoTime() - nowTime < BUSY_WAIT_TIME);
+              while (System.nanoTime() - systemTime < BUSY_WAIT_TIME);
             } else {
               try {
                 Thread.sleep(1);
@@ -431,10 +429,10 @@ public class Monitor {
                 // ignore
               }
             }
-            idleTime += System.nanoTime() - nowTime;
+            idleTime += System.nanoTime() - systemTime;
 	  }
 	}
-        stopTime = System.nanoTime();
+        systemStopTime = System.nanoTime();
         if (haveBreakPoint && !trace) {
           printOperation(op, 0);
           registeraccess();
@@ -448,9 +446,11 @@ public class Monitor {
       throw new InternalError(e.getMessage());
     }
     if (!singleStep && !trace) {
+      long stopCycle = cpu.getWallClockCycles();
       stdout.printf("[paused]%n");
       stdout.printf("[avg_speed = %.3fMhz]%n",
-                    1000.0 * totalClockPeriods / (stopTime - startTime));
+                    1000.0 * (stopCycle - startCycle) /
+                    (systemStopTime - systemStartTime));
       stdout.printf("[busy_wait = %b]%n", BUSY_WAIT);
       if (BUSY_WAIT) {
         stdout.printf("[busy_wait_time = %.2fµs]%n", 0.001 * BUSY_WAIT_TIME);

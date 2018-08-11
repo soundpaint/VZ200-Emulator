@@ -579,10 +579,33 @@ public class Z80 implements CPU {
 
   private final static int DEFAULT_CPU_FREQUENCY = 3579545; // [Hz]
 
-  private long timePerClockPeriod; // [ns]
+  private long wallClockCycles = 0; // number of CPU cycles since startup
+  private long wallClockTime = 0; // [ns since startup]
+  private long timePerClockCycle; // [ns]
 
-  public long getTimePerClockPeriod() {
-    return timePerClockPeriod;
+  public long getTimePerClockCycle() {
+    return timePerClockCycle;
+  }
+
+  /**
+   * Returns the total number of instruction cycles of all
+   * instructions performed since CPU start.
+   */
+  public long getWallClockCycles() {
+    return wallClockCycles;
+  }
+
+  /**
+   * Returns the total number of time in ns of all instructions
+   * performed since CPU start.
+   */
+  public long getWallClockTime() {
+    return wallClockTime;
+  }
+
+  private void updateWallClock(int cycles) {
+    wallClockCycles += cycles;
+    wallClockTime = wallClockCycles * timePerClockCycle;
   }
 
   // *** OPCODE HELPERS *******************************************************
@@ -778,6 +801,7 @@ public class Z80 implements CPU {
 
     public void execute() {
       genericOperation.execute(args);
+      updateWallClock(getClockPeriods());
     }
 
     public int getClockPeriods() {
@@ -4334,7 +4358,7 @@ public class Z80 implements CPU {
   }
 
   public Z80(CPU.Memory memory, CPU.Memory io, int cpuFrequency) {
-    timePerClockPeriod = 1000000000 / cpuFrequency;
+    timePerClockCycle = 1000000000 / cpuFrequency;
     System.out.println("initializing Z80:");
     this.memory = memory;
     this.io = io;
