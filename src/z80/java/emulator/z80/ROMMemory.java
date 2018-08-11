@@ -61,7 +61,7 @@ public class ROMMemory implements MemoryBus.Writer
     return data;
   }
 
-  public int readByte(int address) {
+  public int readByte(int address, long wallClockTime) {
     int addressOffset = (address - baseAddress) & 0xffff;
     int result;
     if (addressOffset < data.length) {
@@ -72,7 +72,7 @@ public class ROMMemory implements MemoryBus.Writer
     return result;
   }
 
-  public int readShort(int address) {
+  public int readShort(int address, long wallClockTime) {
     int addressOffset = (address - baseAddress) & 0xffff;
     int resultLSB;
     if (addressOffset < data.length) {
@@ -90,8 +90,8 @@ public class ROMMemory implements MemoryBus.Writer
     return (resultMSB << 8) | resultLSB;
   }
 
-  public void writeByte(int address, int value) {}
-  public void writeShort(int address, int value) {}
+  public void writeByte(int address, int value, long wallClockTime) {}
+  public void writeShort(int address, int value, long wallClockTime) {}
 
   public String toString()
   {

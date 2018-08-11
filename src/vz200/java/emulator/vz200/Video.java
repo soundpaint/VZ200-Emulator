@@ -20,21 +20,21 @@ public class Video extends JFrame
   private int baseAddress;
   private long startTime;
 
-  public int readByte(int address) {
-    return videoRAM.readByte(address);
+  public int readByte(int address, long wallClockTime) {
+    return videoRAM.readByte(address, wallClockTime);
   }
 
-  public int readShort(int address) {
-    return videoRAM.readShort(address);
+  public int readShort(int address, long wallClockTime) {
+    return videoRAM.readShort(address, wallClockTime);
   }
 
-  public void writeByte(int address, int value) {
-    videoRAM.writeByte(address, value);
+  public void writeByte(int address, int value, long wallClockTime) {
+    videoRAM.writeByte(address, value, wallClockTime);
     panel.invalidate(address);
   }
 
-  public void writeShort(int address, int value) {
-    videoRAM.writeShort(address, value);
+  public void writeShort(int address, int value, long wallClockTime) {
+    videoRAM.writeShort(address, value, wallClockTime);
     panel.invalidate(address++);
     panel.invalidate(address);
   }

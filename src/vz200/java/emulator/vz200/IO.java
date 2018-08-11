@@ -40,11 +40,11 @@ public class IO implements MemoryBus.Reader, MemoryBus.Writer {
     return false;
   }
 
-  public int readByte(int address) {
+  public int readByte(int address, long wallClockTime) {
     int addressOffset = (address - baseAddress) & 0xffff;
     int data;
     if (addressOffset < MEMORY_SIZE) {
-      data = keyboard.readByte(address);
+      data = keyboard.readByte(address, wallClockTime);
       if (cassetteInputActive())
         data |= 0x40;
       if (video.fs())
@@ -55,13 +55,13 @@ public class IO implements MemoryBus.Reader, MemoryBus.Writer {
     return data;
   }
 
-  public int readShort(int address) {
+  public int readShort(int address, long wallClockTime) {
     return
-      readByte(address++) |
-      (readByte(address) << 8);
+      readByte(address++, wallClockTime) |
+      (readByte(address, wallClockTime) << 8);
   }
 
-  public void writeByte(int address, int value) {
+  public void writeByte(int address, int value, long wallClockTime) {
     int addressOffset = (address - baseAddress) & 0xffff;
     if (addressOffset < MEMORY_SIZE) {
       setCassetteOutput((value >> 1) & 0x3);
@@ -71,9 +71,9 @@ public class IO implements MemoryBus.Reader, MemoryBus.Writer {
     }
   }
 
-  public void writeShort(int address, int value) {
-    writeByte(address++, value & 0xff);
-    writeByte(address, (value >> 8) & 0xff);
+  public void writeShort(int address, int value, long wallClockTime) {
+    writeByte(address++, value & 0xff, wallClockTime);
+    writeByte(address, (value >> 8) & 0xff, wallClockTime);
   }
 
   public String toString()

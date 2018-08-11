@@ -17,8 +17,8 @@ public class MemoryBus implements CPU.Memory {
    * that the CPU writes to the bus.
    */
   public interface Reader {
-    public void writeByte(int address, int value);
-    public void writeShort(int address, int value);
+    public void writeByte(int address, int value, long wallClockTime);
+    public void writeShort(int address, int value, long wallClockTime);
   }
 
   /*
@@ -32,8 +32,8 @@ public class MemoryBus implements CPU.Memory {
      */
     public static final int BYTE_UNDEFINED = 0xff;
 
-    public int readByte(int address);
-    public int readShort(int address);
+    public int readByte(int address, long wallClockTime);
+    public int readShort(int address, long wallClockTime);
   }
 
   public static MemoryBus createRAMMemoryBus(int baseAddress, int size)
@@ -65,31 +65,31 @@ public class MemoryBus implements CPU.Memory {
     writers.add(writer);
   }
 
-  public int readByte(int address) {
+  public int readByte(int address, long wallClockTime) {
     int result = 0xff;
     for (Writer writer : writers) {
-      result &= writer.readByte(address);
+      result &= writer.readByte(address, wallClockTime);
     }
     return result;
   }
 
-  public int readShort(int address) {
+  public int readShort(int address, long wallClockTime) {
     int result = 0xffff;
     for (Writer writer : writers) {
-      result &= writer.readShort(address);
+      result &= writer.readShort(address, wallClockTime);
     }
     return result;
   }
 
-  public void writeByte(int address, int value) {
+  public void writeByte(int address, int value, long wallClockTime) {
     for (Reader reader : readers) {
-      reader.writeByte(address, value);
+      reader.writeByte(address, value, wallClockTime);
     }
   }
 
-  public void writeShort(int address, int value) {
+  public void writeShort(int address, int value, long wallClockTime) {
     for (Reader reader : readers) {
-      reader.writeShort(address, value);
+      reader.writeShort(address, value, wallClockTime);
     }
   }
 }

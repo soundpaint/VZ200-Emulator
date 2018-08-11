@@ -19,7 +19,7 @@ public class Keyboard extends JFrame implements MemoryBus.Writer {
   private KeyboardPanel panel;
   private KeyboardMatrix matrix;
 
-  public int readByte(int address) {
+  public int readByte(int address, long wallClockTime) {
     int result;
     int addressOffset = (address - baseAddress) & 0xffff;
     if (addressOffset < MEMORY_SIZE)
@@ -29,7 +29,7 @@ public class Keyboard extends JFrame implements MemoryBus.Writer {
     return result;
   }
 
-  public int readShort(int address) {
+  public int readShort(int address, long wallClockTime) {
     int resultLSB, resultMSB;
     int addressOffset = (address - baseAddress) & 0xffff;
     if (addressOffset < MEMORY_SIZE)

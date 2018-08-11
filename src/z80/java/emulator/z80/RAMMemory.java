@@ -15,14 +15,14 @@ public class RAMMemory extends ROMMemory implements MemoryBus.Reader {
     super(baseAddress, createRAMData(size));
   }
 
-  public void writeByte(int address, int value) {
+  public void writeByte(int address, int value, long wallClockTime) {
     int addressOffset = (address - baseAddress) & 0xffff;
     if (addressOffset < data.length) {
       data[addressOffset] = value & 0xff;
     }
   }
 
-  public void writeShort(int address, int value) {
+  public void writeShort(int address, int value, long wallClockTime) {
     int addressOffset = (address - baseAddress) & 0xffff;
     if (addressOffset < data.length) {
       data[addressOffset] = value & 0xff;

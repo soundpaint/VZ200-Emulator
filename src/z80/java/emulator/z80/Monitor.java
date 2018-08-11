@@ -469,7 +469,7 @@ public class Monitor {
 	new BufferedOutputStream(new FileOutputStream(fileName.value));
       int addr = num1.value;
       do {
-	int value = memory.readByte(addr);
+	int value = memory.readByte(addr, cpu.getWallClockCycles());
 	os.write(value);
 	addr++;
       } while (addr != num2.value);
@@ -492,7 +492,7 @@ public class Monitor {
       do {
 	value = is.read();
 	if (value >= 0) {
-	  memory.writeByte(addr, value);
+	  memory.writeByte(addr, value, cpu.getWallClockCycles());
 	  addr++;
 	}
       }
@@ -526,7 +526,8 @@ public class Monitor {
       }
       stdout.println(op.getConcreteMnemonic());
     } else {
-      stdout.println(" " + Util.hexByteStr(memory.readByte(fallbackAddress)) +
+      int dataByte = memory.readByte(fallbackAddress, cpu.getWallClockCycles());
+      stdout.println(" " + Util.hexByteStr(dataByte) +
                      "               ???");
       length = 1;
     }
@@ -598,7 +599,7 @@ public class Monitor {
     StringBuffer sbText =
       new StringBuffer(SPACE.substring(0, currentaddr & 0xf));
     do {
-      int dataByte = memory.readByte(currentaddr++);
+      int dataByte = memory.readByte(currentaddr++, cpu.getWallClockCycles());
       currentaddr &= 0xffff;
       sbNumeric.append(" " + Util.hexByteStr(dataByte));
       sbText.append(renderDataByteAsChar(dataByte));
@@ -622,8 +623,9 @@ public class Monitor {
     if (num1.parsed)
       startaddr = num1.value;
     do {
+      int dataByte = memory.readByte(startaddr, cpu.getWallClockCycles());
       stdout.print(Util.hexShortStr(startaddr) + "-   (" +
-		   Util.hexByteStr(memory.readByte(startaddr)) + ") ");
+		   Util.hexByteStr(dataByte) + ") ");
       try {
 	cmdLine = readLine();
 	pos = 0;
@@ -637,7 +639,7 @@ public class Monitor {
       else {
 	while (!eof()) {
 	  parseNumber(num1);
-	  memory.writeByte(startaddr, num1.value);
+	  memory.writeByte(startaddr, num1.value, cpu.getWallClockCycles());
 	  startaddr++;
 	}
       }
@@ -647,10 +649,11 @@ public class Monitor {
   private void portaccess() {
     int port = num1.value;
     if (num2.parsed) {
-      int data = num2.value;
-      io.writeByte(port, data);
+      int dataByte = num2.value;
+      io.writeByte(port, dataByte, cpu.getWallClockCycles());
     } else {
-      stdout.println(Util.hexByteStr(io.readByte(port)));
+      int dataByte = io.readByte(port, cpu.getWallClockCycles());
+      stdout.println(Util.hexByteStr(dataByte));
     }
   }
 
@@ -680,7 +683,6 @@ public class Monitor {
         return;
       }
       if (num1.parsed) {
-	int data = num1.value;
         try {
           matchedRegister.setValue(num1.value);
         } catch (Exception e) {

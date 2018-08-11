@@ -4,10 +4,10 @@ package emulator.z80;
 
 public interface CPU {
   public interface Memory {
-    public int readByte(int address);
-    public int readShort(int address);
-    public void writeByte(int address, int value);
-    public void writeShort(int address, int value);
+    public int readByte(int address, long wallClockTime);
+    public int readShort(int address, long wallClockTime);
+    public void writeByte(int address, int value, long wallClockTime);
+    public void writeShort(int address, int value, long wallClockTime);
   }
 
   public interface NamedObject {

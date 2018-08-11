@@ -29,6 +29,8 @@ public class KeyboardPanel extends JPanel {
   private KeyListener keyListener;
 
   private static class Button extends JButton {
+    private static final long serialVersionUID = 5897697714699999757L;
+
     private KeyboardMatrix.Key key;
 
     public Button(ImageIcon icon, KeyboardMatrix.Key key) {
