@@ -588,6 +588,16 @@ public class Z80 implements CPU {
   private long wallClockTime = 0; // [ns since startup]
   private long timePerClockCycle; // [ns]
 
+  public void addWallClockListener(WallClockListener listener) {
+    wallClockListeners.add(listener);
+  }
+
+  private void notifyWallClockListeners() {
+    for (WallClockListener listener : wallClockListeners) {
+      listener.wallClockChanged(wallClockCycles, wallClockTime);
+    }
+  }
+
   public long getTimePerClockCycle() {
     return timePerClockCycle;
   }
@@ -611,6 +621,7 @@ public class Z80 implements CPU {
   private void updateWallClock(int cycles) {
     wallClockCycles += cycles;
     wallClockTime = wallClockCycles * timePerClockCycle;
+    notifyWallClockListeners();
   }
 
   // *** OPCODE HELPERS *******************************************************
@@ -4362,6 +4373,7 @@ public class Z80 implements CPU {
   }
 
   private CPU.Memory memory, io;
+  private List<WallClockListener> wallClockListeners;
 
   public CPU.Memory getMemory() { return memory; }
 
@@ -4406,6 +4418,7 @@ public class Z80 implements CPU {
     System.out.println("setting up processor interface...");
     memoryCodeFetcher = new MemoryCodeFetcher(memory, regPC);
     intrBusDataFetcher = new IntrBusDataFetcher();
+    wallClockListeners = new ArrayList<WallClockListener>();
     System.out.println("resetting processor status...");
     reset();
     System.out.println("Z80 initialized.");

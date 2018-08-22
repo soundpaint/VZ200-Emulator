@@ -47,7 +47,7 @@ public class IO implements MemoryBus.Reader, MemoryBus.Writer {
       data = keyboard.readByte(address, wallClockTime);
       if (cassetteInputActive())
         data |= 0x40;
-      if (video.fs())
+      if (video.hs())
         data |= 0x80;
     } else {
       data = BYTE_UNDEFINED;
@@ -74,6 +74,10 @@ public class IO implements MemoryBus.Reader, MemoryBus.Writer {
   public void writeShort(int address, int value, long wallClockTime) {
     writeByte(address++, value & 0xff, wallClockTime);
     writeByte(address, (value >> 8) & 0xff, wallClockTime);
+  }
+
+  public boolean updateWallClock(long wallClockCycles, long wallClockTime) {
+    return video.updateWallClock(wallClockCycles, wallClockTime);
   }
 
   public String toString()

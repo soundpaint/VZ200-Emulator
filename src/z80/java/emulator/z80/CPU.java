@@ -37,6 +37,10 @@ public interface CPU {
     public ConcreteOpCode createOpCode();
   }
 
+  public interface WallClockListener {
+    public void wallClockChanged(long wallClockCycles, long wallClockTime);
+  }
+
   public int doPOP();
   public void doPUSH(int op);
 
@@ -51,6 +55,8 @@ public interface CPU {
 
   public void requestIRQ();
   public void requestNMI();
+
+  public void addWallClockListener(WallClockListener listener);
 
   public long getTimePerClockCycle();
 

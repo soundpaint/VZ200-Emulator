@@ -14,11 +14,23 @@ public class Video extends JFrame
 {
   private static final long serialVersionUID = 8771293905230414438L;
 
-  private final static int DEFAULT_BASE_ADDRESS = 0x7000;
+  private static final int DEFAULT_BASE_ADDRESS = 0x7000;
+
+  // horizontal sync
+  private static final long HS_CYCLE = 64000; // [ns]
+  private static final long HS_CYCLE_LOW = 4800; // [ns]
+
+  // field sync
+  // FS_CYCLE must be a multiple of HS_CYCLE to keep FS and HS sync'd
+  private static final long FS_CYCLE = 40960000; // [ns]
+  private static final long FS_CYCLE_LOW = 2480000; // [ns]
+
   private VideoPanel panel;
   private RAMMemory videoRAM;
   private int baseAddress;
-  private long startTime;
+  private long wallClockTime;
+  private long prevHsCycleLowStart;
+  private long prevFsCycleLowStart;
 
   public int readByte(int address, long wallClockTime) {
     return videoRAM.readByte(address, wallClockTime);
@@ -39,9 +51,27 @@ public class Video extends JFrame
     panel.invalidate(address);
   }
 
+  public boolean hs() {
+    return wallClockTime - prevHsCycleLowStart >= HS_CYCLE_LOW;
+  }
+
   public boolean fs() {
-    long time = (System.nanoTime() - startTime) % 20000000;
-    return time < 1000000;
+    return wallClockTime - prevFsCycleLowStart >= FS_CYCLE_LOW;
+  }
+
+  public boolean updateWallClock(long wallClockCycles, long wallClockTime) {
+    this.wallClockTime = wallClockTime;
+    if (wallClockTime - prevHsCycleLowStart >= HS_CYCLE) {
+      prevHsCycleLowStart += HS_CYCLE;
+    }
+    boolean doIrq;
+    if (wallClockTime - prevFsCycleLowStart >= FS_CYCLE) {
+      prevFsCycleLowStart += FS_CYCLE;
+      doIrq = true;
+    } else {
+      doIrq = false;
+    }
+    return doIrq;
   }
 
   public void setColorMode(boolean colorMode) {
@@ -59,7 +89,9 @@ public class Video extends JFrame
   public Video(int baseAddress) throws IOException {
     super("VZ200 Video Screen");
     this.baseAddress = baseAddress;
-    startTime = System.nanoTime();
+    wallClockTime = 0;
+    prevHsCycleLowStart = 0;
+    prevFsCycleLowStart = 0;
     panel = new VideoPanel(baseAddress);
     getContentPane().add(panel);
     videoRAM = panel.getVideoRAM();
