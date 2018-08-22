@@ -858,7 +858,7 @@ public class Monitor {
       CPU cpu = null;
       try {
 	cpuClassName = argv[0];
-	Class cpuClass = Class.forName(cpuClassName);
+	Class<?> cpuClass = Class.forName(cpuClassName);
 	cpu = (CPU)cpuClass.newInstance();
       } catch (Exception e) {
 	System.out.println("Could not instantiate CPU class '" +
