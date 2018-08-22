@@ -691,19 +691,19 @@ public class Z80 implements CPU {
 
   private class Rel8 implements Function {
     private String name;
-    private Reg16 reg16;
+    private ConcreteOperation concreteOperation;
 
     private Rel8() {}
 
-    Rel8(String name, Reg16 reg16) {
+    Rel8(String name, ConcreteOperation concreteOperation) {
       this.name = name;
-      this.reg16 = reg16;
+      this.concreteOperation = concreteOperation;
     }
 
     public String getName() { return name; }
 
     public String evaluate(int arg) {
-      int address = reg16.getValue();
+      int address = concreteOperation.getNextAddress();
       address += (byte)arg; // signed byte
       return Util.hexShortStr(address);
     }
@@ -724,7 +724,7 @@ public class Z80 implements CPU {
       new Identity("VAL8", 2),
       new Identity("VAL16", 4),
       new Displacement("DISP8", 2),
-      new Rel8("REL8", regPC)
+      new Rel8("REL8", concreteOperation)
     };
   }
 
@@ -766,6 +766,19 @@ public class Z80 implements CPU {
 	throw new IndexOutOfBoundsException("index");
       args[index] = value;
     }
+
+    public String toString() {
+      StringBuffer sb = new StringBuffer();
+      for (int index = 0; index < ARGS_LENGTH; index++) {
+        if (sb.length() > 0) {
+          sb.append(", ");
+        }
+        sb.append((char)(index + 'a'));
+        sb.append("=");
+        sb.append(args[index]);
+      }
+      return "Arguments{" + sb + "}";
+    }
   }
 
   public class ConcreteOperation implements CPU.ConcreteOperation {
@@ -802,6 +815,10 @@ public class Z80 implements CPU {
         concreteOpCode.addByte(concreteOpCodeByte);
       }
       return concreteOpCode;
+    }
+
+    public int getNextAddress() {
+      return (address + genericOperation.byteLength) & 0xffff;
     }
 
     public void execute() {
@@ -4367,10 +4384,11 @@ public class Z80 implements CPU {
   }
 
   public Z80(CPU.Memory memory, CPU.Memory io, int cpuFrequency) {
-    timePerClockCycle = 1000000000 / cpuFrequency;
     System.out.println("initializing Z80:");
     this.memory = memory;
     this.io = io;
+    timePerClockCycle = 1000000000 / cpuFrequency;
+    concreteOperation = new ConcreteOperation();
     System.out.println("setting up registers...");
     createRegisters();
     System.out.println("setting up processor flags...");
@@ -4388,7 +4406,6 @@ public class Z80 implements CPU {
     System.out.println("setting up processor interface...");
     memoryCodeFetcher = new MemoryCodeFetcher(memory, regPC);
     intrBusDataFetcher = new IntrBusDataFetcher();
-    concreteOperation = new ConcreteOperation();
     System.out.println("resetting processor status...");
     reset();
     System.out.println("Z80 initialized.");
