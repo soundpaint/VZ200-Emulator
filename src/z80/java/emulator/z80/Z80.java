@@ -1690,8 +1690,8 @@ public class Z80 implements CPU {
 	     6, 0);
       }
       public void execute0(Arguments args) {
-	REG16[getArg(args, 'x')].setValue(doDEC16(REG16[getArg(args, 'x')].
-						 getValue()));
+        Reg16 reg = REG16[getArg(args, 'x')];
+	reg.setValue(doDEC16(reg.getValue()));
       }
     },
     new GenericOperation() {
@@ -1701,8 +1701,8 @@ public class Z80 implements CPU {
 	     4, 0);
       }
       public void execute0(Arguments args) {
-	REG8[getArg(args, 'x')].setValue(doDEC8(REG8[getArg(args, 'x')].
-					       getValue()));
+        Reg8 reg = REG8[getArg(args, 'x')];
+	reg.setValue(doDEC8(reg.getValue()));
       }
     },
     new GenericOperation() {
@@ -1875,7 +1875,8 @@ public class Z80 implements CPU {
 	     11, 0);
       }
       public void execute0(Arguments args) {
-	doIN(regC.getValue());
+	doIN(regC.getValue()); // result of doIN() intentionally
+                               // ignored
       }
     },
     new GenericOperation() {
@@ -1949,8 +1950,8 @@ public class Z80 implements CPU {
 	     6, 0);
       }
       public void execute0(Arguments args) {
-	REG16[getArg(args, 'x')].setValue(doINC16(REG16[getArg(args, 'x')].
-						 getValue()));
+        Reg16 reg = REG16[getArg(args, 'x')];
+	reg.setValue(doINC16(reg.getValue()));
       }
     },
     new GenericOperation() {
@@ -1960,8 +1961,8 @@ public class Z80 implements CPU {
 	     4, 0);
       }
       public void execute0(Arguments args) {
-	REG8[getArg(args, 'x')].setValue(doINC8(REG8[getArg(args, 'x')].
-					       getValue()));
+        Reg8 reg = REG8[getArg(args, 'x')];
+	reg.setValue(doINC8(reg.getValue()));
       }
     },
     new GenericOperation() {
@@ -2885,8 +2886,8 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-	REG8[getArg(args, 'x')].setValue(doRL(REG8[getArg(args, 'x')].
-					     getValue()));
+        Reg8 reg = REG8[getArg(args, 'x')];
+	reg.setValue(doRL(reg.getValue()));
       }
     },
     new GenericOperation() {
@@ -2938,8 +2939,8 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-	REG8[getArg(args, 'x')].setValue(doRLC(REG8[getArg(args, 'x')].
-					      getValue()));
+        Reg8 reg = REG8[getArg(args, 'x')];
+	reg.setValue(doRLC(reg.getValue()));
       }
     },
     new GenericOperation() {
@@ -3001,7 +3002,8 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-	REG8[getArg(args, 'x')].setValue(doRR(REG8[getArg(args, 'x')].getValue()));
+        Reg8 reg = REG8[getArg(args, 'x')];
+	reg.setValue(doRR(reg.getValue()));
       }
     },
     new GenericOperation() {
@@ -3053,8 +3055,8 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-	REG8[getArg(args, 'x')].setValue(doRRC(REG8[getArg(args, 'x')].
-					      getValue()));
+        Reg8 reg = REG8[getArg(args, 'x')];
+	reg.setValue(doRRC(reg.getValue()));
       }
     },
     new GenericOperation() {
@@ -3247,8 +3249,8 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-	REG8[getArg(args, 'x')].setValue(doSLA(REG8[getArg(args, 'x')].
-					      getValue()));
+        Reg8 reg = REG8[getArg(args, 'x')];
+	reg.setValue(doSLA(reg.getValue()));
       }
     },
     new GenericOperation() {
@@ -3290,8 +3292,8 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-	REG8[getArg(args, 'x')].setValue(doSRA(REG8[getArg(args, 'x')].
-					      getValue()));
+        Reg8 reg = REG8[getArg(args, 'x')];
+	reg.setValue(doSRA(reg.getValue()));
       }
     },
     new GenericOperation() {
@@ -3333,8 +3335,8 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-	REG8[getArg(args, 'x')].setValue(doSRL(REG8[getArg(args, 'x')].
-					      getValue()));
+        Reg8 reg = REG8[getArg(args, 'x')];
+	reg.setValue(doSRL(reg.getValue()));
       }
     },
     new GenericOperation() {
