@@ -306,7 +306,7 @@ public class Z80 implements CPU {
     public String getName() { return regHi.getName() + regLo.getName(); }
 
     public int getValue() {
-      return (regHi.getValue() << 8) | regLo.getValue();
+      return (regHi.getValue() << 8) | (regLo.getValue() & 0xff);
     }
 
     public void setValue(int value) {
@@ -1001,7 +1001,7 @@ public class Z80 implements CPU {
 
     private int swapEndianShort(int value) {
       return
-	((value & 0x00ff) << 8) | ((value & 0xff00) >>>  8);
+	((value & 0xff) << 8) | ((value >>>  8) & 0xff);
     }
 
     private int swapEndianInt(int value) {
