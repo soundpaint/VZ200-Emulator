@@ -13,6 +13,7 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -45,20 +46,26 @@ public class KeyboardPanel extends JPanel {
 
   private class KeyListener extends KeyAdapter {
     public void keyPressed(KeyEvent e) {
-      KeyboardMatrix.Key key = KeyboardMatrix.getKeyByKeyCode(e.getKeyCode());
-      if (key != null) {
-	matrix.setSelected(key, true);
-	JButton button = buttons[key.getRow()][key.getColumn()];
-	button.setSelected(true);
+      List<KeyboardMatrix.Key> keys =
+        KeyboardMatrix.getKeysByKeyCode(e.getKeyCode());
+      if (keys != null) {
+        for (KeyboardMatrix.Key key : keys) {
+          matrix.setSelected(key, true);
+          JButton button = buttons[key.getRow()][key.getColumn()];
+          button.setSelected(true);
+        }
       }
     }
 
     public void keyReleased(KeyEvent e) {
-      KeyboardMatrix.Key key = KeyboardMatrix.getKeyByKeyCode(e.getKeyCode());
-      if (key != null) {
-	matrix.setSelected(key, false);
-	JButton button = buttons[key.getRow()][key.getColumn()];
-	button.setSelected(false);
+      List<KeyboardMatrix.Key> keys =
+        KeyboardMatrix.getKeysByKeyCode(e.getKeyCode());
+      if (keys != null) {
+        for (KeyboardMatrix.Key key : keys) {
+          matrix.setSelected(key, false);
+          JButton button = buttons[key.getRow()][key.getColumn()];
+          button.setSelected(false);
+        }
       }
     }
   }
@@ -218,7 +225,7 @@ public class KeyboardPanel extends JPanel {
       panelTop.setPreferredSize(size);
       add(panelTop);
 
-      JLabel bottomLabel = new JLabel(key.getBottomLabel() != null ? 
+      JLabel bottomLabel = new JLabel(key.getBottomLabel() != null ?
 				      key.getBottomLabel() : " ");
       bottomLabel.setForeground(LABEL_FG_COLOR);
       bottomLabel.setFont(smallFont);

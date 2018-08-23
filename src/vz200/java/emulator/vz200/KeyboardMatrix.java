@@ -1,9 +1,11 @@
 package emulator.vz200;
 
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import emulator.z80.CPU;
@@ -241,24 +243,125 @@ public class KeyboardMatrix {
     return new KeyIterator();
   }
 
-  private final static HashMap<Integer, Key> keyCode2Key;
+  private final static HashMap<Integer, List<Key>> keyCode2Keys;
+
+  private static void addKeyForKeyCode(Integer keyCode, Key key) {
+    List<Key> keys;
+    if (keyCode2Keys.containsKey(keyCode)) {
+      keys = keyCode2Keys.get(keyCode);
+    } else {
+      keys = new ArrayList<Key>();
+      keyCode2Keys.put(keyCode, keys);
+    }
+    keys.add(key);
+  }
+
+  private static Key lookupKeyByLabel(String label) {
+    for (Iterator<Key> keyIterator = getKeyIterator(); keyIterator.hasNext();) {
+      Key key = keyIterator.next();
+      if (key.getKeyLabel().equals(label)) {
+        return key;
+      }
+    }
+    throw new IllegalArgumentException("unknown key: " + label);
+  }
+
+  private static void addKeyShortcuts() {
+    addKeyForKeyCode(KeyEvent.VK_DOWN, lookupKeyByLabel("SPACE"));
+    addKeyForKeyCode(KeyEvent.VK_DOWN, lookupKeyByLabel("CTRL"));
+    addKeyForKeyCode(KeyEvent.VK_LEFT, lookupKeyByLabel("M"));
+    addKeyForKeyCode(KeyEvent.VK_LEFT, lookupKeyByLabel("CTRL"));
+    addKeyForKeyCode(KeyEvent.VK_RIGHT, lookupKeyByLabel(","));
+    addKeyForKeyCode(KeyEvent.VK_RIGHT, lookupKeyByLabel("CTRL"));
+    addKeyForKeyCode(KeyEvent.VK_UP, lookupKeyByLabel("."));
+    addKeyForKeyCode(KeyEvent.VK_UP, lookupKeyByLabel("CTRL"));
+    addKeyForKeyCode(KeyEvent.VK_KP_DOWN, lookupKeyByLabel("SPACE"));
+    addKeyForKeyCode(KeyEvent.VK_KP_DOWN, lookupKeyByLabel("CTRL"));
+    addKeyForKeyCode(KeyEvent.VK_KP_LEFT, lookupKeyByLabel("M"));
+    addKeyForKeyCode(KeyEvent.VK_KP_LEFT, lookupKeyByLabel("CTRL"));
+    addKeyForKeyCode(KeyEvent.VK_KP_RIGHT, lookupKeyByLabel(","));
+    addKeyForKeyCode(KeyEvent.VK_KP_RIGHT, lookupKeyByLabel("CTRL"));
+    addKeyForKeyCode(KeyEvent.VK_KP_UP, lookupKeyByLabel("."));
+    addKeyForKeyCode(KeyEvent.VK_KP_UP, lookupKeyByLabel("CTRL"));
+    addKeyForKeyCode(KeyEvent.VK_DELETE, lookupKeyByLabel(";"));
+    addKeyForKeyCode(KeyEvent.VK_DELETE, lookupKeyByLabel("CTRL"));
+    addKeyForKeyCode(KeyEvent.VK_INSERT, lookupKeyByLabel("L"));
+    addKeyForKeyCode(KeyEvent.VK_INSERT, lookupKeyByLabel("CTRL"));
+    addKeyForKeyCode(KeyEvent.VK_ASTERISK, lookupKeyByLabel(":"));
+    addKeyForKeyCode(KeyEvent.VK_ASTERISK, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_NUMPAD1, lookupKeyByLabel("1"));
+    addKeyForKeyCode(KeyEvent.VK_EXCLAMATION_MARK, lookupKeyByLabel("1"));
+    addKeyForKeyCode(KeyEvent.VK_EXCLAMATION_MARK, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_NUMPAD2, lookupKeyByLabel("2"));
+    addKeyForKeyCode(KeyEvent.VK_QUOTEDBL, lookupKeyByLabel("2"));
+    addKeyForKeyCode(KeyEvent.VK_QUOTEDBL, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_NUMPAD3, lookupKeyByLabel("3"));
+    addKeyForKeyCode(KeyEvent.VK_NUMBER_SIGN, lookupKeyByLabel("3"));
+    addKeyForKeyCode(KeyEvent.VK_NUMBER_SIGN, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_NUMPAD4, lookupKeyByLabel("4"));
+    addKeyForKeyCode(KeyEvent.VK_DOLLAR, lookupKeyByLabel("4"));
+    addKeyForKeyCode(KeyEvent.VK_DOLLAR, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_NUMPAD5, lookupKeyByLabel("5"));
+    addKeyForKeyCode(KeyEvent.VK_NUMPAD6, lookupKeyByLabel("6"));
+    addKeyForKeyCode(KeyEvent.VK_AMPERSAND, lookupKeyByLabel("6"));
+    addKeyForKeyCode(KeyEvent.VK_AMPERSAND, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_NUMPAD7, lookupKeyByLabel("7"));
+    addKeyForKeyCode(KeyEvent.VK_QUOTE, lookupKeyByLabel("7"));
+    addKeyForKeyCode(KeyEvent.VK_QUOTE, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_NUMPAD8, lookupKeyByLabel("8"));
+    addKeyForKeyCode(KeyEvent.VK_LEFT_PARENTHESIS, lookupKeyByLabel("8"));
+    addKeyForKeyCode(KeyEvent.VK_LEFT_PARENTHESIS, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_NUMPAD9, lookupKeyByLabel("9"));
+    addKeyForKeyCode(KeyEvent.VK_RIGHT_PARENTHESIS, lookupKeyByLabel("9"));
+    addKeyForKeyCode(KeyEvent.VK_RIGHT_PARENTHESIS, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_NUMPAD0, lookupKeyByLabel("0"));
+    addKeyForKeyCode(KeyEvent.VK_AT, lookupKeyByLabel("0"));
+    addKeyForKeyCode(KeyEvent.VK_AT, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_SUBTRACT, lookupKeyByLabel("-"));
+    addKeyForKeyCode(KeyEvent.VK_EQUALS, lookupKeyByLabel("-"));
+    addKeyForKeyCode(KeyEvent.VK_EQUALS, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_OPEN_BRACKET, lookupKeyByLabel("O"));
+    addKeyForKeyCode(KeyEvent.VK_OPEN_BRACKET, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_CLOSE_BRACKET, lookupKeyByLabel("P"));
+    addKeyForKeyCode(KeyEvent.VK_CLOSE_BRACKET, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_DIVIDE, lookupKeyByLabel("K"));
+    addKeyForKeyCode(KeyEvent.VK_DIVIDE, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_SLASH, lookupKeyByLabel("K"));
+    addKeyForKeyCode(KeyEvent.VK_SLASH, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_BACK_SLASH, lookupKeyByLabel("M"));
+    addKeyForKeyCode(KeyEvent.VK_BACK_SLASH, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_CIRCUMFLEX, lookupKeyByLabel("N"));
+    addKeyForKeyCode(KeyEvent.VK_CIRCUMFLEX, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_ADD, lookupKeyByLabel(";"));
+    addKeyForKeyCode(KeyEvent.VK_ADD, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_PLUS, lookupKeyByLabel(";"));
+    addKeyForKeyCode(KeyEvent.VK_PLUS, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_MULTIPLY, lookupKeyByLabel(":"));
+    addKeyForKeyCode(KeyEvent.VK_MULTIPLY, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_DECIMAL, lookupKeyByLabel(","));
+    addKeyForKeyCode(KeyEvent.VK_LESS, lookupKeyByLabel(","));
+    addKeyForKeyCode(KeyEvent.VK_LESS, lookupKeyByLabel("SHIFT"));
+    addKeyForKeyCode(KeyEvent.VK_GREATER, lookupKeyByLabel("."));
+    addKeyForKeyCode(KeyEvent.VK_GREATER, lookupKeyByLabel("SHIFT"));
+  }
 
   static {
-    keyCode2Key = new HashMap<Integer, Key>();
+    keyCode2Keys = new HashMap<Integer, List<Key>>();
     for (int row = 0; row < ROW_COUNT; row++) {
       for (int column = 0; column < COLUMN_COUNT; column++) {
 	Key key = KEYS[row][column];
 	if (key != null) {
 	  key.row = row;
 	  key.column = column;
-	  keyCode2Key.put(key.keyCode, key);
+          addKeyForKeyCode(key.keyCode, key);
 	}
       }
     }
+    addKeyShortcuts();
   }
 
-  public static Key getKeyByKeyCode(int keyCode) {
-    return keyCode2Key.get(keyCode);
+  public static List<Key> getKeysByKeyCode(int keyCode) {
+    return keyCode2Keys.get(keyCode);
   }
 
   private int rows[];
