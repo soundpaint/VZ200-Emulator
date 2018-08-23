@@ -233,25 +233,21 @@ public class Z80 implements CPU {
   }
 
   class IndirectReg8Disp8 extends IndirectReg8 {
-    private int disp8 = 0x00;
+    private byte disp8 = 0x00;
 
     public IndirectReg8Disp8(CPU.Memory memory, Reg16 reg16) {
       super(memory, reg16);
     }
 
-    public void setDisp8(int disp8) { this.disp8 = disp8; }
+    public void setDisp8(int disp8) { this.disp8 = (byte)disp8; }
 
     public int getDisp8() { return disp8; }
 
-    private String disp8ToString(int disp8) {
-      disp8 &= 0xff;
-      boolean neg = disp8 > 0x7f;
-      if (neg)
-	disp8 = 0x100 - disp8;
-      return
-	((neg) ? "-" : "+") +
-	(char)('0' + (disp8 >>> 4)) +
-	(char)('0' + (disp8 & 0x0f));
+    private String disp8ToString(byte disp8) {
+      if (disp8 >= 0)
+        return String.format("+%02x", disp8);
+      else
+        return String.format("-%02x", -disp8);
     }
 
     public String getName() {
@@ -671,32 +667,23 @@ public class Z80 implements CPU {
     }
   }
 
-  private class Displacement implements Function {
+  private class Disp8 implements Function {
     private String name;
-    private int digits;
 
-    private Displacement() {}
+    private Disp8() {}
 
-    Displacement(String name, int digits) {
+    Disp8(String name) {
       this.name = name;
-      this.digits = digits;
     }
 
     public String getName() { return name; }
 
     public String evaluate(int arg) {
-      int sign;
-      if (arg < 0) {
-	arg = -arg;
-	sign = -1;
-      } else {
-	sign = +1;
-      }
-      String hex = Util.hexByteStr(arg);
-      while (hex.length() < digits)
-	hex = "0" + hex; // TODO: This is very slow and inefficient!
-      return
-	((sign == +1) ? "+" : "-") + hex.substring(hex.length() - digits);
+      byte disp8 = (byte)arg;
+      if (disp8 >= 0)
+        return String.format("+%02x", disp8);
+      else
+        return String.format("-%02x", -disp8);
     }
   }
 
@@ -734,7 +721,7 @@ public class Z80 implements CPU {
       new Identity("VAL3", 1),
       new Identity("VAL8", 2),
       new Identity("VAL16", 4),
-      new Displacement("DISP8", 2),
+      new Disp8("DISP8"),
       new Rel8("REL8", concreteOperation)
     };
   }
