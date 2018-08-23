@@ -1529,7 +1529,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("CP (IY+\\DISP8[d])",
+	init("CP (IY\\DISP8[d])",
 	     "1111110110111110dddddddd",
 	     19, 0);
       }
@@ -2319,7 +2319,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("LD (IX\\DISP8[d]),q",
+	init("LD (IX\\DISP8[d]),\\VAL8[q]",
 	     "1101110100110110ddddddddqqqqqqqq",
 	     19, 0);
       }
@@ -2361,7 +2361,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("LD (IY\\DISP8[d]),q",
+	init("LD (IY\\DISP8[d]),\\VAL8[q]",
 	     "1111110100110110ddddddddqqqqqqqq",
 	     19, 0);
       }
