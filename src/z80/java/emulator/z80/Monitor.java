@@ -448,7 +448,7 @@ public class Monitor {
     if (!singleStep && !trace) {
       long stopCycle = cpu.getWallClockCycles();
       stdout.printf("[paused]%n");
-      stdout.printf("[avg_speed = %.3fMhz]%n",
+      stdout.printf("[avg_speed = %.3fMHz]%n",
                     1000.0 * (stopCycle - startCycle) /
                     (systemStopTime - systemStartTime));
       stdout.printf("[busy_wait = %b]%n", BUSY_WAIT);
