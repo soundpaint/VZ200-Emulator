@@ -2763,7 +2763,8 @@ public class Z80 implements CPU {
 	     15, 0);
       }
       public void execute0(Arguments args) {
-	doRES(indirectRegHL.getValue(), getArg(args, 'b'));
+	indirectRegHL.setValue(doRES(indirectRegHL.getValue(),
+                                     getArg(args, 'b')));
       }
     },
     new GenericOperation() {
@@ -2774,7 +2775,8 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIXDisp8.setDisp8(getArg(args, 'd'));
-	doRES(indirectIXDisp8.getValue(), getArg(args, 'b'));
+	indirectIXDisp8.setValue(doRES(indirectIXDisp8.getValue(),
+                                       getArg(args, 'b')));
       }
     },
     new GenericOperation() {
@@ -2785,7 +2787,8 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIYDisp8.setDisp8(getArg(args, 'd'));
-	doRES(indirectIYDisp8.getValue(), getArg(args, 'b'));
+	indirectIYDisp8.setValue(doRES(indirectIYDisp8.getValue(),
+                                       getArg(args, 'b')));
       }
     },
     new GenericOperation() {
@@ -2795,7 +2798,8 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-	doRES(REG8[getArg(args, 'x')].getValue(), getArg(args, 'b'));
+        Reg8 reg = REG8[getArg(args, 'x')];
+	reg.setValue(doRES(reg.getValue(), getArg(args, 'b')));
       }
     },
     new GenericOperation() {
@@ -3165,7 +3169,8 @@ public class Z80 implements CPU {
 	     15, 0);
       }
       public void execute0(Arguments args) {
-	doSET(indirectRegHL.getValue(), getArg(args, 'b'));
+	indirectRegHL.setValue(doSET(indirectRegHL.getValue(),
+                                     getArg(args, 'b')));
       }
     },
     new GenericOperation() {
@@ -3176,7 +3181,8 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIXDisp8.setDisp8(getArg(args, 'd'));
-	doSET(indirectIXDisp8.getValue(), getArg(args, 'b'));
+	indirectIXDisp8.setValue(doSET(indirectIXDisp8.getValue(),
+                                       getArg(args, 'b')));
       }
     },
     new GenericOperation() {
@@ -3187,7 +3193,8 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIYDisp8.setDisp8(getArg(args, 'd'));
-	doSET(indirectIYDisp8.getValue(), getArg(args, 'b'));
+	indirectIYDisp8.setValue(doSET(indirectIYDisp8.getValue(),
+                                       getArg(args, 'b')));
       }
     },
     new GenericOperation() {
@@ -3197,7 +3204,8 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-	doSET(REG8[getArg(args, 'x')].getValue(), getArg(args, 'b'));
+        Reg8 reg = REG8[getArg(args, 'x')];
+	reg.setValue(doSET(reg.getValue(), getArg(args, 'b')));
       }
     },
     new GenericOperation() {
