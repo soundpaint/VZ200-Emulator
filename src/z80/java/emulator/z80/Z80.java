@@ -1616,18 +1616,6 @@ public class Z80 implements CPU {
 	regA.setValue(doDAA(regA.getValue()));
       }
     },
-/*
-    new GenericOperation() {
-      public void init() {
-	init("DEC (HL)",
-	     "00110101",
-	     11, 0);
-      }
-      public void execute0(Arguments args) {
-	indirectRegHL.setValue(doDEC8(indirectRegHL.getValue()));
-      }
-    },
-*/
     new GenericOperation() {
       public void init() {
 	init("DEC IX",
@@ -1876,18 +1864,6 @@ public class Z80 implements CPU {
 	DREG8[getArg(args, 'x')].setValue(doIN(regC.getValue()));
       }
     },
-/*
-    new GenericOperation() {
-      public void init() {
-	init("INC (HL)",
-	     "00110100",
-	     11, 0);
-      }
-      public void execute0(Arguments args) {
-	indirectRegHL.setValue(doINC8(indirectRegHL.getValue()));
-      }
-    },
-*/
     new GenericOperation() {
       public void init() {
 	init("INC IX",
@@ -2265,18 +2241,6 @@ public class Z80 implements CPU {
 	regHL.setValue(memory.readShort(getArg(args, 'x'), wallClockTime));
       }
     },
-/*
-    new GenericOperation() {
-      public void init() {
-	init("LD (HL),\\VAL8[d]",
-	     "00110110dddddddd",
-	     10, 0);
-      }
-      public void execute0(Arguments args) {
-	indirectRegHL.setValue(getArg(args, 'd'));
-      }
-    },
-*/
     new GenericOperation() {
       public void init() {
 	init("LD (HL),\\DREG8[x]",
