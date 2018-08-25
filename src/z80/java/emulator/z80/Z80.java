@@ -1623,7 +1623,7 @@ public class Z80 implements CPU {
 	     10, 0);
       }
       public void execute0(Arguments args) {
-	regIX.setValue(doDEC16(regIX.getValue()));
+	doDEC16(regIX);
       }
     },
     new GenericOperation() {
@@ -1634,7 +1634,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIXDisp8.setDisp8(getArg(args, 'd'));
-	indirectIXDisp8.setValue(doDEC8(indirectIXDisp8.getValue()));
+	doDEC8(indirectIXDisp8);
       }
     },
     new GenericOperation() {
@@ -1644,7 +1644,7 @@ public class Z80 implements CPU {
 	     10, 0);
       }
       public void execute0(Arguments args) {
-	regIY.setValue(doDEC16(regIY.getValue()));
+	doDEC16(regIY);
       }
     },
     new GenericOperation() {
@@ -1655,7 +1655,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIYDisp8.setDisp8(getArg(args, 'd'));
-	indirectIYDisp8.setValue(doDEC8(indirectIYDisp8.getValue()));
+	doDEC8(indirectIYDisp8);
       }
     },
     new GenericOperation() {
@@ -1665,8 +1665,7 @@ public class Z80 implements CPU {
 	     6, 0);
       }
       public void execute0(Arguments args) {
-        Reg16 reg = REG16[getArg(args, 'x')];
-	reg.setValue(doDEC16(reg.getValue()));
+	doDEC16(REG16[getArg(args, 'x')]);
       }
     },
     new GenericOperation() {
@@ -1676,8 +1675,7 @@ public class Z80 implements CPU {
 	     4, 0);
       }
       public void execute0(Arguments args) {
-        Reg8 reg = REG8[getArg(args, 'x')];
-	reg.setValue(doDEC8(reg.getValue()));
+	doDEC8(REG8[getArg(args, 'x')]);
       }
     },
     new GenericOperation() {
@@ -1871,7 +1869,7 @@ public class Z80 implements CPU {
 	     10, 0);
       }
       public void execute0(Arguments args) {
-	regIX.setValue(doINC16(regIX.getValue()));
+	doINC16(regIX);
       }
     },
     new GenericOperation() {
@@ -1882,7 +1880,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIXDisp8.setDisp8(getArg(args, 'd'));
-	indirectIXDisp8.setValue(doINC8(indirectIXDisp8.getValue()));
+	doINC8(indirectIXDisp8);
       }
     },
     new GenericOperation() {
@@ -1892,7 +1890,7 @@ public class Z80 implements CPU {
 	     10, 0);
       }
       public void execute0(Arguments args) {
-	regIY.setValue(doINC16(regIY.getValue()));
+	doINC16(regIY);
       }
     },
     new GenericOperation() {
@@ -1903,7 +1901,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIYDisp8.setDisp8(getArg(args, 'd'));
-	indirectIYDisp8.setValue(doINC8(indirectIYDisp8.getValue()));
+	doINC8(indirectIYDisp8);
       }
     },
     new GenericOperation() {
@@ -1913,8 +1911,7 @@ public class Z80 implements CPU {
 	     6, 0);
       }
       public void execute0(Arguments args) {
-        Reg16 reg = REG16[getArg(args, 'x')];
-	reg.setValue(doINC16(reg.getValue()));
+	doINC16(REG16[getArg(args, 'x')]);
       }
     },
     new GenericOperation() {
@@ -1924,8 +1921,7 @@ public class Z80 implements CPU {
 	     4, 0);
       }
       public void execute0(Arguments args) {
-        Reg8 reg = REG8[getArg(args, 'x')];
-	reg.setValue(doINC8(reg.getValue()));
+	doINC8(REG8[getArg(args, 'x')]);
       }
     },
     new GenericOperation() {
@@ -3850,48 +3846,46 @@ public class Z80 implements CPU {
     return op;
   }
 
-  private int doDEC16(int op) {
-    op--; op &= 0xffff;
+  private void doDEC16(Reg16 reg) {
+    reg.decrement();
     // flagC unmodified
     // flagN unmodified
     // flagPV unmodified
     // flagH unmodified
     // flagZ unmodified
     // flagS unmodified
-    return op;
   }
 
-  private int doDEC8(int op) {
-    op--; op &= 0xff;
+  private void doDEC8(Reg8 reg) {
+    reg.decrement();
+    int op = reg.getValue();
     // flagC unmodified
     flagN.set(true);
     flagPV.set(op == 0xff);
     flagH.set((op & 0xf) == 0xf);
     flagZ.set(op == 0x00);
     flagS.set(op >= 0x80);
-    return op;
   }
 
-  private int doINC16(int op) {
-    op++; op &= 0xffff;
+  private void doINC16(Reg16 reg) {
+    reg.increment();
     // flagC unmodified
     // flagN unmodified
     // flagPV unmodified
     // flagH unmodified
     // flagZ unmodified
     // flagS unmodified
-    return op;
   }
 
-  private int doINC8(int op) {
-    op++; op &= 0xff;
+  private void doINC8(Reg8 reg) {
+    reg.increment();
+    int op = reg.getValue();
     // flagC unmodified
     flagN.set(false);
     flagPV.set(op == 0xff);
     flagH.set((op & 0xf) == 0x0);
     flagZ.set(op == 0x00);
     flagS.set(op >= 0x80);
-    return op;
   }
 
   private int doIN(int op1) {
