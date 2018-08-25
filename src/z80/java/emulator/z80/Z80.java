@@ -2153,22 +2153,13 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("LD (\\VAL16[x]),BC",
-	     "1110110101000011xxxxxxxxxxxxxxxx",
+	init("LD (\\VAL16[y]),\\REG16[x]",
+	     "1110110101xx0011yyyyyyyyyyyyyyyy",
 	     20, 0);
       }
       public void execute0(Arguments args) {
-	memory.writeShort(getArg(args, 'x'), regBC.getValue(), wallClockTime);
-      }
-    },
-    new GenericOperation() {
-      public void init() {
-	init("LD (\\VAL16[x]),DE",
-	     "1110110101010011xxxxxxxxxxxxxxxx",
-	     20, 0);
-      }
-      public void execute0(Arguments args) {
-	memory.writeShort(getArg(args, 'x'), regDE.getValue(), wallClockTime);
+	memory.writeShort(getArg(args, 'y'),
+                          REG16[getArg(args, 'x')].getValue(), wallClockTime);
       }
     },
     new GenericOperation() {
@@ -2199,16 +2190,6 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	memory.writeShort(getArg(args, 'x'), regIY.getValue(), wallClockTime);
-      }
-    },
-    new GenericOperation() {
-      public void init() {
-	init("LD (\\VAL16[x]),SP",
-	     "1110110101110011xxxxxxxxxxxxxxxx",
-	     20, 0);
-      }
-      public void execute0(Arguments args) {
-	memory.writeShort(getArg(args, 'x'), regSP.getValue(), wallClockTime);
       }
     },
     new GenericOperation() {
