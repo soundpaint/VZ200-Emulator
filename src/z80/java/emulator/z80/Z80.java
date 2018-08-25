@@ -3810,17 +3810,29 @@ public class Z80 implements CPU {
   }
 
   private void doCPD() {
+    boolean savedFlagC = flagC.get();
     doCP(regA.getValue(), indirectRegHL.getValue());
     regHL.decrement();
     regBC.decrement();
-    flagPV.set(flagZ.get());
+    flagC.set(savedFlagC);
+    // flag N set by doCP()
+    flagPV.set(((regBC.getValue() + 0xffff) & 0xffff) == 0x0000);
+    // flag H set by doCP()
+    // flag Z set by doCP()
+    // flag S set by doCP()
   }
 
   private void doCPI() {
+    boolean savedFlagC = flagC.get();
     doCP(regA.getValue(), indirectRegHL.getValue());
     regHL.increment();
     regBC.decrement();
-    flagPV.set(flagZ.get());
+    flagC.set(savedFlagC);
+    // flag N set by doCP()
+    flagPV.set(((regBC.getValue() + 0xffff) & 0xffff) == 0x0000);
+    // flag H set by doCP()
+    // flag Z set by doCP()
+    // flag S set by doCP()
   }
 
   private int doDAA(int op) {
