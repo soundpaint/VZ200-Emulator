@@ -508,7 +508,7 @@ public class Monitor {
 
   private int printOperation(CPU.ConcreteOperation op, int fallbackAddress) {
     // TODO: have to know that regPC is a short
-    if (op.isSynthesizedCode()) {
+    if ((op != null) && op.isSynthesizedCode()) {
       stdout.print("INTR:");
     } else {
       stdout.print(Util.hexShortStr(op.getAddress()) + "-");
