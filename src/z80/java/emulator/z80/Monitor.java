@@ -28,7 +28,8 @@ public class Monitor {
   }
 
   // monitor status
-  private int startaddr;
+  private int codeStartAddr;
+  private int dataStartAddr;
 
   // command line
   private History history;
@@ -356,8 +357,8 @@ public class Monitor {
     }
 
     if (num1.parsed) {
-      startaddr = num1.value;
-      regPC.setValue(startaddr);
+      codeStartAddr = num1.value;
+      regPC.setValue(codeStartAddr);
     } else {
       // continue whereever regPC currently points to
     }
@@ -460,7 +461,7 @@ public class Monitor {
                     100 * (busyTime / ((float)idleTime + busyTime)));
       registeraccess();
     }
-    startaddr = regPC.getValue();
+    codeStartAddr = regPC.getValue();
   }
 
   private void save() {
@@ -486,8 +487,8 @@ public class Monitor {
     try {
       InputStream is =
 	new BufferedInputStream(new FileInputStream(fileName.value));
-      startaddr = num1.value;
-      int addr = startaddr;
+      dataStartAddr = num1.value;
+      int addr = dataStartAddr;
       int value;
       do {
 	value = is.read();
@@ -538,26 +539,26 @@ public class Monitor {
 
   private void unassemble() {
     if (num1.parsed)
-      startaddr = num1.value;
+      codeStartAddr = num1.value;
     int endAddr = 0;
     if (num2.parsed)
       endAddr = num2.value;
     int regPCValue = regPC.getValue();
-    int currentaddr = startaddr;
+    int currentAddr = codeStartAddr;
     CPU.ConcreteOperation op;
     int lineCount = 0;
     do {
-      regPC.setValue(currentaddr);
+      regPC.setValue(currentAddr);
       try {
 	op = cpu.fetchNextOperationNoInterrupts();
       } catch (CPU.MismatchException e) {
         op = null;
       }
-      currentaddr += printOperation(op, currentaddr);
-      currentaddr &= 0xffff; // TODO: 0xffff is z80 specific
-    } while ((num2.parsed && (currentaddr <= endAddr)) ||
+      currentAddr += printOperation(op, currentAddr);
+      currentAddr &= 0xffff; // TODO: 0xffff is z80 specific
+    } while ((num2.parsed && (currentAddr <= endAddr)) ||
              (++lineCount < DEFAULT_UNASSEMBLE_LINES));
-    startaddr = currentaddr;
+    codeStartAddr = currentAddr;
     regPC.setValue(regPCValue);
   }
 
@@ -585,46 +586,46 @@ public class Monitor {
 
   private void dump() {
     if (num1.parsed)
-      startaddr = num1.value;
+      dataStartAddr = num1.value;
     int stopAddr;
     if (num2.parsed)
       stopAddr = num2.value;
     else
-      stopAddr = (startaddr + DEFAULT_DUMP_BYTES) &
+      stopAddr = (dataStartAddr + DEFAULT_DUMP_BYTES) &
         ~0xf & 0xffff; // TODO: 0xffff is z80 specific
-    int currentaddr = startaddr;
-    stdout.print(Util.hexShortStr(currentaddr) + "-  ");
+    int currentAddr = dataStartAddr;
+    stdout.print(Util.hexShortStr(currentAddr) + "-  ");
     StringBuffer sbNumeric =
-      new StringBuffer(SPACE.substring(0, (currentaddr & 0xf) * 3));
+      new StringBuffer(SPACE.substring(0, (currentAddr & 0xf) * 3));
     StringBuffer sbText =
-      new StringBuffer(SPACE.substring(0, currentaddr & 0xf));
+      new StringBuffer(SPACE.substring(0, currentAddr & 0xf));
     do {
-      int dataByte = memory.readByte(currentaddr++, cpu.getWallClockCycles());
-      currentaddr &= 0xffff;
+      int dataByte = memory.readByte(currentAddr++, cpu.getWallClockCycles());
+      currentAddr &= 0xffff;
       sbNumeric.append(" " + Util.hexByteStr(dataByte));
       sbText.append(renderDataByteAsChar(dataByte));
-      if ((currentaddr & 0xf) == 0) {
+      if ((currentAddr & 0xf) == 0) {
 	stdout.println(sbNumeric + "   " + sbText);
 	sbNumeric.setLength(0);
 	sbText.setLength(0);
-	if (currentaddr != stopAddr)
-	  stdout.print(Util.hexShortStr(currentaddr) + "-  ");
+	if (currentAddr != stopAddr)
+	  stdout.print(Util.hexShortStr(currentAddr) + "-  ");
       }
-    } while (currentaddr != stopAddr);
-    if ((currentaddr & 0xf) != 0) {
-      sbNumeric.append(SPACE.substring(0, (0x10 - currentaddr & 0xf) * 3));
-      sbText.append(SPACE.substring(0, 0x10 - currentaddr & 0xf));
+    } while (currentAddr != stopAddr);
+    if ((currentAddr & 0xf) != 0) {
+      sbNumeric.append(SPACE.substring(0, (0x10 - currentAddr & 0xf) * 3));
+      sbText.append(SPACE.substring(0, 0x10 - currentAddr & 0xf));
       stdout.println(sbNumeric + "   " + sbText);
     }
-    startaddr = stopAddr;
+    dataStartAddr = stopAddr;
   }
 
   private void enter() throws ParseError {
     if (num1.parsed)
-      startaddr = num1.value;
+      dataStartAddr = num1.value;
     do {
-      int dataByte = memory.readByte(startaddr, cpu.getWallClockCycles());
-      stdout.print(Util.hexShortStr(startaddr) + "-   (" +
+      int dataByte = memory.readByte(dataStartAddr, cpu.getWallClockCycles());
+      stdout.print(Util.hexShortStr(dataStartAddr) + "-   (" +
 		   Util.hexByteStr(dataByte) + ") ");
       try {
 	cmdLine = readLine();
@@ -635,12 +636,12 @@ public class Monitor {
       if (cmdLine.toUpperCase().equals("Q"))
 	break;
       if (eof())
-	startaddr++;
+	dataStartAddr++;
       else {
 	while (!eof()) {
 	  parseNumber(num1);
-	  memory.writeByte(startaddr, num1.value, cpu.getWallClockCycles());
-	  startaddr++;
+	  memory.writeByte(dataStartAddr, num1.value, cpu.getWallClockCycles());
+	  dataStartAddr++;
 	}
       }
     } while (true);
@@ -808,7 +809,8 @@ public class Monitor {
     registers = cpu.getAllRegisters();
     regPC = cpu.getProgramCounter();
     regSP = cpu.getStackPointer();
-    startaddr = 0x0000;
+    codeStartAddr = 0x0000;
+    dataStartAddr = 0x0000;
     welcome();
     num1 = new Number();
     num2 = new Number();
