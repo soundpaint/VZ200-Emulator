@@ -181,7 +181,9 @@ public class Z80 implements CPU {
     public GenericReg8(String name) { this.name = name; }
     public String getName() { return name; }
     public int getValue() { return value; }
+
     public void setValue(int value) { this.value = value; }
+
     public boolean increment() {
       value++;
       value &= 0xff;
@@ -2782,7 +2784,7 @@ public class Z80 implements CPU {
 	     15, 0);
       }
       public void execute0(Arguments args) {
-	indirectRegHL.setValue(doRL(indirectRegHL.getValue()));
+	doRL(indirectRegHL);
       }
     },
     new GenericOperation() {
@@ -2793,7 +2795,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIXDisp8.setDisp8(getArg(args, 'd'));
-	indirectIXDisp8.setValue(doRL(indirectIXDisp8.getValue()));
+	doRL(indirectIXDisp8);
       }
     },
     new GenericOperation() {
@@ -2804,7 +2806,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIYDisp8.setDisp8(getArg(args, 'd'));
-	indirectIYDisp8.setValue(doRL(indirectIYDisp8.getValue()));
+	doRL(indirectIYDisp8);
       }
     },
     new GenericOperation() {
@@ -2814,8 +2816,7 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-        Reg8 reg = REG8[getArg(args, 'x')];
-	reg.setValue(doRL(reg.getValue()));
+	doRL(REG8[getArg(args, 'x')]);
       }
     },
     new GenericOperation() {
@@ -2825,7 +2826,7 @@ public class Z80 implements CPU {
 	     4, 0);
       }
       public void execute0(Arguments args) {
-	regA.setValue(doRLA(regA.getValue()));
+	doRLA(regA);
       }
     },
     new GenericOperation() {
@@ -2835,7 +2836,7 @@ public class Z80 implements CPU {
 	     15, 0);
       }
       public void execute0(Arguments args) {
-	indirectRegHL.setValue(doRLC(indirectRegHL.getValue()));
+	doRLC(indirectRegHL);
       }
     },
     new GenericOperation() {
@@ -2846,7 +2847,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIXDisp8.setDisp8(getArg(args, 'd'));
-	indirectIXDisp8.setValue(doRLC(indirectIXDisp8.getValue()));
+	doRLC(indirectIXDisp8);
       }
     },
     new GenericOperation() {
@@ -2857,7 +2858,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIYDisp8.setDisp8(getArg(args, 'd'));
-	indirectIYDisp8.setValue(doRLC(indirectIYDisp8.getValue()));
+	doRLC(indirectIYDisp8);
       }
     },
     new GenericOperation() {
@@ -2867,8 +2868,7 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-        Reg8 reg = REG8[getArg(args, 'x')];
-	reg.setValue(doRLC(reg.getValue()));
+	doRLC(REG8[getArg(args, 'x')]);
       }
     },
     new GenericOperation() {
@@ -2878,7 +2878,7 @@ public class Z80 implements CPU {
 	     4, 0);
       }
       public void execute0(Arguments args) {
-	regA.setValue(doRLCA(regA.getValue()));
+	doRLCA(regA);
       }
     },
     new GenericOperation() {
@@ -2888,7 +2888,7 @@ public class Z80 implements CPU {
 	     18, 0);
       }
       public void execute0(Arguments args) {
-	indirectRegHL.setValue(doRLD(indirectRegHL.getValue()));
+	doRLD(indirectRegHL);
       }
     },
     new GenericOperation() {
@@ -2898,7 +2898,7 @@ public class Z80 implements CPU {
 	     15, 0);
       }
       public void execute0(Arguments args) {
-	indirectRegHL.setValue(doRR(indirectRegHL.getValue()));
+	doRR(indirectRegHL);
       }
     },
     new GenericOperation() {
@@ -2909,7 +2909,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIXDisp8.setDisp8(getArg(args, 'd'));
-	indirectIXDisp8.setValue(doRR(indirectIXDisp8.getValue()));
+	doRR(indirectIXDisp8);
       }
     },
     new GenericOperation() {
@@ -2920,7 +2920,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIYDisp8.setDisp8(getArg(args, 'd'));
-	indirectIYDisp8.setValue(doRR(indirectIYDisp8.getValue()));
+	doRR(indirectIYDisp8);
       }
     },
     new GenericOperation() {
@@ -2930,8 +2930,7 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-        Reg8 reg = REG8[getArg(args, 'x')];
-	reg.setValue(doRR(reg.getValue()));
+	doRR(REG8[getArg(args, 'x')]);
       }
     },
     new GenericOperation() {
@@ -2941,7 +2940,7 @@ public class Z80 implements CPU {
 	     4, 0);
       }
       public void execute0(Arguments args) {
-	regA.setValue(doRRA(regA.getValue()));
+	doRRA(regA);
       }
     },
     new GenericOperation() {
@@ -2951,7 +2950,7 @@ public class Z80 implements CPU {
 	     15, 0);
       }
       public void execute0(Arguments args) {
-	indirectRegHL.setValue(doRRC(indirectRegHL.getValue()));
+	doRRC(indirectRegHL);
       }
     },
     new GenericOperation() {
@@ -2962,7 +2961,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIXDisp8.setDisp8(getArg(args, 'd'));
-	indirectIXDisp8.setValue(doRRC(indirectIXDisp8.getValue()));
+	doRRC(indirectIXDisp8);
       }
     },
     new GenericOperation() {
@@ -2973,7 +2972,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIYDisp8.setDisp8(getArg(args, 'd'));
-	indirectIYDisp8.setValue(doRRC(indirectIYDisp8.getValue()));
+	doRRC(indirectIYDisp8);
       }
     },
     new GenericOperation() {
@@ -2983,8 +2982,7 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-        Reg8 reg = REG8[getArg(args, 'x')];
-	reg.setValue(doRRC(reg.getValue()));
+	doRRC(REG8[getArg(args, 'x')]);
       }
     },
     new GenericOperation() {
@@ -2994,7 +2992,7 @@ public class Z80 implements CPU {
 	     4, 0);
       }
       public void execute0(Arguments args) {
-	regA.setValue(doRRCA(regA.getValue()));
+	doRRCA(regA);
       }
     },
     new GenericOperation() {
@@ -3004,7 +3002,7 @@ public class Z80 implements CPU {
 	     18, 0);
       }
       public void execute0(Arguments args) {
-	indirectRegHL.setValue(doRRD(indirectRegHL.getValue()));
+	doRRD(indirectRegHL);
       }
     },
     new GenericOperation() {
@@ -3145,7 +3143,7 @@ public class Z80 implements CPU {
 	     15, 0);
       }
       public void execute0(Arguments args) {
-	indirectRegHL.setValue(doSLA(indirectRegHL.getValue()));
+	doSLA(indirectRegHL);
       }
     },
     new GenericOperation() {
@@ -3156,7 +3154,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIXDisp8.setDisp8(getArg(args, 'd'));
-	indirectIXDisp8.setValue(doSLA(indirectIXDisp8.getValue()));
+	doSLA(indirectIXDisp8);
       }
     },
     new GenericOperation() {
@@ -3167,7 +3165,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIYDisp8.setDisp8(getArg(args, 'd'));
-	indirectIYDisp8.setValue(doSLA(indirectIYDisp8.getValue()));
+	doSLA(indirectIYDisp8);
       }
     },
     new GenericOperation() {
@@ -3177,8 +3175,7 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-        Reg8 reg = REG8[getArg(args, 'x')];
-	reg.setValue(doSLA(reg.getValue()));
+	doSLA(REG8[getArg(args, 'x')]);
       }
     },
     new GenericOperation() {
@@ -3188,7 +3185,7 @@ public class Z80 implements CPU {
 	     15, 0);
       }
       public void execute0(Arguments args) {
-	indirectRegHL.setValue(doSRA(indirectRegHL.getValue()));
+	doSRA(indirectRegHL);
       }
     },
     new GenericOperation() {
@@ -3199,7 +3196,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIXDisp8.setDisp8(getArg(args, 'd'));
-	indirectIXDisp8.setValue(doSRA(indirectIXDisp8.getValue()));
+	doSRA(indirectIXDisp8);
       }
     },
     new GenericOperation() {
@@ -3210,7 +3207,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIYDisp8.setDisp8(getArg(args, 'd'));
-	indirectIYDisp8.setValue(doSRA(indirectIYDisp8.getValue()));
+	doSRA(indirectIYDisp8);
       }
     },
     new GenericOperation() {
@@ -3220,8 +3217,7 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-        Reg8 reg = REG8[getArg(args, 'x')];
-	reg.setValue(doSRA(reg.getValue()));
+	doSRA(REG8[getArg(args, 'x')]);
       }
     },
     new GenericOperation() {
@@ -3231,7 +3227,7 @@ public class Z80 implements CPU {
 	     15, 0);
       }
       public void execute0(Arguments args) {
-	indirectRegHL.setValue(doSRL(indirectRegHL.getValue()));
+	doSRL(indirectRegHL);
       }
     },
     new GenericOperation() {
@@ -3242,7 +3238,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIXDisp8.setDisp8(getArg(args, 'd'));
-	indirectIXDisp8.setValue(doSRL(indirectIXDisp8.getValue()));
+	doSRL(indirectIXDisp8);
       }
     },
     new GenericOperation() {
@@ -3253,7 +3249,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	indirectIYDisp8.setDisp8(getArg(args, 'd'));
-	indirectIYDisp8.setValue(doSRL(indirectIYDisp8.getValue()));
+	doSRL(indirectIYDisp8);
       }
     },
     new GenericOperation() {
@@ -3263,8 +3259,7 @@ public class Z80 implements CPU {
 	     8, 0);
       }
       public void execute0(Arguments args) {
-        Reg8 reg = REG8[getArg(args, 'x')];
-	reg.setValue(doSRL(reg.getValue()));
+	doSRL(REG8[getArg(args, 'x')]);
       }
     },
     new GenericOperation() {
@@ -4041,128 +4036,144 @@ public class Z80 implements CPU {
     return op1 & RES_MASK[op2 & 0x7];
   }
 
-  private int doRL(int op) {
+  private void doRL(Reg8 reg) {
+    int op = reg.getValue();
     boolean new_flag_c = (op >= 0x80);
     op <<= 1; op &= 0xff;
-    if (flagC.get()) op++;
+    if (flagC.get()) op |= 0x1;
+    reg.setValue(op);
     flagC.set(new_flag_c);
     flagN.set(false);
     flagPV.set(PARITY[op]);
     flagH.set(false);
     flagZ.set(op == 0x00);
     flagS.set(op >= 0x80);
-    return op;
   }
 
-  private int doRLA(int op) {
+  private void doRLA(Reg8 reg) {
+    int op = reg.getValue();
     boolean new_flag_c = (op >= 0x80);
     op <<= 1; op &= 0xff;
-    if (flagC.get()) op++;
+    if (flagC.get()) op |= 0x1;
+    reg.setValue(op);
     flagC.set(new_flag_c);
     flagN.set(false);
     // flagPV unmodified
     flagH.set(false);
     // flagZ unmodified
     // flagS unmodified
-    return op;
   }
 
-  private int doRLC(int op) {
-    flagC.set(op >= 0x80);
+  private void doRLC(Reg8 reg) {
+    int op = reg.getValue();
+    boolean new_flag_c = op >= 0x80;
     op <<= 1; op &= 0xff;
-    if (flagC.get()) op++;
+    if (new_flag_c) op |= 0x1;
+    reg.setValue(op);
+    flagC.set(new_flag_c);
     flagN.set(false);
     flagPV.set(PARITY[op]);
     flagH.set(false);
     flagZ.set(op == 0x00);
     flagS.set(op >= 0x80);
-    return op;
   }
 
-  private int doRLCA(int op) {
-    flagC.set(op >= 0x80);
+  private void doRLCA(Reg8 reg) {
+    int op = reg.getValue();
+    boolean new_flag_c = op >= 0x80;
     op <<= 1; op &= 0xff;
-    if (flagC.get()) op++;
+    if (new_flag_c) op |= 0x1;
+    reg.setValue(op);
+    flagC.set(new_flag_c);
     flagN.set(false);
     // flagPV unmodified
     flagH.set(false);
     // flagZ unmodified
     // flagS unmodified
-    return op;
   }
 
-  private int doRLD(int op) {
-    int shifted = (op << 4) | (regA.getValue() & 0x0f);
-    regA.setValue((regA.getValue() & 0xf0) | (op >>> 4));
+  private void doRLD(Reg8 reg) {
+    int regValue = reg.getValue();
+    int regAValue = regA.getValue();
+    reg.setValue(((regValue << 4) & 0xf0) | (regAValue & 0x0f));
+    regAValue = (regAValue & 0xf0) | ((regValue >>> 4) & 0x0f);
+    regA.setValue(regAValue);
     // flagC unmodified
     flagN.set(false);
-    flagPV.set(PARITY[op]);
+    flagPV.set(PARITY[regAValue]);
     flagH.set(false);
-    flagZ.set(op == 0x00);
-    flagS.set(op >= 0x80);
-    return shifted;
+    flagZ.set(regAValue == 0x00);
+    flagS.set(regAValue >= 0x80);
   }
 
-  private int doRR(int op) {
+  private void doRR(Reg8 reg) {
+    int op = reg.getValue();
     boolean new_flag_c = (op & 0x01) == 1;
     op >>>= 1;
     if (flagC.get()) op |= 0x80;
+    reg.setValue(op);
     flagC.set(new_flag_c);
     flagN.set(false);
     flagPV.set(PARITY[op]);
     flagH.set(false);
     flagZ.set(op == 0x00);
     flagS.set(op >= 0x80);
-    return op;
   }
 
-  private int doRRA(int op) {
+  private void doRRA(Reg8 reg) {
+    int op = reg.getValue();
     boolean new_flag_c = (op & 0x01) == 1;
     op >>>= 1;
     if (flagC.get()) op |= 0x80;
+    reg.setValue(op);
     flagC.set(new_flag_c);
     flagN.set(false);
     // flagPV unmodified
     flagH.set(false);
     // flagZ unmodified
     // flagS unmodified
-    return op;
   }
 
-  private int doRRC(int op) {
-    flagC.set((op & 0x01) == 1);
+  private void doRRC(Reg8 reg) {
+    int op = reg.getValue();
+    boolean new_flag_c = (op & 0x01) == 1;
     op >>>= 1;
     if (flagC.get()) op |= 0x80;
+    reg.setValue(op);
+    flagC.set(new_flag_c);
     flagN.set(false);
     flagPV.set(PARITY[op]);
     flagH.set(false);
     flagZ.set(op == 0x00);
     flagS.set(op >= 0x80);
-    return op;
   }
 
-  private int doRRCA(int op) {
-    flagC.set((op & 0x01) == 1);
+  private void doRRCA(Reg8 reg) {
+    int op = reg.getValue();
+    boolean new_flag_c = (op & 0x01) == 1;
     op >>>= 1;
-    if (flagC.get()) op |= 0x80;
+    if (new_flag_c) op |= 0x80;
+    reg.setValue(op);
+    flagC.set(new_flag_c);
     flagN.set(false);
     // flagPV unmodified
     flagH.set(false);
     // flagZ unmodified
     // flagS unmodified
-    return op;
   }
 
-  private int doRRD(int op) {
-    int shifted = op | (regA.getValue() << 8);
-    regA.setValue((regA.getValue() & 0xf0) | (op & 0x0f));
+  private void doRRD(Reg8 reg) {
+    int regValue = reg.getValue();
+    int regAValue = regA.getValue();
+    reg.setValue(((regAValue << 4) & 0xf0) | ((regValue >>> 4) & 0x0f));
+    regAValue = (regAValue & 0xf0) | (regValue & 0x0f);
+    regA.setValue(regAValue);
     // flagC unmodified
     flagN.set(false);
-    flagPV.set(PARITY[op]);
+    flagPV.set(PARITY[regAValue]);
     flagH.set(false);
-    flagZ.set(op == 0x00);
-    flagS.set(op >= 0x80);
-    return shifted >>> 4;
+    flagZ.set(regAValue == 0x00);
+    flagS.set(regAValue >= 0x80);
   }
 
   private int doSBC8(int op1, int op2) {
@@ -4198,38 +4209,41 @@ public class Z80 implements CPU {
     return op1 | SET_MASK[op2 & 0x7];
   }
 
-  private int doSLA(int op) {
+  private void doSLA(Reg8 reg) {
+    int op = reg.getValue();
     flagC.set(op >= 0x80);
     op <<= 1; op &= 0xff;
+    reg.setValue(op);
     flagN.set(false);
     flagPV.set(PARITY[op]);
     flagH.set(false);
     flagZ.set(op == 0x00);
     flagS.set(op >= 0x80);
-    return op;
   }
 
-  private int doSRA(int op) {
+  private void doSRA(Reg8 reg) {
+    int op = reg.getValue();
     flagC.set((op & 0x01) == 1);
     op >>>= 1;
-    if (flagC.get()) op |= 0x80;
+    if ((op & 0x40) == 0x1) op |= 0x80;
+    reg.setValue(op);
     flagN.set(false);
     flagPV.set(PARITY[op]);
     flagH.set(false);
     flagZ.set(op == 0x00);
     flagS.set(op >= 0x80);
-    return op;
   }
 
-  private int doSRL(int op) {
+  private void doSRL(Reg8 reg) {
+    int op = reg.getValue();
     flagC.set((op & 0x01) == 1);
     op >>>= 1;
+    reg.setValue(op);
     flagN.set(false);
     flagPV.set(PARITY[op]);
     flagH.set(false);
     flagZ.set(op == 0x00);
     flagS.set(op >= 0x80);
-    return op;
   }
 
   private int doSUB8(int op1, int op2) {
