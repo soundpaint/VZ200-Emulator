@@ -24,7 +24,23 @@ public class Monitor {
   private static class ParseError extends Exception {
     private static final long serialVersionUID = 6821628755472075263L;
 
-    public ParseError(String s) { super(s); }
+    private int location;
+
+    public ParseError(String s, int location) {
+      super(s);
+      this.location = location;
+    }
+
+    public String prettyPrint() {
+      StringBuffer s = new StringBuffer();
+      s.append(" ");
+      for (int i = 0; i < location; i++)
+        s.append(" ");
+      s.append("^ >>> ");
+      s.append(getMessage());
+      s.append(" (enter 'h' for help)");
+      return s.toString();
+    }
   }
 
   // monitor status
@@ -38,13 +54,74 @@ public class Monitor {
   private char command;
 
   private class Number {
-    private boolean parsed;
+    private int location;
     private int value;
+
+    public Number() { reset(); }
+
+    public void reset() {
+      location = -1;
+      value = 0;
+    }
+
+    public void set(int location, int value) {
+      if (location < 0) {
+        throw new IllegalArgumentException("location < 0: " + location);
+      }
+      this.location = location;
+      this.value = value;
+    }
+
+    public boolean parsed() {
+      return location >= 0;
+    }
+
+    public int getLocation() {
+      if (!parsed()) { throw new IllegalStateException("unparsed value"); }
+      return location;
+    }
+
+    public int getValue() {
+      if (!parsed()) { throw new IllegalStateException("unparsed value"); }
+      return value;
+    }
   }
 
   private class Text {
-    private boolean parsed;
+    private int location;
     private String value;
+
+    public Text() { reset(); }
+
+    public void reset() {
+      location = -1;
+      value = "";
+    }
+
+    public void set(int location, String value) {
+      if (location < 0) {
+        throw new IllegalArgumentException("location < 0: " + location);
+      }
+      if (value == null) {
+        throw new NullPointerException("value");
+      }
+      this.location = location;
+      this.value = value;
+    }
+
+    public boolean parsed() {
+      return location >= 0;
+    }
+
+    public int getLocation() {
+      if (!parsed()) { throw new IllegalStateException("unparsed value"); }
+      return location;
+    }
+
+    public String getValue() {
+      if (!parsed()) { throw new IllegalStateException("unparsed value"); }
+      return value;
+    }
   }
 
   private static boolean isWhiteSpace(char ch) {
@@ -98,92 +175,106 @@ public class Monitor {
 
   private void parseEof() throws ParseError {
     if (!eof())
-      throw new ParseError("end of line expected");
+      throw new ParseError("end of line expected", pos);
   }
 
   private static final String SYMBOL_ASSIGN = "=";
   private static final String SYMBOL_TO = "-";
 
-  private void parseSymbol(String symbol) throws ParseError {
+  private boolean tryParseSymbol(String symbol) {
     skipWhiteSpace();
-    if (symbol.isEmpty()) {
-      return;
-    }
+    int location = pos;
     int symbolPos;
     for (symbolPos = 0; symbolPos < symbol.length(); symbolPos++) {
       if (pos >= cmdLine.length()) break;
       if (symbol.charAt(symbolPos) != cmdLine.charAt(pos)) break;
       pos++;
     }
-    if (symbolPos < symbol.length())
-      throw new ParseError("symbol '" + symbol + "' expected");
+    if (symbolPos >= symbol.length()) {
+      return true;
+    }
+    pos = location;
+    return false;
+  }
+
+  private void parseSymbol(String symbol) throws ParseError {
+    int location = pos;
+    if (!tryParseSymbol(symbol))
+      throw new ParseError("symbol '" + symbol + "' expected", location);
   }
 
   private boolean tryParseNumber(Number num) {
     skipWhiteSpace();
     int value = 0;
     boolean stop = false;
-    boolean parsed = false;
+    int location = pos;
     while ((pos < cmdLine.length()) && !stop) {
       int digit;
       if ((digit = Util.hexValue(cmdLine.charAt(pos))) >= 0) {
 	value = (value << 4) | digit;
-	parsed = true;
 	pos++;
       }	else {
 	stop = true;
       }
     }
-    if (parsed) {
-      num.value = value;
-      num.parsed = true;
+    if (pos > location) {
+      num.set(location, value);
+      return true;
     }
-    return parsed;
+    return false;
   }
 
   private void parseNumber(Number num) throws ParseError {
     if (!tryParseNumber(num))
-      throw new ParseError("number expected");
+      throw new ParseError("number expected", pos);
   }
 
-  private void parseRegName(Text regName) throws ParseError {
+  private boolean tryParseRegName(Text regName) {
     skipWhiteSpace();
-    int startpos = pos;
     boolean stop = false;
-    boolean parsed = false;
+    int location = pos;
     while ((pos < cmdLine.length()) && !stop) {
       char ch = cmdLine.charAt(pos);
       if (isRegNameChar(ch) && !isWhiteSpace(ch)) {
-	parsed = true;
 	pos++;
       }	else {
 	stop = true;
       }
     }
-    if (!parsed)
-      throw new ParseError("register name expected");
-    regName.value = cmdLine.substring(startpos, pos);
-    regName.parsed = true;
+    if (pos > location) {
+      regName.set(location, cmdLine.substring(location, pos));
+      return true;
+    }
+    return false;
   }
 
-  private void parseFileName(Text fileName) throws ParseError {
+  private void parseRegName(Text regName) throws ParseError {
+    if (!tryParseRegName(regName))
+      throw new ParseError("register name expected", pos);
+  }
+
+  private boolean tryParseFileName(Text fileName) {
     skipWhiteSpace();
-    int startpos = pos;
     boolean stop = false;
-    boolean parsed = false;
+    int location = pos;
     while ((pos < cmdLine.length()) && !stop) {
       char ch = cmdLine.charAt(pos);
       if (isFileNameChar(ch) && !isWhiteSpace(ch)) {
-	parsed = true;
 	pos++;
       }	else {
 	stop = true;
       }
     }
-    if (!parsed)
-      throw new ParseError("file name expected");
-    fileName.value = cmdLine.substring(startpos, pos);
-    fileName.parsed = true;
+    if (pos > location) {
+      fileName.set(location, cmdLine.substring(location, pos));
+      return true;
+    }
+    return false;
+  }
+
+  private void parseFileName(Text fileName) throws ParseError {
+    if (!tryParseFileName(fileName))
+      throw new ParseError("file name expected", pos);
   }
 
   private char lineBuffer[];
@@ -252,7 +343,8 @@ public class Monitor {
   private String enterCommand() {
     try {
       stdout.println();
-      stdout.print("#"); stdout.flush();
+      stdout.print("#");
+      stdout.flush();
       return readLine();
     } catch (IOException e) {
       throw new InternalError(e.getMessage());
@@ -262,13 +354,13 @@ public class Monitor {
   private void parseCommand() throws ParseError {
     pos = 0;
     if (eof())
-      throw new ParseError("enter command ('h' for help)");
+      throw new ParseError("enter command ('h' for help)", pos);
     command = cmdLine.charAt(pos);
     pos = 1;
-    num1.parsed = false;
-    num2.parsed = false;
-    fileName.parsed = false;
-    regName.parsed = false;
+    num1.reset();
+    num2.reset();
+    fileName.reset();
+    regName.reset();
     switch (command) {
       case 'g' :
       case 't' :
@@ -327,7 +419,7 @@ public class Monitor {
 	break;
       default :
 	pos = 0;
-	throw new ParseError("invalid command");
+	throw new ParseError("invalid command", pos);
     }
     parseEof();
   }
@@ -356,8 +448,8 @@ public class Monitor {
       stdout.println("press <enter> to pause");
     }
 
-    if (num1.parsed) {
-      codeStartAddr = num1.value;
+    if (num1.parsed()) {
+      codeStartAddr = num1.getValue();
       regPC.setValue(codeStartAddr);
     } else {
       // continue whereever regPC currently points to
@@ -365,9 +457,9 @@ public class Monitor {
 
     boolean haveBreakPoint;
     int breakPoint;
-    if (num2.parsed) {
+    if (num2.parsed()) {
       haveBreakPoint = true;
-      breakPoint = num2.value;
+      breakPoint = num2.getValue();
     } else if (singleStep) {
       haveBreakPoint = true;
       breakPoint = 0; // will be set later
@@ -409,7 +501,7 @@ public class Monitor {
             }
             if (trace) {
               printOperation(op, 0);
-              registeraccess();
+              printRegisters();
             }
             if (haveBreakPoint && (regPC.getValue() == breakPoint)) {
               done = true;
@@ -436,7 +528,7 @@ public class Monitor {
         systemStopTime = System.nanoTime();
         if (haveBreakPoint && !trace) {
           printOperation(op, 0);
-          registeraccess();
+          printRegisters();
         }
       } catch (CPU.MismatchException e) {
 	System.err.println(e);
@@ -459,7 +551,7 @@ public class Monitor {
       stdout.printf("[latest_jitter = %.2fµs]%n", 0.001 * jitter);
       stdout.printf("[avg_thread_load = %3.2f%%]%n",
                     100 * (busyTime / ((float)idleTime + busyTime)));
-      registeraccess();
+      printRegisters();
     }
     codeStartAddr = regPC.getValue();
   }
@@ -467,17 +559,18 @@ public class Monitor {
   private void save() {
     try {
       OutputStream os =
-	new BufferedOutputStream(new FileOutputStream(fileName.value));
-      int addr = num1.value;
+	new BufferedOutputStream(new FileOutputStream(fileName.getValue()));
+      int addr = num1.getValue();
       do {
 	int value = memory.readByte(addr, cpu.getWallClockCycles());
 	os.write(value);
 	addr++;
-      } while (addr != num2.value);
+      } while (addr != num2.getValue());
       os.close();
       stdout.printf("wrote %s bytes to file %s%n",
-                    Util.hexShortStr((num2.value - num1.value) & 0xffff),
-                    fileName.value);
+                    Util.hexShortStr((num2.getValue() - num1.getValue()) &
+                                     0xffff),
+                    fileName.getValue());
     } catch (IOException e) {
       stderr.println(e.getMessage());
     }
@@ -486,8 +579,8 @@ public class Monitor {
   private void load() {
     try {
       InputStream is =
-	new BufferedInputStream(new FileInputStream(fileName.value));
-      dataStartAddr = num1.value;
+	new BufferedInputStream(new FileInputStream(fileName.getValue()));
+      dataStartAddr = num1.getValue();
       int addr = dataStartAddr;
       int value;
       do {
@@ -500,8 +593,8 @@ public class Monitor {
       while (value >= 0);
       is.close();
       stdout.printf("loaded %s bytes from file %s%n",
-                    Util.hexShortStr((addr - num1.value) & 0xffff),
-                    fileName.value);
+                    Util.hexShortStr((addr - num1.getValue()) & 0xffff),
+                    fileName.getValue());
     } catch (IOException e) {
       stderr.println(e.getMessage());
     }
@@ -538,11 +631,11 @@ public class Monitor {
   private static final int DEFAULT_UNASSEMBLE_LINES = 16;
 
   private void unassemble() {
-    if (num1.parsed)
-      codeStartAddr = num1.value;
+    if (num1.parsed())
+      codeStartAddr = num1.getValue();
     int endAddr = 0;
-    if (num2.parsed)
-      endAddr = num2.value;
+    if (num2.parsed())
+      endAddr = num2.getValue();
     int regPCValue = regPC.getValue();
     int currentAddr = codeStartAddr;
     CPU.ConcreteOperation op;
@@ -556,7 +649,7 @@ public class Monitor {
       }
       currentAddr += printOperation(op, currentAddr);
       currentAddr &= 0xffff; // TODO: 0xffff is z80 specific
-    } while ((num2.parsed && (currentAddr <= endAddr)) ||
+    } while ((num2.parsed() && (currentAddr <= endAddr)) ||
              (++lineCount < DEFAULT_UNASSEMBLE_LINES));
     codeStartAddr = currentAddr;
     regPC.setValue(regPCValue);
@@ -585,11 +678,11 @@ public class Monitor {
   private static final int DEFAULT_DUMP_BYTES = 0x100;
 
   private void dump() {
-    if (num1.parsed)
-      dataStartAddr = num1.value;
+    if (num1.parsed())
+      dataStartAddr = num1.getValue();
     int stopAddr;
-    if (num2.parsed)
-      stopAddr = num2.value;
+    if (num2.parsed())
+      stopAddr = num2.getValue();
     else
       stopAddr = (dataStartAddr + DEFAULT_DUMP_BYTES) &
         ~0xf & 0xffff; // TODO: 0xffff is z80 specific
@@ -621,8 +714,8 @@ public class Monitor {
   }
 
   private void enter() throws ParseError {
-    if (num1.parsed)
-      dataStartAddr = num1.value;
+    if (num1.parsed())
+      dataStartAddr = num1.getValue();
     do {
       int dataByte = memory.readByte(dataStartAddr, cpu.getWallClockCycles());
       stdout.print(Util.hexShortStr(dataStartAddr) + "-   (" +
@@ -640,7 +733,8 @@ public class Monitor {
       else {
 	while (!eof()) {
 	  parseNumber(num1);
-	  memory.writeByte(dataStartAddr, num1.value, cpu.getWallClockCycles());
+	  memory.writeByte(dataStartAddr, num1.getValue(),
+                           cpu.getWallClockCycles());
 	  dataStartAddr++;
 	}
       }
@@ -648,9 +742,9 @@ public class Monitor {
   }
 
   private void portaccess() {
-    int port = num1.value;
-    if (num2.parsed) {
-      int dataByte = num2.value;
+    int port = num1.getValue();
+    if (num2.parsed()) {
+      int dataByte = num2.getValue();
       io.writeByte(port, dataByte, cpu.getWallClockCycles());
     } else {
       int dataByte = io.readByte(port, cpu.getWallClockCycles());
@@ -670,25 +764,26 @@ public class Monitor {
     stdout.println();
   }
 
-  private void registeraccess() {
-    if (regName.parsed) {
+  private void registerAccess() throws ParseError {
+    if (regName.parsed()) {
       CPU.Register matchedRegister = null;
       for (CPU.Register register : registers) {
-        if (register.getName().equalsIgnoreCase(regName.value)) {
+        if (register.getName().equalsIgnoreCase(regName.getValue())) {
           matchedRegister = register;
           break;
         }
       }
       if (matchedRegister == null) {
-	stderr.printf("no such register: '%s'%n", regName.value);
-        return;
+        throw new ParseError("no such register: " + regName.getValue(),
+                             regName.getLocation());
       }
-      if (num1.parsed) {
+      if (num1.parsed()) {
         try {
-          matchedRegister.setValue(num1.value);
+          matchedRegister.setValue(num1.getValue());
         } catch (Exception e) {
-          stderr.printf("failed setting register %s: %s%n",
-                        regName.value, e.getMessage());
+          throw new ParseError("failed setting register " +
+                               regName.getValue() + ": " + e.getMessage(),
+                               regName.getLocation());
         }
       }
       stdout.printf("     %s%n", matchedRegister);
@@ -767,7 +862,7 @@ public class Monitor {
 	portaccess();
 	break;
       case 'r' :
-	registeraccess();
+	registerAccess();
 	break;
       case 'h' :
 	help();
@@ -816,11 +911,11 @@ public class Monitor {
     num2 = new Number();
     fileName = new Text();
     regName = new Text();
-    num1.parsed = false;
-    num2.parsed = false;
-    fileName.parsed = false;
-    regName.parsed = false;
-    registeraccess();
+    num1.reset();
+    num2.reset();
+    fileName.reset();
+    regName.reset();
+    printRegisters();
     do {
       try {
         cmdLine = enterCommand();
@@ -830,11 +925,7 @@ public class Monitor {
           executeCommand();
         }
       } catch (ParseError e) {
-	stdout.print(" ");
-	for (int i = 0; i < pos; i++)
-	  stdout.print(" ");
-	stdout.println("^");
-	stderr.println(">>> " + e.getMessage() + " (enter 'h' for help)");
+        stdout.print(e.prettyPrint());
       }
     } while (command != 'q');
     System.exit(0);
