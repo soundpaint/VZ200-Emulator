@@ -916,7 +916,8 @@ public class Monitor {
     fileName.reset();
     regName.reset();
     printRegisters();
-    do {
+    boolean quit = false;
+    while (!quit) {
       try {
         cmdLine = enterCommand();
         if (!cmdLine.isEmpty()) {
@@ -924,10 +925,13 @@ public class Monitor {
           history.addEntry(cmdLine);
           executeCommand();
         }
+        if (command == 'q') {
+          quit = true;
+        }
       } catch (ParseError e) {
         stdout.print(e.prettyPrint());
       }
-    } while (command != 'q');
+    }
     System.exit(0);
   }
 
