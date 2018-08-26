@@ -3861,7 +3861,7 @@ public class Z80 implements CPU {
     int op = reg.getValue();
     // flagC unmodified
     flagN.set(true);
-    flagPV.set(op == 0xff);
+    flagPV.set(op == 0x7f);
     flagH.set((op & 0xf) == 0xf);
     flagZ.set(op == 0x00);
     flagS.set(op >= 0x80);
@@ -3882,7 +3882,7 @@ public class Z80 implements CPU {
     int op = reg.getValue();
     // flagC unmodified
     flagN.set(false);
-    flagPV.set(op == 0xff);
+    flagPV.set(op == 0x80);
     flagH.set((op & 0xf) == 0x0);
     flagZ.set(op == 0x00);
     flagS.set(op >= 0x80);
