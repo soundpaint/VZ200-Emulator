@@ -551,6 +551,7 @@ public class Monitor {
       stdout.printf("[latest_jitter = %.2fµs]%n", 0.001 * jitter);
       stdout.printf("[avg_thread_load = %3.2f%%]%n",
                     100 * (busyTime / ((float)idleTime + busyTime)));
+      stdout.println();
       printRegisters();
     }
     codeStartAddr = regPC.getValue();
@@ -753,8 +754,9 @@ public class Monitor {
   }
 
   private void printRegisters() {
+    stdout.print("    ");
     for (int i = 0; i < registers.length; i++) {
-      if ((i & 0x7) == 0) {
+      if (i == 7) {
 	stdout.println();
 	stdout.print("    ");
       }

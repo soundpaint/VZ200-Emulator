@@ -267,6 +267,97 @@ public class Z80 implements CPU {
     }
   }
 
+  // *** CPU FLAGS DIRECT ACCESS **********************************************
+
+  // flags mask constants for processor register F
+  private final static int FLAG_S = 0x80;
+  private final static int FLAG_Z = 0x40;
+  private final static int FLAG_X1 = 0x20;
+  private final static int FLAG_H = 0x10;
+  private final static int FLAG_X2 = 0x08;
+  private final static int FLAG_PV = 0x04;
+  private final static int FLAG_N = 0x02;
+  private final static int FLAG_C = 0x01;
+
+  private class Flag {
+    private String name, nameTrue, nameFalse;
+    private int andMask;
+    private int reverseAndMask;
+    private Reg8 regF;
+
+    public Flag(String name, String nameTrue, String nameFalse,
+                int andMask, Reg8 regF) {
+      this.name = name;
+      this.nameTrue = nameTrue;
+      this.nameFalse = nameFalse;
+      this.andMask = andMask;
+      reverseAndMask = andMask ^ 0xff;
+      this.regF = regF;
+    }
+
+    public boolean get() {
+      return (regF.getValue() & andMask) != 0x00;
+    }
+
+    public void set(boolean value) {
+      if (value)
+	regF.setValue(regF.getValue() | andMask);
+      else
+	regF.setValue(regF.getValue() & reverseAndMask);
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public String getValueName() {
+      return get() ? nameTrue : nameFalse;
+    }
+
+    public String toString() {
+      return getName() + "=" + getValueName();
+    }
+  }
+
+  private /*final*/ Flag flagS;
+  private /*final*/ Flag flagZ;
+  private /*final*/ Flag flagX1;
+  private /*final*/ Flag flagH;
+  private /*final*/ Flag flagX2;
+  private /*final*/ Flag flagPV;
+  private /*final*/ Flag flagN;
+  private /*final*/ Flag flagC;
+
+  class Flags extends GenericReg8
+  {
+    private Flag[] flags;
+
+    public Flags(String name) {
+      super(name);
+      System.out.println("setting up processor flags...");
+      flags = new Flag[] {
+        flagS = new Flag("S", "M", "P", FLAG_S, this),
+        flagZ = new Flag("Z", "Z", "NZ", FLAG_Z, this),
+        flagX1 = new Flag("X", "1", "0", FLAG_X1, this),
+        flagH = new Flag("H", "H", "NH", FLAG_H, this),
+        flagX2 = new Flag("X", "1", "0", FLAG_X2, this),
+        flagPV = new Flag("PV", "PE", "PO", FLAG_PV, this),
+        flagN = new Flag("N", "N", "NN", FLAG_N, this),
+        flagC = new Flag("C", "C", "NC", FLAG_C, this)
+      };
+    }
+
+    public String toString() {
+      StringBuffer s = new StringBuffer();
+      for (Flag flag : flags) {
+        if (s.length() > 0) s.append(" ");
+        s.append(flag.getValueName());
+      }
+      return
+        getName() + "=" + Util.hexByteStr(getValue()) + "(" + s + ")";
+    }
+  }
+
   public interface Reg16 extends CPU.Register {}
 
   class GenericReg16 implements Reg16 {
@@ -388,7 +479,7 @@ public class Z80 implements CPU {
 
   private void createRegisters() {
     regA = new GenericReg8("A");
-    regF = new GenericReg8("F");
+    regF = new Flags("F");
     regB = new GenericReg8("B");
     regC = new GenericReg8("C");
     regD = new GenericReg8("D");
@@ -444,43 +535,6 @@ public class Z80 implements CPU {
 
   public CPU.Register getStackPointer() { return regSP; }
 
-  // *** CPU FLAGS DIRECT ACCESS **********************************************
-
-  // flags mask constants for processor register F
-  private final static int FLAG_C = 0x01;
-  private final static int FLAG_N = 0x02;
-  private final static int FLAG_PV = 0x04;
-  private final static int FLAG_H = 0x10;
-  private final static int FLAG_Z = 0x40;
-  private final static int FLAG_S = 0x80;
-
-  private class Flag {
-    private String name;
-    private int andMask;
-    private int reverseAndMask;
-    private Reg8 regF;
-
-    public Flag(String name, int andMask, Reg8 regF) {
-      this.name = name;
-      this.andMask = andMask;
-      reverseAndMask = andMask ^ 0xff;
-      this.regF = regF;
-    }
-
-    public boolean get() {
-      return (regF.getValue() & andMask) != 0x00;
-    }
-
-    public void set(boolean value) {
-      if (value)
-	regF.setValue(regF.getValue() | andMask);
-      else
-	regF.setValue(regF.getValue() & reverseAndMask);
-    }
-
-    public String toString() { return name + "=" + (get() ? '1' : '0'); }
-  }
-
   private class Cond implements CPU.NamedObject {
     private String name;
     private int andMask;
@@ -501,22 +555,6 @@ public class Z80 implements CPU {
     public boolean isTrue() {
       return (regF.getValue() & andMask) == trueValue;
     }
-  }
-
-  private /*final*/ Flag flagC;
-  private /*final*/ Flag flagN;
-  private /*final*/ Flag flagPV;
-  private /*final*/ Flag flagH;
-  private /*final*/ Flag flagZ;
-  private /*final*/ Flag flagS;
-
-  private void createFlags() {
-    flagC = new Flag("C", FLAG_C, regF);
-    flagN = new Flag("N", FLAG_N, regF);
-    flagPV = new Flag("PV", FLAG_PV, regF);
-    flagH = new Flag("H", FLAG_H, regF);
-    flagZ = new Flag("Z", FLAG_Z, regF);
-    flagS = new Flag("S", FLAG_S, regF);
   }
 
   private /*final*/ Cond condNZ;
@@ -4385,8 +4423,6 @@ public class Z80 implements CPU {
     concreteOperation = new ConcreteOperation();
     System.out.println("setting up registers...");
     createRegisters();
-    System.out.println("setting up processor flags...");
-    createFlags();
     System.out.println("setting up branch conditions...");
     createConditions();
     System.out.println("setting up mnemonic functions...");
