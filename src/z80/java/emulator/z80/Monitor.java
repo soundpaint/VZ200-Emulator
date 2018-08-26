@@ -530,8 +530,8 @@ public class Monitor {
           printOperation(op, 0);
           printRegisters();
         }
-      } catch (CPU.MismatchException e) {
-	System.err.println(e);
+      } catch (CPU.MismatchException | RuntimeException e) {
+        e.printStackTrace(stderr);
       }
       if (inputAvailable() > 0)
 	readLine();
