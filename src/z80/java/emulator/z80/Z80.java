@@ -3837,6 +3837,7 @@ public class Z80 implements CPU {
       flagC.set((op & 0xf0) == 0x00);
       flagH.set(true);
     } else {
+      // flagC unmodified
       flagH.set(false);
     }
     // flagN unmodified
