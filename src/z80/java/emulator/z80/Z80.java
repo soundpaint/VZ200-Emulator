@@ -3373,6 +3373,7 @@ public class Z80 implements CPU {
   private static class DecodeCompletionActions {
     private static interface Action {
       public void apply(CodeFetcher codeFetcher, Arguments args);
+      public int getVarIndex();
     }
 
     private static class ConstantAction implements Action {
@@ -3383,6 +3384,8 @@ public class Z80 implements CPU {
         this.varIndex = varIndex;
         this.value = value;
       }
+
+      public int getVarIndex() { return varIndex; }
 
       public void apply(CodeFetcher codeFetcher, Arguments args) {
         args.setArg(varIndex, value);
@@ -3412,6 +3415,8 @@ public class Z80 implements CPU {
         this.opCodeByteShiftRight = opCodeByteShiftRight;
       }
 
+      public int getVarIndex() { return varIndex; }
+
       public void apply(CodeFetcher codeFetcher, Arguments args) {
         int value = codeFetcher.fetchByte(opCodeByteIndex);
         int arg = args.getArg(varIndex);
@@ -3433,6 +3438,15 @@ public class Z80 implements CPU {
       actions = new ArrayList<Action>();
     }
 
+    private boolean haveActionForVar(int varIndex) {
+      for (Action action : actions) {
+        if (action.getVarIndex() == varIndex) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     public void addConstant(int varIndex, int value) {
       actions.add(new ConstantAction(varIndex, value));
     }
@@ -3441,6 +3455,11 @@ public class Z80 implements CPU {
                                 int opCodeByteIndex,
                                 int opCodeByteShiftRight)
     {
+      if (!haveActionForVar(varIndex)) {
+        // this is the first action for this varIndex
+        // => clear value before starting to append bits
+        actions.add(new ConstantAction(varIndex, 0));
+      }
       actions.add(new AppendBitsToVarAction(varIndex, bitCount,
                                             opCodeByteIndex,
                                             opCodeByteShiftRight));
