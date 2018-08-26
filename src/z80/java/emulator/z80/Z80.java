@@ -3835,10 +3835,11 @@ public class Z80 implements CPU {
   }
 
   private void doCCF() {
-    flagC.set(!flagC.get());
+    boolean savedFlagC = flagC.get();
+    flagC.set(!savedFlagC);
     flagN.set(false);
     // flagPV unmodified
-    flagH.set(!flagC.get());
+    flagH.set(savedFlagC);
     // flagZ unmodified
     // flagS unmodified
   }
