@@ -3868,7 +3868,7 @@ public class Z80 implements CPU {
     regBC.decrement();
     flagC.set(savedFlagC);
     // flag N set by doCP()
-    flagPV.set(((regBC.getValue() + 0xffff) & 0xffff) == 0x0000);
+    flagPV.set(((regBC.getValue() + 0xffff) & 0xffff) != 0x0);
     // flag H set by doCP()
     // flag Z set by doCP()
     // flag S set by doCP()
@@ -3881,7 +3881,7 @@ public class Z80 implements CPU {
     regBC.decrement();
     flagC.set(savedFlagC);
     // flag N set by doCP()
-    flagPV.set(((regBC.getValue() + 0xffff) & 0xffff) == 0x0000);
+    flagPV.set(((regBC.getValue() + 0xffff) & 0xffff) != 0x0);
     // flag H set by doCP()
     // flag Z set by doCP()
     // flag S set by doCP()
