@@ -3810,10 +3810,10 @@ public class Z80 implements CPU {
     sum &= 0xffff;
     flagC.set(new_flag_c);
     flagN.set(false);
-    // flagPV unmodified
+    // flagPV not affected
     flagH.set(new_flag_h);
-    // flagZ unmodified
-    // flagS unmodified
+    // flagZ not affected
+    // flagS not affected
     return sum;
   }
 
@@ -3829,31 +3829,31 @@ public class Z80 implements CPU {
   }
 
   private void doBIT(int op1, int op2) {
-    // flagC unmodified
+    // flagC not affected
     flagN.set(false);
-    // flagPV unmodified ("unknown")
+    // flagPV unknown
     flagH.set(true);
     flagZ.set((op1 & SET_MASK[op2 & 0x7]) == 0x00);
-    // flagS unmodified ("unknown")
+    // flagS unknown
   }
 
   private void doCCF() {
     boolean savedFlagC = flagC.get();
     flagC.set(!savedFlagC);
     flagN.set(false);
-    // flagPV unmodified
+    // flagPV not affected
     flagH.set(savedFlagC);
-    // flagZ unmodified
-    // flagS unmodified
+    // flagZ not affected
+    // flagS not affected
   }
 
   private int doCPL(int op) {
-    // flagC unmodified
+    // flagC not affected
     flagN.set(true);
-    // flagPV unmodified
+    // flagPV not affected
     flagH.set(true);
-    // flagZ unmodified
-    // flagS unmodified
+    // flagZ not affected
+    // flagS not affected
     return op ^ 0xff;
   }
 
@@ -3893,10 +3893,10 @@ public class Z80 implements CPU {
       flagC.set((op & 0xf0) == 0x00);
       flagH.set(true);
     } else {
-      // flagC unmodified
+      // flagC not affected
       flagH.set(false);
     }
-    // flagN unmodified
+    // flagN not affected
     flagPV.set(PARITY[op]);
     flagZ.set(op == 0x00);
     flagS.set(op >= 0x80);
@@ -3905,18 +3905,18 @@ public class Z80 implements CPU {
 
   private void doDEC16(Reg16 reg) {
     reg.decrement();
-    // flagC unmodified
-    // flagN unmodified
-    // flagPV unmodified
-    // flagH unmodified
-    // flagZ unmodified
-    // flagS unmodified
+    // flagC not affected
+    // flagN not affected
+    // flagPV not affected
+    // flagH not affected
+    // flagZ not affected
+    // flagS not affected
   }
 
   private void doDEC8(Reg8 reg) {
     reg.decrement();
     int op = reg.getValue();
-    // flagC unmodified
+    // flagC not affected
     flagN.set(true);
     flagPV.set(op == 0x7f);
     flagH.set((op & 0xf) == 0xf);
@@ -3926,18 +3926,18 @@ public class Z80 implements CPU {
 
   private void doINC16(Reg16 reg) {
     reg.increment();
-    // flagC unmodified
-    // flagN unmodified
-    // flagPV unmodified
-    // flagH unmodified
-    // flagZ unmodified
-    // flagS unmodified
+    // flagC not affected
+    // flagN not affected
+    // flagPV not affected
+    // flagH not affected
+    // flagZ not affected
+    // flagS not affected
   }
 
   private void doINC8(Reg8 reg) {
     reg.increment();
     int op = reg.getValue();
-    // flagC unmodified
+    // flagC not affected
     flagN.set(false);
     flagPV.set(op == 0x80);
     flagH.set((op & 0xf) == 0x0);
@@ -3947,7 +3947,7 @@ public class Z80 implements CPU {
 
   private int doIN(int op1) {
     int result = io.readByte(op1, wallClockTime);
-    // flagC unmodified
+    // flagC not affected
     flagN.set(false);
     flagPV.set(PARITY[result]);
     flagH.set(false);
@@ -3960,7 +3960,7 @@ public class Z80 implements CPU {
     indirectRegHL.setValue(io.readByte(regBC.getValue(), wallClockTime));
     regB.decrement();
     regHL.decrement();
-    // flagC unmodified
+    // flagC not affected
     flagN.set(true);
     // flagPV unknown
     // flagH unknown
@@ -3972,7 +3972,7 @@ public class Z80 implements CPU {
     indirectRegHL.setValue(io.readByte(regBC.getValue(), wallClockTime));
     regB.decrement();
     regHL.increment();
-    // flagC unmodified
+    // flagC not affected
     flagN.set(true);
     // flagPV unknown
     // flagH unknown
@@ -3982,7 +3982,7 @@ public class Z80 implements CPU {
 
   private void doLDAIV() {
     regA.setValue(regIV.getValue());
-    // flagC unmodified
+    // flagC not affected
     flagN.set(false);
     flagPV.set(irq_enabled);
     flagH.set(false);
@@ -3992,7 +3992,7 @@ public class Z80 implements CPU {
 
   private void doLDAR() {
     regA.setValue(regR.getValue());
-    // flagC unmodified
+    // flagC not affected
     flagN.set(false);
     flagPV.set(irq_enabled);
     flagH.set(false);
@@ -4006,12 +4006,12 @@ public class Z80 implements CPU {
     regDE.decrement();
     regHL.decrement();
     regBC.decrement();
-    // flagC unmodified
+    // flagC not affected
     flagN.set(false);
     flagPV.set(regBC.getValue() != 0x0000);
     flagH.set(false);
-    // flagZ unmodified
-    // flagS unmodified
+    // flagZ not affected
+    // flagS not affected
   }
 
   private void doLDI() {
@@ -4020,12 +4020,12 @@ public class Z80 implements CPU {
     regDE.increment();
     regHL.increment();
     regBC.decrement();
-    // flagC unmodified
+    // flagC not affected
     flagN.set(false);
     flagPV.set(regBC.getValue() != 0x0000);
     flagH.set(false);
-    // flagZ unmodified
-    // flagS unmodified
+    // flagZ not affected
+    // flagS not affected
   }
 
   private int doNEG(int op) {
@@ -4033,12 +4033,12 @@ public class Z80 implements CPU {
   }
 
   private void doNOP() {
-    // flagC unmodified
-    // flagN unmodified
-    // flagPV unmodified
-    // flagH unmodified
-    // flagZ unmodified
-    // flagS unmodified
+    // flagC not affected
+    // flagN not affected
+    // flagPV not affected
+    // flagH not affected
+    // flagZ not affected
+    // flagS not affected
   }
 
   private int doOR(int op1, int op2) {
@@ -4057,7 +4057,7 @@ public class Z80 implements CPU {
     regB.decrement();
     io.writeByte(regBC.getValue(), value, wallClockTime);
     regHL.decrement();
-    // flagC unmodified
+    // flagC not affected
     flagN.set(true);
     // flagPV unknown
     // flagH unknown
@@ -4070,7 +4070,7 @@ public class Z80 implements CPU {
     regB.decrement();
     io.writeByte(regBC.getValue(), value, wallClockTime);
     regHL.increment();
-    // flagC unmodified
+    // flagC not affected
     flagN.set(true);
     // flagPV unknown
     // flagH unknown
@@ -4090,12 +4090,12 @@ public class Z80 implements CPU {
   }
 
   private int doRES(int op1, int op2) {
-    // flagC unmodified
-    // flagN unmodified
-    // flagPV unmodified
-    // flagH unmodified
-    // flagZ unmodified
-    // flagS unmodified
+    // flagC not affected
+    // flagN not affected
+    // flagPV not affected
+    // flagH not affected
+    // flagZ not affected
+    // flagS not affected
     return op1 & RES_MASK[op2 & 0x7];
   }
 
@@ -4121,10 +4121,10 @@ public class Z80 implements CPU {
     reg.setValue(op);
     flagC.set(new_flag_c);
     flagN.set(false);
-    // flagPV unmodified
+    // flagPV not affected
     flagH.set(false);
-    // flagZ unmodified
-    // flagS unmodified
+    // flagZ not affected
+    // flagS not affected
   }
 
   private void doRLC(Reg8 reg) {
@@ -4149,10 +4149,10 @@ public class Z80 implements CPU {
     reg.setValue(op);
     flagC.set(new_flag_c);
     flagN.set(false);
-    // flagPV unmodified
+    // flagPV not affected
     flagH.set(false);
-    // flagZ unmodified
-    // flagS unmodified
+    // flagZ not affected
+    // flagS not affected
   }
 
   private void doRLD(Reg8 reg) {
@@ -4161,7 +4161,7 @@ public class Z80 implements CPU {
     reg.setValue(((regValue << 4) & 0xf0) | (regAValue & 0x0f));
     regAValue = (regAValue & 0xf0) | ((regValue >>> 4) & 0x0f);
     regA.setValue(regAValue);
-    // flagC unmodified
+    // flagC not affected
     flagN.set(false);
     flagPV.set(PARITY[regAValue]);
     flagH.set(false);
@@ -4191,10 +4191,10 @@ public class Z80 implements CPU {
     reg.setValue(op);
     flagC.set(new_flag_c);
     flagN.set(false);
-    // flagPV unmodified
+    // flagPV not affected
     flagH.set(false);
-    // flagZ unmodified
-    // flagS unmodified
+    // flagZ not affected
+    // flagS not affected
   }
 
   private void doRRC(Reg8 reg) {
@@ -4219,10 +4219,10 @@ public class Z80 implements CPU {
     reg.setValue(op);
     flagC.set(new_flag_c);
     flagN.set(false);
-    // flagPV unmodified
+    // flagPV not affected
     flagH.set(false);
-    // flagZ unmodified
-    // flagS unmodified
+    // flagZ not affected
+    // flagS not affected
   }
 
   private void doRRD(Reg8 reg) {
@@ -4231,7 +4231,7 @@ public class Z80 implements CPU {
     reg.setValue(((regAValue << 4) & 0xf0) | ((regValue >>> 4) & 0x0f));
     regAValue = (regAValue & 0xf0) | (regValue & 0x0f);
     regA.setValue(regAValue);
-    // flagC unmodified
+    // flagC not affected
     flagN.set(false);
     flagPV.set(PARITY[regAValue]);
     flagH.set(false);
@@ -4256,19 +4256,19 @@ public class Z80 implements CPU {
   private void doSCF() {
     flagC.set(true);
     flagN.set(false);
-    // flagPV unmodified
+    // flagPV not affected
     flagH.set(false);
-    // flagZ unmodified
-    // flagS unmodified
+    // flagZ not affected
+    // flagS not affected
   }
 
   private int doSET(int op1, int op2) {
-    // flagC unmodified
-    // flagN unmodified
-    // flagPV unmodified
-    // flagH unmodified
-    // flagZ unmodified
-    // flagS unmodified
+    // flagC not affected
+    // flagN not affected
+    // flagPV not affected
+    // flagH not affected
+    // flagZ not affected
+    // flagS not affected
     return op1 | SET_MASK[op2 & 0x7];
   }
 
