@@ -1607,7 +1607,7 @@ public class Z80 implements CPU {
       public void execute0(Arguments args) {
 	doCPD();
 	if (regBC.getValue() != 0x0000)
-	  regPC.setValue((regPC.getValue() - 0x0002) & 0xffff);
+	  regPC.setValue((regPC.getValue() + 0xfffe) & 0xffff);
 	else
 	  args.useDefaultClockPeriods = false;
       }
@@ -1631,7 +1631,7 @@ public class Z80 implements CPU {
       public void execute0(Arguments args) {
 	doCPI();
 	if (regBC.getValue() != 0x0000)
-	  regPC.setValue((regPC.getValue() - 0x0002) & 0xffff);
+	  regPC.setValue((regPC.getValue() + 0xfffe) & 0xffff);
 	else
 	  args.useDefaultClockPeriods = false;
       }
@@ -1984,7 +1984,7 @@ public class Z80 implements CPU {
       public void execute0(Arguments args) {
 	doIND();
 	if (condNZ.isTrue())
-	  regPC.setValue((regPC.getValue() - 0x0002) & 0xffff);
+	  regPC.setValue((regPC.getValue() + 0xfffe) & 0xffff);
 	else
 	  args.useDefaultClockPeriods = false;
       }
@@ -2008,7 +2008,7 @@ public class Z80 implements CPU {
       public void execute0(Arguments args) {
 	doINI();
 	if (condNZ.isTrue())
-	  regPC.setValue((regPC.getValue() - 0x0002) & 0xffff);
+	  regPC.setValue((regPC.getValue() + 0xfffe) & 0xffff);
 	else
 	  args.useDefaultClockPeriods = false;
       }
@@ -2495,7 +2495,7 @@ public class Z80 implements CPU {
       public void execute0(Arguments args) {
 	doLDD();
 	if (condPE.isTrue())
-	  regPC.setValue((regPC.getValue() - 0x0002) & 0xffff);
+	  regPC.setValue((regPC.getValue() + 0xfffe) & 0xffff);
 	else
 	  args.useDefaultClockPeriods = false;
       }
@@ -2519,7 +2519,7 @@ public class Z80 implements CPU {
       public void execute0(Arguments args) {
 	doLDI();
 	if (condPE.isTrue())
-	  regPC.setValue((regPC.getValue() - 0x0002) & 0xffff);
+	  regPC.setValue((regPC.getValue() + 0xfffe) & 0xffff);
 	else
 	  args.useDefaultClockPeriods = false;
       }
@@ -2606,7 +2606,7 @@ public class Z80 implements CPU {
       public void execute0(Arguments args) {
 	doOUTD();
 	if (condNZ.isTrue())
-	  regPC.setValue((regPC.getValue() - 0x0002) & 0xffff);
+	  regPC.setValue((regPC.getValue() + 0xfffe) & 0xffff);
 	else
 	  args.useDefaultClockPeriods = false;
       }
@@ -2620,7 +2620,7 @@ public class Z80 implements CPU {
       public void execute0(Arguments args) {
 	doOUTI();
 	if (condNZ.isTrue())
-	  regPC.setValue((regPC.getValue() - 0x0002) & 0xffff);
+	  regPC.setValue((regPC.getValue() + 0xfffe) & 0xffff);
 	else
 	  args.useDefaultClockPeriods = false;
       }
@@ -4085,7 +4085,7 @@ public class Z80 implements CPU {
   }
 
   public void doPUSH(int op) {
-    regSP.setValue((regSP.getValue() - 0x0002) & 0xffff);
+    regSP.setValue((regSP.getValue() + 0xfffe) & 0xffff);
     memory.writeShort(regSP.getValue(), op, wallClockTime);
   }
 
