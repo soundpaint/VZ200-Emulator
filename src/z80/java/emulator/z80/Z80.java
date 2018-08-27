@@ -1878,7 +1878,8 @@ public class Z80 implements CPU {
 	     10, 0);
       }
       public void execute0(Arguments args) {
-	regA.setValue(io.readByte(getArg(args, 'p'), wallClockTime));
+        int portAddress = (regA.getValue() << 8) | getArg(args, 'p');
+	regA.setValue(io.readByte(portAddress, wallClockTime));
       }
     },
     new GenericOperation() {
@@ -1888,8 +1889,8 @@ public class Z80 implements CPU {
 	     11, 0);
       }
       public void execute0(Arguments args) {
-	doIN(regC.getValue()); // result of doIN() intentionally
-                               // ignored
+	doIN(regBC.getValue()); // result of doIN() intentionally
+                                // ignored
       }
     },
     new GenericOperation() {
@@ -1899,7 +1900,7 @@ public class Z80 implements CPU {
 	     11, 0);
       }
       public void execute0(Arguments args) {
-	DREG8[getArg(args, 'x')].setValue(doIN(regC.getValue()));
+	DREG8[getArg(args, 'x')].setValue(doIN(regBC.getValue()));
       }
     },
     new GenericOperation() {
@@ -2631,7 +2632,7 @@ public class Z80 implements CPU {
 	     12, 0);
       }
       public void execute0(Arguments args) {
-	io.writeByte(regC.getValue(), REG8[getArg(args, 'x')].getValue(),
+	io.writeByte(regBC.getValue(), REG8[getArg(args, 'x')].getValue(),
                      wallClockTime);
       }
     },
@@ -2642,7 +2643,9 @@ public class Z80 implements CPU {
 	     11, 0);
       }
       public void execute0(Arguments args) {
-	io.writeByte(getArg(args, 'p'), regA.getValue(), wallClockTime);
+        int regAValue = regA.getValue();
+        int portAddress = (regAValue << 8) | getArg(args, 'p');
+	io.writeByte(portAddress, regAValue, wallClockTime);
       }
     },
     new GenericOperation() {
@@ -3947,34 +3950,34 @@ public class Z80 implements CPU {
     // flagC unmodified
     flagN.set(false);
     flagPV.set(PARITY[result]);
-    flagH.set((result & 0xf) == 0x0);
+    flagH.set(false);
     flagZ.set(result == 0x00);
     flagS.set(result >= 0x80);
     return result;
   }
 
   private void doIND() {
-    indirectRegHL.setValue(io.readByte(regC.getValue(), wallClockTime));
+    indirectRegHL.setValue(io.readByte(regBC.getValue(), wallClockTime));
     regB.decrement();
     regHL.decrement();
     // flagC unmodified
     flagN.set(true);
-    // flagPV unmodified
-    flagH.set((regB.getValue() & 0xf) == 0x0);
+    // flagPV unknown
+    // flagH unknown
     flagZ.set(regB.getValue() == 0x00);
-    flagS.set(regB.getValue() >= 0x80);
+    // flagS unknown
   }
 
   private void doINI() {
-    indirectRegHL.setValue(io.readByte(regC.getValue(), wallClockTime));
+    indirectRegHL.setValue(io.readByte(regBC.getValue(), wallClockTime));
     regB.decrement();
     regHL.increment();
     // flagC unmodified
     flagN.set(true);
-    // flagPV unmodified
-    flagH.set((regB.getValue() & 0xf) == 0x0);
+    // flagPV unknown
+    // flagH unknown
     flagZ.set(regB.getValue() == 0x00);
-    flagS.set(regB.getValue() >= 0x80);
+    // flagS unknown
   }
 
   private void doLDAIV() {
@@ -4050,27 +4053,29 @@ public class Z80 implements CPU {
   }
 
   private void doOUTD() {
-    io.writeByte(regC.getValue(), indirectRegHL.getValue(), wallClockTime);
+    int value = indirectRegHL.getValue();
     regB.decrement();
+    io.writeByte(regBC.getValue(), value, wallClockTime);
     regHL.decrement();
     // flagC unmodified
     flagN.set(true);
-    flagPV.set(false); // ?
-    flagH.set((regB.getValue() & 0xf) == 0x0);
+    // flagPV unknown
+    // flagH unknown
     flagZ.set(regB.getValue() == 0x00);
-    flagS.set(regB.getValue() >= 0x80);
+    // flagS unknown
   }
 
   private void doOUTI() {
-    io.writeByte(regC.getValue(), indirectRegHL.getValue(), wallClockTime);
+    int value = indirectRegHL.getValue();
     regB.decrement();
+    io.writeByte(regBC.getValue(), value, wallClockTime);
     regHL.increment();
     // flagC unmodified
     flagN.set(true);
-    flagPV.set(false); // ?
-    flagH.set((regB.getValue() & 0xf) == 0x0);
+    // flagPV unknown
+    // flagH unknown
     flagZ.set(regB.getValue() == 0x00);
-    flagS.set(regB.getValue() >= 0x80);
+    // flagS unknown
   }
 
   public int doPOP() {
