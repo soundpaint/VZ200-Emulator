@@ -3735,20 +3735,23 @@ public class Z80 implements CPU {
     nmi_requested = false;
   }
 
-  private int doADC8(int op1, int op2) {
+  private boolean halfCarry(int bitOp1, int bitOp2, int bitSum) {
+    return
+      ((bitOp1 & bitOp2) != 0x0) ||
+      ((bitSum == 0x0) && ((bitOp1 | bitOp2) != 0x0));
+  }
+
+  private int doADC8OrSBC8(int op1, int op2, int carry, boolean carryIsBorrow) {
     int msb_op1 = op1 & 0x80;
     int msb_op2 = op2 & 0x80;
-    int sum = (op1 & 0xff) + (op2 & 0xff);
-    boolean new_flag_h =
-      ((sum & 0xf) < (op1 & 0xf)) ||
-      (((sum & 0xf) == 0xf) && flagC.get());
-    if (flagC.get()) sum++;
-    boolean new_flag_c = (sum & 0x100) != 0;
+    int sum = (op1 & 0xff) + (op2 & 0xff) + carry;
+    boolean new_flag_h = halfCarry(op1 & 0x08, op2 & 0x08, sum & 0x08);
+    boolean new_flag_c = (sum >= 0x100) ^ carryIsBorrow;
     int msb_sum = sum & 0x80;
     boolean new_flag_v = (msb_op1 == msb_op2) && (msb_op1 != msb_sum);
     sum &= 0xff;
     flagC.set(new_flag_c);
-    flagN.set(false);
+    flagN.set(carryIsBorrow);
     flagPV.set(new_flag_v);
     flagH.set(new_flag_h);
     flagZ.set(sum == 0x00);
@@ -3756,20 +3759,21 @@ public class Z80 implements CPU {
     return sum;
   }
 
-  private int doADC16(int op1, int op2) {
+  private int doADC8(int op1, int op2) {
+    return doADC8OrSBC8(op1, op2, flagC.get() ? 1 : 0, false);
+  }
+
+  private int doADC16OrSBC16(int op1, int op2, int carry, boolean carryIsBorrow) {
     int msb_op1 = op1 & 0x8000;
     int msb_op2 = op2 & 0x8000;
-    int sum = (op1 & 0xffff) + (op2 & 0xffff);
-    boolean new_flag_h =
-      ((sum & 0xff) < (op1 & 0xff)) ||
-      (((sum & 0xff) == 0xff) && flagC.get());
-    if (flagC.get()) sum++;
-    boolean new_flag_c = (sum & 0x10000) != 0;
+    int sum = (op1 & 0xffff) + (op2 & 0xffff) + carry;
+    boolean new_flag_h = halfCarry(op1 & 0x0800, op2 & 0x0800, sum & 0x0800);
+    boolean new_flag_c = (sum >= 0x10000) ^ carryIsBorrow;
     int msb_sum = sum & 0x8000;
     boolean new_flag_v = (msb_op1 == msb_op2) && (msb_op1 != msb_sum);
     sum &= 0xffff;
     flagC.set(new_flag_c);
-    flagN.set(false);
+    flagN.set(carryIsBorrow);
     flagPV.set(new_flag_v);
     flagH.set(new_flag_h);
     flagZ.set(sum == 0x0000);
@@ -3777,36 +3781,31 @@ public class Z80 implements CPU {
     return sum;
   }
 
-  private int doADD8(int op1, int op2) {
-    int msb_op1 = op1 & 0x80;
-    int msb_op2 = op2 & 0x80;
-    int sum = (op1 & 0xff) + (op2 & 0xff);
-    boolean new_flag_h = (sum & 0xf) < (op1 & 0xf);
-    boolean new_flag_c = (sum & 0x100) != 0;
-    int msb_sum = sum & 0x80;
-    boolean new_flag_v = (msb_op1 == msb_op2) && (msb_op1 != msb_sum);
-    sum &= 0xff;
-    flagC.set(new_flag_c);
-    flagN.set(false);
-    flagPV.set(new_flag_v);
-    flagH.set(new_flag_h);
-    flagZ.set(sum == 0x00);
-    flagS.set(sum >= 0x80);
-    return sum;
-  }
-
-  private int doADD16(int op1, int op2) {
+  private int doADD16OrSUB16(int op1, int op2, boolean carryIsBorrow) {
     int sum = (op1 & 0xffff) + (op2 & 0xffff);
-    boolean new_flag_h = (sum & 0xff) < (op1 & 0xff);
-    boolean new_flag_c = (sum & 0x10000) != 0;
+    boolean new_flag_h = halfCarry(op1 & 0x0800, op2 & 0x0800, sum & 0x0800);
+    boolean new_flag_c = (sum >= 0x10000) ^ carryIsBorrow;
     sum &= 0xffff;
     flagC.set(new_flag_c);
-    flagN.set(false);
+    flagN.set(carryIsBorrow);
     // flagPV not affected
     flagH.set(new_flag_h);
     // flagZ not affected
     // flagS not affected
     return sum;
+  }
+
+  private int doADC16(int op1, int op2) {
+    return doADC16OrSBC16(op1, op2, flagC.get() ? 1 : 0, false);
+  }
+
+  private int doADD8(int op1, int op2) {
+    return doADC8OrSBC8(op1, op2, 0, false);
+  }
+
+  private int doADD16(int op1, int op2) {
+    return doADD16OrSUB16(op1, op2, false);
+    // return doADC16OrSBC16(op1, op2, 0, false);
   }
 
   private void doAND(Reg8 reg, int op) {
@@ -4233,17 +4232,11 @@ public class Z80 implements CPU {
   }
 
   private int doSBC8(int op1, int op2) {
-    int result = doADC8(op1, 0x100 - op2);
-    flagC.set(!flagC.get());
-    flagN.set(true);
-    return result;
+    return doADC8OrSBC8(op1, 0x100 - op2, flagC.get() ? -1 : 0, true);
   }
 
   private int doSBC16(int op1, int op2) {
-    int result = doADC16(op1, 0x10000 - op2);
-    flagC.set(!flagC.get());
-    flagN.set(true);
-    return result;
+    return doADC16OrSBC16(op1, 0x10000 - op2, flagC.get() ? -1 : 0, true);
   }
 
   private void doSCF() {
@@ -4303,17 +4296,12 @@ public class Z80 implements CPU {
   }
 
   private int doSUB8(int op1, int op2) {
-    int result = doADD8(op1, 0x100 - op2);
-    flagC.set(!flagC.get());
-    flagN.set(true);
-    return result;
+    return doADC8OrSBC8(op1, 0x100 - op2, 0, true);
   }
 
   private int doSUB16(int op1, int op2) {
-    int result = doADD16(op1, 0x10000 - op2);
-    flagC.set(!flagC.get());
-    flagN.set(true);
-    return result;
+    // return doADD16OrSUB16(op1, 0x10000 - op2, true);
+    return doADC16OrSBC16(op1, 0x10000 - op2, 0, true);
   }
 
   private void doXOR(Reg8 reg, int op) {
