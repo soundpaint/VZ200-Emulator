@@ -1367,7 +1367,7 @@ public class Z80 implements CPU {
 	     15, 0);
       }
       public void execute0(Arguments args) {
-	regIY.setValue(doADD16(regIY.getValue(),
+	regIX.setValue(doADD16(regIX.getValue(),
 			       QREG16[getArg(args, 'x')].getValue()));
       }
     },
