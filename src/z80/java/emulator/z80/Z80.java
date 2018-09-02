@@ -1783,8 +1783,9 @@ public class Z80 implements CPU {
 	     19, 0);
       }
       public void execute0(Arguments args) {
-	int value = memory.readShort(regSP.getValue(), wallClockTime);
-	memory.writeShort(regSP.getValue(), regHL.getValue(), wallClockTime);
+        int address = regSP.getValue();
+	int value = memory.readShort(address, wallClockTime);
+	memory.writeShort(address, regHL.getValue(), wallClockTime);
 	regHL.setValue(value);
       }
     },
@@ -1795,8 +1796,9 @@ public class Z80 implements CPU {
 	     23, 0);
       }
       public void execute0(Arguments args) {
-	int value = memory.readShort(regSP.getValue(), wallClockTime);
-	memory.writeShort(regSP.getValue(), regIX.getValue(), wallClockTime);
+        int address = regSP.getValue();
+	int value = memory.readShort(address, wallClockTime);
+	memory.writeShort(address, regIX.getValue(), wallClockTime);
 	regIX.setValue(value);
       }
     },
@@ -1807,8 +1809,9 @@ public class Z80 implements CPU {
 	     23, 0);
       }
       public void execute0(Arguments args) {
-	int value = memory.readShort(regSP.getValue(), wallClockTime);
-	memory.writeShort(regSP.getValue(), regIY.getValue(), wallClockTime);
+        int address = regSP.getValue();
+	int value = memory.readShort(address, wallClockTime);
+	memory.writeShort(address, regIY.getValue(), wallClockTime);
 	regIY.setValue(value);
       }
     },
