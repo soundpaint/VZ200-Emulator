@@ -334,10 +334,14 @@ public class Monitor {
     return cmdLine;
   }
 
-  private int inputAvailable() throws IOException {
-    if ((script != null) && (scriptLineIndex < script.length))
-      return script[scriptLineIndex].length();
-    return stdin.available();
+  private void abortScript() {
+    if (scriptLineIndex < script.length) {
+      stdout.println("[abort script:");
+      while (scriptLineIndex < script.length) {
+        stdout.println("  script: " + script[scriptLineIndex++]);
+      }
+      stdout.println("]");
+    }
   }
 
   private String enterCommand() {
@@ -424,6 +428,9 @@ public class Monitor {
     parseEof();
   }
 
+  // TODO: Specify monitor keyboard check interval by emulation CPU
+  // wall clock time (or host CPU time?) rather than as number of
+  // emulation CPU instructions.
   private static final int KBD_CHECK_COUNT_LIMIT = 1024;
 
   /**
@@ -507,7 +514,7 @@ public class Monitor {
               done = true;
             }
             if (kbdCheckCount++ >= KBD_CHECK_COUNT_LIMIT) {
-              done |= inputAvailable() > 0;
+              done |= stdin.available() > 0;
               kbdCheckCount = 0;
             }
             busyTime += System.nanoTime() - systemTime;
@@ -533,8 +540,10 @@ public class Monitor {
       } catch (CPU.MismatchException | RuntimeException e) {
         e.printStackTrace(stderr);
       }
-      if (inputAvailable() > 0)
-	readLine();
+      if (stdin.available() > 0) {
+        abortScript();
+        readLine();
+      }
     } catch (IOException e) {
       throw new InternalError(e.getMessage());
     }
