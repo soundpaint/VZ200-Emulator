@@ -442,7 +442,7 @@ public class Z80 implements CPU {
   private Reg8 regA, regF, regB, regC, regD, regE, regH, regL;
   private RegPair regAF, regBC, regDE, regHL;
   private Reg16 regIX, regIY;
-  private Reg8 regIV, regR;
+  private Reg8 regI, regR;
   private Reg16 regSP, regPC;
   private Reg16 regAF_, regBC_, regDE_, regHL_;
   private RegIM regIM;
@@ -492,7 +492,7 @@ public class Z80 implements CPU {
     regHL = new RegPair(regH, regL);
     regIX = new GenericReg16("IX");
     regIY = new GenericReg16("IY");
-    regIV = new GenericReg8("IV");
+    regI = new GenericReg8("I");
     regR = new GenericReg8("R");
     regSP = new GenericReg16("SP");
     regPC = new GenericReg16("PC");
@@ -507,7 +507,7 @@ public class Z80 implements CPU {
     REGISTER_SET = new CPU.Register[] {
       regF, regA, regBC, regDE, regHL, regIX, regIY,
       regAF_, regBC_, regDE_, regHL_,
-      regSP, regPC, regIV, regR, regIM
+      regSP, regPC, regI, regR, regIM
     };
     REG16 = new Reg16[] {
       regBC, regDE, regHL, regSP
@@ -589,7 +589,7 @@ public class Z80 implements CPU {
 		" " + regIX + " " + regIY);
     out.println("  " + regAF_ + " " + regBC_ + " " + regDE_ + " " + regHL_);
     out.println("  " + regSP + " " + regPC +
-		" " + regIV + " " + regR + " IM=" + regIM);
+		" " + regI + " " + regR + " IM=" + regIM);
   }
 
   // *** INTERRUPT HANDLING ***************************************************
@@ -2160,12 +2160,12 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("LD A,IV",
+	init("LD A,I",
 	     "1110110101010111",
 	     9, 0);
       }
       public void execute0(Arguments args) {
-	doLDAIV();
+	doLDAI();
       }
     },
     new GenericOperation() {
@@ -2271,12 +2271,12 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("LD IV,A",
+	init("LD I,A",
 	     "1110110101000111",
 	     9, 0);
       }
       public void execute0(Arguments args) {
-	regIV.setValue(regA.getValue());
+	regI.setValue(regA.getValue());
       }
     },
     new GenericOperation() {
@@ -3721,6 +3721,8 @@ public class Z80 implements CPU {
     regHL.reset();
     regIX.reset();
     regIY.reset();
+    regI.reset();
+    regR.reset();
     regSP.reset();
     regPC.reset();
     regAF_.reset();
@@ -3972,8 +3974,8 @@ public class Z80 implements CPU {
     // flagS unknown
   }
 
-  private void doLDAIV() {
-    int op = regIV.getValue();
+  private void doLDAI() {
+    int op = regI.getValue();
     regA.setValue(op);
     // flagC not affected
     flagN.set(false);
@@ -4353,7 +4355,7 @@ public class Z80 implements CPU {
 	  case INTR_MODE_2 :
             doPUSH(regPC.getValue());
 	    int vectorTableAddr =
-	      (regIV.getValue() << 8) | (intr_bus_data & 0xfe);
+	      (regI.getValue() << 8) | (intr_bus_data & 0xfe);
 	    regPC.setValue(memory.readShort(vectorTableAddr, wallClockTime));
 	    workPending = true;
 	    break;
