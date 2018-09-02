@@ -3973,23 +3973,25 @@ public class Z80 implements CPU {
   }
 
   private void doLDAIV() {
-    regA.setValue(regIV.getValue());
+    int op = regIV.getValue();
+    regA.setValue(op);
     // flagC not affected
     flagN.set(false);
-    flagPV.set(irq_enabled);
+    flagPV.set(irq_enabled); // TODO: irq_enabled != IFF2
     flagH.set(false);
-    flagZ.set(regA.getValue() == 0x00);
-    flagS.set(regA.getValue() >= 0x80);
+    flagZ.set(op == 0x00);
+    flagS.set(op >= 0x80);
   }
 
   private void doLDAR() {
-    regA.setValue(regR.getValue());
+    int op = regR.getValue();
+    regA.setValue(op);
     // flagC not affected
     flagN.set(false);
-    flagPV.set(irq_enabled);
+    flagPV.set(irq_enabled); // TODO: irq_enabled != IFF2
     flagH.set(false);
-    flagZ.set(regA.getValue() == 0x00);
-    flagS.set(regA.getValue() >= 0x80);
+    flagZ.set(op == 0x00);
+    flagS.set(op >= 0x80);
   }
 
   private void doLDD() {
