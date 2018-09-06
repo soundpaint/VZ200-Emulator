@@ -3746,17 +3746,17 @@ public class Z80 implements CPU {
       ((bitSum == 0x0) && ((bitOp1 | bitOp2) != 0x0));
   }
 
-  private int doADC8OrSBC8(int op1, int op2, int carry, boolean carryIsBorrow) {
+  private int doADC8OrSBC8(int op1, int op2, int carry, boolean isSubOp) {
     int msb_op1 = op1 & 0x80;
     int msb_op2 = op2 & 0x80;
-    int sum = (op1 & 0xff) + (op2 & 0xff) + carry;
+    int sum = op1 + op2 + carry;
     boolean new_flag_h = halfCarry(op1 & 0x08, op2 & 0x08, sum & 0x08);
-    boolean new_flag_c = (sum >= 0x100) ^ carryIsBorrow;
+    boolean new_flag_c = (sum >= 0x100) ^ isSubOp;
     int msb_sum = sum & 0x80;
     boolean new_flag_v = (msb_op1 == msb_op2) && (msb_op1 != msb_sum);
     sum &= 0xff;
     flagC.set(new_flag_c);
-    flagN.set(carryIsBorrow);
+    flagN.set(isSubOp);
     flagPV.set(new_flag_v);
     flagH.set(new_flag_h);
     flagZ.set(sum == 0x00);
@@ -3768,17 +3768,17 @@ public class Z80 implements CPU {
     return doADC8OrSBC8(op1, op2, flagC.get() ? 1 : 0, false);
   }
 
-  private int doADC16OrSBC16(int op1, int op2, int carry, boolean carryIsBorrow) {
+  private int doADC16OrSBC16(int op1, int op2, int carry, boolean isSubOp) {
     int msb_op1 = op1 & 0x8000;
     int msb_op2 = op2 & 0x8000;
-    int sum = (op1 & 0xffff) + (op2 & 0xffff) + carry;
+    int sum = op1 + op2 + carry;
     boolean new_flag_h = halfCarry(op1 & 0x0800, op2 & 0x0800, sum & 0x0800);
-    boolean new_flag_c = (sum >= 0x10000) ^ carryIsBorrow;
+    boolean new_flag_c = (sum >= 0x10000) ^ isSubOp;
     int msb_sum = sum & 0x8000;
     boolean new_flag_v = (msb_op1 == msb_op2) && (msb_op1 != msb_sum);
     sum &= 0xffff;
     flagC.set(new_flag_c);
-    flagN.set(carryIsBorrow);
+    flagN.set(isSubOp);
     flagPV.set(new_flag_v);
     flagH.set(new_flag_h);
     flagZ.set(sum == 0x0000);
@@ -3810,7 +3810,6 @@ public class Z80 implements CPU {
 
   private int doADD16(int op1, int op2) {
     return doADD16OrSUB16(op1, op2, false);
-    // return doADC16OrSBC16(op1, op2, 0, false);
   }
 
   private void doAND(Reg8 reg, int op) {
