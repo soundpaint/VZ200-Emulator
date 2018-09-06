@@ -212,7 +212,7 @@ public class Z80 implements CPU {
     public String getName() { return "(" + reg16.getName() + ")"; }
 
     public int getValue() {
-      return memory.readByte(reg16.getValue(), wallClockTime);
+      return memory.readByte(reg16.getValue(), wallClockTime) & 0xff;
     }
 
     public void setValue(int value) {
@@ -258,7 +258,7 @@ public class Z80 implements CPU {
 
     public int getValue() {
       return this.memory.readByte((reg16.getValue() + disp8) & 0xffff,
-                                  wallClockTime);
+                                  wallClockTime) & 0xff;
     }
 
     public void setValue(int value) {
@@ -3943,7 +3943,7 @@ public class Z80 implements CPU {
   }
 
   private int doIN(int op) {
-    int result = io.readByte(op, wallClockTime);
+    int result = io.readByte(op, wallClockTime) & 0xff;
     // flagC not affected
     flagN.set(false);
     flagPV.set(PARITY[result]);
