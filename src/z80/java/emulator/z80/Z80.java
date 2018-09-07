@@ -4027,7 +4027,15 @@ public class Z80 implements CPU {
   }
 
   private void doNEG(Reg8 reg) {
-    reg.setValue(doSUB8(0, reg.getValue()));
+    int op = reg.getValue();
+    int neg = 0x100 - op;
+    reg.setValue(neg);
+    flagC.set(op == 0x00);
+    flagN.set(true);
+    flagPV.set(op == 0x80);
+    flagH.set((op & 0x0f) != 0x00);
+    flagZ.set(neg == 0x00);
+    flagS.set(neg >= 0x80);
   }
 
   private void doNOP() {
