@@ -4207,7 +4207,7 @@ public class Z80 implements CPU {
     int op = reg.getValue();
     boolean new_flag_c = (op & 0x01) == 1;
     op >>>= 1;
-    if (flagC.get()) op |= 0x80;
+    if (new_flag_c) op |= 0x80;
     reg.setValue(op);
     flagC.set(new_flag_c);
     flagN.set(false);
@@ -4274,9 +4274,10 @@ public class Z80 implements CPU {
 
   private void doSLA(Reg8 reg) {
     int op = reg.getValue();
-    flagC.set(op >= 0x80);
+    boolean new_flag_c = op >= 0x80;
     op <<= 1; op &= 0xff;
     reg.setValue(op);
+    flagC.set(new_flag_c);
     flagN.set(false);
     flagPV.set(PARITY[op]);
     flagH.set(false);
@@ -4286,10 +4287,11 @@ public class Z80 implements CPU {
 
   private void doSRA(Reg8 reg) {
     int op = reg.getValue();
-    flagC.set((op & 0x01) == 1);
+    boolean new_flag_c = (op & 0x01) == 1;
     op >>>= 1;
     if ((op & 0x40) == 0x1) op |= 0x80;
     reg.setValue(op);
+    flagC.set(new_flag_c);
     flagN.set(false);
     flagPV.set(PARITY[op]);
     flagH.set(false);
@@ -4299,9 +4301,10 @@ public class Z80 implements CPU {
 
   private void doSRL(Reg8 reg) {
     int op = reg.getValue();
-    flagC.set((op & 0x01) == 1);
+    boolean new_flag_c = (op & 0x01) == 1;
     op >>>= 1;
     reg.setValue(op);
+    flagC.set(new_flag_c);
     flagN.set(false);
     flagPV.set(PARITY[op]);
     flagH.set(false);
