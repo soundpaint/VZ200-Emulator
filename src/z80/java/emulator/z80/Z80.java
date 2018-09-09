@@ -1453,8 +1453,7 @@ public class Z80 implements CPU {
 	     4, 0);
       }
       public void execute0(Arguments args) {
-	regA.setValue(doADD8(regA.getValue(), REG8[getArg(args, 'x')].
-			     getValue()));
+	doAND(regA, REG8[getArg(args, 'x')].getValue());
       }
     },
     new GenericOperation() {
