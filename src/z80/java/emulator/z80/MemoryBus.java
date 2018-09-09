@@ -16,7 +16,7 @@ public class MemoryBus implements CPU.Memory {
    * A device connected to the memory bus that is listening to data
    * that the CPU writes to the bus.
    */
-  public interface Reader {
+  public interface BusReader {
     public void writeByte(int address, int value, long wallClockTime);
     public void writeShort(int address, int value, long wallClockTime);
   }
@@ -25,7 +25,7 @@ public class MemoryBus implements CPU.Memory {
    * A device connected to the memory bus that provides data for the
    * CPU to read from the bus.
    */
-  public interface Writer {
+  public interface BusWriter {
     /**
      * The default value that a device must issue onto the bus
      * if it does not feel addressed.
@@ -45,21 +45,21 @@ public class MemoryBus implements CPU.Memory {
     return memoryBus;
   }
 
-  private List<Reader> readers;
-  private List<Writer> writers;
+  private List<BusReader> readers;
+  private List<BusWriter> writers;
 
   public MemoryBus() {
-    readers = new ArrayList<Reader>();
-    writers = new ArrayList<Writer>();
+    readers = new ArrayList<BusReader>();
+    writers = new ArrayList<BusWriter>();
   }
 
-  public void addReader(Reader reader) {
+  public void addReader(BusReader reader) {
     if (reader == null)
       throw new NullPointerException("reader");
     readers.add(reader);
   }
 
-  public void addWriter(Writer writer) {
+  public void addWriter(BusWriter writer) {
     if (writer == null)
       throw new NullPointerException("writer");
     writers.add(writer);
@@ -67,7 +67,7 @@ public class MemoryBus implements CPU.Memory {
 
   public int readByte(int address, long wallClockTime) {
     int result = 0xff;
-    for (Writer writer : writers) {
+    for (BusWriter writer : writers) {
       result &= writer.readByte(address, wallClockTime);
     }
     return result;
@@ -75,20 +75,20 @@ public class MemoryBus implements CPU.Memory {
 
   public int readShort(int address, long wallClockTime) {
     int result = 0xffff;
-    for (Writer writer : writers) {
+    for (BusWriter writer : writers) {
       result &= writer.readShort(address, wallClockTime);
     }
     return result;
   }
 
   public void writeByte(int address, int value, long wallClockTime) {
-    for (Reader reader : readers) {
+    for (BusReader reader : readers) {
       reader.writeByte(address, value, wallClockTime);
     }
   }
 
   public void writeShort(int address, int value, long wallClockTime) {
-    for (Reader reader : readers) {
+    for (BusReader reader : readers) {
       reader.writeShort(address, value, wallClockTime);
     }
   }

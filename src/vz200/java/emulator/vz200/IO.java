@@ -6,7 +6,7 @@ import emulator.z80.CPU;
 import emulator.z80.MemoryBus;
 import emulator.z80.Util;
 
-public class IO implements MemoryBus.Reader, MemoryBus.Writer {
+public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
   private final static int DEFAULT_BASE_ADDRESS = 0x6800;
   private final static int MEMORY_SIZE = 0x0800;
 

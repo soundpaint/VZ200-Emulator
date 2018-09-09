@@ -8,7 +8,7 @@ import java.io.IOException;
 /**
  * Default implementation for ROM Memory.
  */
-public class ROMMemory implements MemoryBus.Writer
+public class ROMMemory implements MemoryBus.BusWriter
 {
   protected int baseAddress;
   protected int[] data;
@@ -67,7 +67,7 @@ public class ROMMemory implements MemoryBus.Writer
     if (addressOffset < data.length) {
       result = data[addressOffset];
     } else {
-      result = MemoryBus.Writer.BYTE_UNDEFINED;
+      result = BYTE_UNDEFINED;
     }
     return result;
   }
@@ -78,14 +78,14 @@ public class ROMMemory implements MemoryBus.Writer
     if (addressOffset < data.length) {
       resultLSB = data[addressOffset];
     } else {
-      resultLSB = MemoryBus.Writer.BYTE_UNDEFINED;
+      resultLSB = BYTE_UNDEFINED;
     }
     addressOffset = (addressOffset + 1) & 0xffff;
     int resultMSB;
     if (addressOffset < data.length) {
       resultMSB = data[addressOffset];
     } else {
-      resultMSB = MemoryBus.Writer.BYTE_UNDEFINED;
+      resultMSB = BYTE_UNDEFINED;
     }
     return (resultMSB << 8) | resultLSB;
   }

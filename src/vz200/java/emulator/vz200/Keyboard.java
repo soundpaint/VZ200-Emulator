@@ -10,7 +10,7 @@ import emulator.z80.CPU;
 import emulator.z80.MemoryBus;
 import emulator.z80.Util;
 
-public class Keyboard extends JFrame implements MemoryBus.Writer {
+public class Keyboard extends JFrame implements MemoryBus.BusWriter {
   private static final long serialVersionUID = -6642328202936155082L;
 
   private static final int MEMORY_SIZE = 0x0800;
@@ -25,7 +25,7 @@ public class Keyboard extends JFrame implements MemoryBus.Writer {
     if (addressOffset < MEMORY_SIZE)
       result = matrix.read(addressOffset);
     else
-      result = MemoryBus.Writer.BYTE_UNDEFINED;
+      result = BYTE_UNDEFINED;
     return result;
   }
 
@@ -35,12 +35,12 @@ public class Keyboard extends JFrame implements MemoryBus.Writer {
     if (addressOffset < MEMORY_SIZE)
       resultLSB = matrix.read(addressOffset);
     else
-      resultLSB = MemoryBus.Writer.BYTE_UNDEFINED;
+      resultLSB = BYTE_UNDEFINED;
     addressOffset = (addressOffset + 1) & 0xffff;
     if (addressOffset < MEMORY_SIZE)
       resultMSB = matrix.read(addressOffset);
     else
-      resultMSB = MemoryBus.Writer.BYTE_UNDEFINED;
+      resultMSB = BYTE_UNDEFINED;
     return (resultMSB << 8) | resultLSB;
   }
 

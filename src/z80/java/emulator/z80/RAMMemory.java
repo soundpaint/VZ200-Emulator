@@ -4,7 +4,7 @@ package emulator.z80;
 /**
  * Default implementation for RAM Memory.
  */
-public class RAMMemory extends ROMMemory implements MemoryBus.Reader {
+public class RAMMemory extends ROMMemory implements MemoryBus.BusReader {
   private static int[] createRAMData(int size) {
     if (size < 0)
       throw new IllegalArgumentException("size < 0");

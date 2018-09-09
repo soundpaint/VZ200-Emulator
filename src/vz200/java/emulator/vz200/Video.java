@@ -10,7 +10,7 @@ import emulator.z80.RAMMemory;
 import emulator.z80.Util;
 
 public class Video extends JFrame
-  implements MemoryBus.Reader, MemoryBus.Writer
+  implements MemoryBus.BusReader, MemoryBus.BusWriter
 {
   private static final long serialVersionUID = 8771293905230414438L;
 
