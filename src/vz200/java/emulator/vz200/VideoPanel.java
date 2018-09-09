@@ -231,12 +231,12 @@ public class VideoPanel extends JPanel {
 
     int zoom2 = 2 * zoom;
     int zoom3 = 3 * zoom;
-    int zoom6 = 6 * zoom;
     int zoom8 = 8 * zoom;
+    int _sx = x0 * zoom8 + 6 * zoom + frameWidth;
 
     int sy0 = y0 * zoom3 + frameWidth;
     for (int y = y0; y < y1; y++) {
-      int sx0 = x0 * zoom8 + zoom6 + frameWidth;
+      int sx0 = _sx;
       for (int x = x0; x < x1; x++) {
 	int charCode = directVideoRAM[(y << 5) + x];
 	int sx = sx0;
