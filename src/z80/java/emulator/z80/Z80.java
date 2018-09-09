@@ -3882,17 +3882,29 @@ public class Z80 implements CPU {
   }
 
   private void doDAA(Reg8 reg) {
+    // TODO: This is an 8080-style implementation of DAA.  The full
+    // Z80-style implementation needs also considerating the processor
+    // status "N" flag.
     int op = reg.getValue();
-    if ((op & 0xf) > 0x9) {
-      op = ((op & 0xf0) + 0x10) | ((op & 0xf - 0xa));
-      flagC.set((op & 0xf0) == 0x00);
-      flagH.set(true);
+    boolean new_flag_h;
+    if ((op & 0x0f) > 0x09) {
+      op += 0x06;
+      new_flag_h = true;
+    } else if (flagH.get()) {
+      op += 0x06;
+      new_flag_h = false;
     } else {
-      // flagC not affected
-      flagH.set(false);
+      new_flag_h = false;
     }
+    if (((op & 0xf0) > 0x90) || flagC.get())  {
+      op += 0x60;
+    }
+    boolean new_flag_c = op >= 0x100;
+    op &= 0xff;
+    flagC.set(new_flag_c);
     // flagN not affected
     flagPV.set(PARITY[op]);
+    flagH.set(new_flag_h);
     flagZ.set(op == 0x00);
     flagS.set(op >= 0x80);
     reg.setValue(op);
