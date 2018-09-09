@@ -2045,7 +2045,7 @@ public class Z80 implements CPU {
 	     4, 0);
       }
       public void execute0(Arguments args) {
-	regPC.setValue(indirectRegHL.getValue());
+	regPC.setValue(regHL.getValue());
       }
     },
     new GenericOperation() {
