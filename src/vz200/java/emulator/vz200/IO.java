@@ -13,25 +13,25 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
   private int baseAddress;
   private Video video;
   private Keyboard keyboard;
+  private Speaker speaker;
 
-  public IO() throws IOException {
-    this(DEFAULT_BASE_ADDRESS);
+  private IO() { throw new UnsupportedOperationException(); }
+
+  public IO(CPU cpu) throws IOException {
+    this(cpu, DEFAULT_BASE_ADDRESS);
   }
 
-  public IO(int baseAddress) throws IOException {
+  public IO(CPU cpu, int baseAddress) throws IOException {
     this.baseAddress = baseAddress;
     keyboard = new Keyboard(baseAddress);
     video = new Video();
     video.addKeyListener(keyboard.getKeyListener());
+    speaker = new Speaker(cpu);
   }
 
   public Video getVideo() { return video; }
 
-  private void setCassetteOutput(int value) {
-    // TODO
-  }
-
-  private void setSpeakerOutput(int value) {
+  private void setCassetteOutput(int value, long wallClockTime) {
     // TODO
   }
 
@@ -64,8 +64,8 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
   public void writeByte(int address, int value, long wallClockTime) {
     int addressOffset = (address - baseAddress) & 0xffff;
     if (addressOffset < MEMORY_SIZE) {
-      setCassetteOutput((value >> 1) & 0x3);
-      setSpeakerOutput(((value >> 5) & 0x1) - (value  & 0x1));
+      setCassetteOutput((value >> 1) & 0x3, wallClockTime);
+      speaker.putEvent(((value >> 5) & 0x1) - (value  & 0x1), wallClockTime);
       video.setDisplayMode((value & 0x08) != 0x0);
       video.setColorMode((value & 0x10) != 0x0);
     }
