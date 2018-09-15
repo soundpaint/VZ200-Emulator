@@ -9,7 +9,8 @@ import javax.sound.sampled.SourceDataLine;
 
 public class AudioRenderer extends Thread {
 
-  private static final int BUFFER_FRAMES = 0x800;
+  private static final int BUFFER_FRAMES = 0x1000;
+  private static final int BYTES_PER_FRAME = 4;
   private static final float SAMPLE_RATE = 44100.0f;
 
   private Speaker speaker;
@@ -23,7 +24,7 @@ public class AudioRenderer extends Thread {
 
   public AudioRenderer(Speaker speaker) throws LineUnavailableException {
     this.speaker = speaker;
-    buffer = new byte[4 * BUFFER_FRAMES];
+    buffer = new byte[BYTES_PER_FRAME * BUFFER_FRAMES];
     selectSourceDataLine();
   }
 
@@ -47,48 +48,69 @@ public class AudioRenderer extends Thread {
     sourceDataLine = (SourceDataLine)mixer.getLine(sourceLineInfo[0]);
     System.out.println("using source data line: " + sourceDataLine.getClass());
     sourceDataLine.open(new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
-                                        SAMPLE_RATE, 16, 2, 4,
+                                        SAMPLE_RATE, 16, 2, BYTES_PER_FRAME,
                                         SAMPLE_RATE, true));
   }
-
-  private static boolean alwaysTrue() { return true; }
 
   public void run() {
     System.out.println("AudioRenderer: using audio format " +
                        sourceDataLine.getFormat());
-    double nanoSampleRate = SAMPLE_RATE / 1000000000;
+    double nanoSampleRate = ((double)SAMPLE_RATE) * 0.000000001;
+    double inv_fullBufferTime = nanoSampleRate / BUFFER_FRAMES;
+    int fullBufferTime = (int)(1.0 / inv_fullBufferTime + 0.5);
+    System.out.println("AudioRenderer: fullBufferTime=" + fullBufferTime);
     Speaker.Event event = new Speaker.Event();
     sourceDataLine.start();
-    while (alwaysTrue()) {
-      int maxTime = (int)(BUFFER_FRAMES / nanoSampleRate + 0.5);
-      int bIndex = 0;
-      while (maxTime > 0) {
-        speaker.getEvent(event, maxTime);
-        int bNextIndex =
-          bIndex + (int)(event.deltaWallClockTime * nanoSampleRate + 0.5);
-        if (bNextIndex > BUFFER_FRAMES) {
-          bNextIndex = BUFFER_FRAMES;
-          // TODO: Avoid rounding errors
+    double bufferFramesPerTime = BUFFER_FRAMES * inv_fullBufferTime;
+    while (true) {
+      int bufferTime = 0;
+      int frameIndex = 0;
+      int bufferIndex = 0;
+      while (frameIndex < BUFFER_FRAMES - 1) {
+        speaker.getEvent(event, fullBufferTime - bufferTime);
+        bufferTime += event.deltaWallClockTime;
+        int nextFrameIndex = (int)(bufferFramesPerTime * bufferTime + 0.5);
+        if (nextFrameIndex > BUFFER_FRAMES) {
+          System.out.println("WARNING: rounding error: nextFrameIndex off by " +
+                             (BUFFER_FRAMES - nextFrameIndex));
+          nextFrameIndex = BUFFER_FRAMES;
         }
-        int address = bIndex << 2;
-        for (int i = bIndex; i < bNextIndex; i++) {
-          short sample = (short)(event.value * 10000);
-          byte sampleHi = (byte)(sample >> 8);
-          byte sampleLo = (byte)(sample - sampleHi << 8);
+        short sample = event.value;
+        byte sampleHi = (byte)(sample >> 8);
+        byte sampleLo = (byte)(sample - sampleHi << 8);
+        for (int i = frameIndex; i < nextFrameIndex; i++) {
           // left channel
-          buffer[address++] = sampleLo;
-          buffer[address++] = sampleHi;
+          buffer[bufferIndex++] = sampleLo;
+          buffer[bufferIndex++] = sampleHi;
           // right channel
-          buffer[address++] = sampleLo;
-          buffer[address++] = sampleHi;
+          buffer[bufferIndex++] = sampleLo;
+          buffer[bufferIndex++] = sampleHi;
         }
-        maxTime -= event.deltaWallClockTime;
-        bIndex = bNextIndex;
+        frameIndex = nextFrameIndex;
       }
       sourceDataLine.write(buffer, 0, buffer.length);
     }
-    sourceDataLine.drain();
-    sourceDataLine.stop();
+  }
+
+  protected void finalize() {
+    if (sourceDataLine != null) {
+      try {
+        sourceDataLine.drain();
+      } catch (Throwable t) {
+        System.out.println("AudioRenderer: Failed draining audio: " + t);
+      }
+      try {
+        sourceDataLine.stop();
+      } catch (Throwable t) {
+        System.out.println("AudioRenderer: Failed stopping audio: " + t);
+      }
+      try {
+        sourceDataLine.close();
+      } catch (Throwable t) {
+        System.out.println("AudioRenderer: Failed closing audio: " + t);
+      }
+      sourceDataLine = null;
+    }
   }
 }
 

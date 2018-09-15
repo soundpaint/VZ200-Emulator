@@ -4,7 +4,7 @@ import emulator.z80.CPU;
 
 public class Speaker {
   public static class Event {
-    public int value;
+    public short value;
 
     // duration for that the value holds
     public long deltaWallClockTime;
@@ -90,7 +90,7 @@ public class Speaker {
       producerIndex = 0;
     }
 
-    public synchronized void put(int value, long wallClockTime) {
+    public synchronized void put(short value, long wallClockTime) {
       Event lastEvent = events[producerIndex];
       lastEvent.deltaWallClockTime =
         wallClockTime - currentValueSinceWallClockTime;
@@ -133,7 +133,7 @@ public class Speaker {
   private EventFiFo eventFiFo;
   private CPU cpu;
   private long currentValueSinceWallClockTime;
-  private int currentValue;
+  private short currentValue;
   private AudioRenderer audioRenderer;
   private boolean active;
 
@@ -152,7 +152,7 @@ public class Speaker {
     }
   }
 
-  public void putEvent(int value, long wallClockTime) {
+  public void putEvent(short value, long wallClockTime) {
     if (active && (value != currentValue)) {
       eventFiFo.put(value, wallClockTime);
     }

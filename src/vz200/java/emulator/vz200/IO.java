@@ -61,11 +61,14 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
       (readByte(address, wallClockTime) << 8);
   }
 
+  private static final short[] ELONGATION  = new short[] {-5000, 0, +5000};
+
   public void writeByte(int address, int value, long wallClockTime) {
     int addressOffset = (address - baseAddress) & 0xffff;
     if (addressOffset < MEMORY_SIZE) {
       setCassetteOutput((value >> 1) & 0x3, wallClockTime);
-      speaker.putEvent(((value >> 5) & 0x1) - (value  & 0x1), wallClockTime);
+      speaker.putEvent(ELONGATION[((value >> 5) & 0x1) - (value  & 0x1) + 1],
+                       wallClockTime);
       video.setDisplayMode((value & 0x08) != 0x0);
       video.setColorMode((value & 0x10) != 0x0);
     }
