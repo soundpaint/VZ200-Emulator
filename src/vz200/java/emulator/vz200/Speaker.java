@@ -4,10 +4,16 @@ import emulator.z80.CPU;
 
 public class Speaker {
   public static class Event {
-    public short value;
+    /**
+     * State of speaker membrane.
+     */
+    public short elongation;
 
-    // duration for that the value holds
-    public long deltaWallClockTime;
+    /**
+     * Duration in nanoseconds for that the elongation is known to
+     * have not changed.
+     */
+    public long timeSpan;
   }
 
   /**
@@ -90,36 +96,35 @@ public class Speaker {
       producerIndex = 0;
     }
 
-    public synchronized void put(short value, long wallClockTime) {
+    public synchronized void put(short elongation, long wallClockTime) {
       Event lastEvent = events[producerIndex];
-      lastEvent.deltaWallClockTime =
-        wallClockTime - currentValueSinceWallClockTime;
+      lastEvent.timeSpan =
+        wallClockTime - currentElongationSince;
       producerIndex = (producerIndex + 1) % BUFFER_SIZE;
       if (producerIndex == consumerIndex) {
         System.err.println("Warning: Speaker event queue overflow");
         consumerIndex = (consumerIndex + 1) % BUFFER_SIZE;
       }
       Event event = events[producerIndex];
-      event.value = value;
-      event.deltaWallClockTime = 0;
-      currentValueSinceWallClockTime = wallClockTime;
-      currentValue = value;
+      event.elongation = elongation;
+      event.timeSpan = 0;
+      currentElongationSince = wallClockTime;
+      currentElongation = elongation;
     }
 
-    private synchronized void get(Event event, long maxTimeSpan) {
+    private synchronized void get(Event result, long maxTimeSpan) {
       if (consumerIndex == producerIndex) {
-        long wallClockTime = cpu.getWallClockTime();
-        currentValueSinceWallClockTime = cpu.getWallClockTime();
-        event.value = currentValue;
-        event.deltaWallClockTime = maxTimeSpan;
+        currentElongationSince = cpu.getWallClockTime();
+        result.elongation = currentElongation;
+        result.timeSpan = maxTimeSpan;
       } else {
-        Event ev = events[consumerIndex];
-        event.value = ev.value;
-        if (ev.deltaWallClockTime > maxTimeSpan) {
-          event.deltaWallClockTime = maxTimeSpan;
-          ev.deltaWallClockTime -= maxTimeSpan;
+        Event event = events[consumerIndex];
+        result.elongation = event.elongation;
+        if (event.timeSpan > maxTimeSpan) {
+          result.timeSpan = maxTimeSpan;
+          event.timeSpan -= maxTimeSpan;
         } else {
-          event.deltaWallClockTime = ev.deltaWallClockTime;
+          result.timeSpan = event.timeSpan;
           consumerIndex = (consumerIndex + 1) % BUFFER_SIZE;
         }
       }
@@ -130,17 +135,22 @@ public class Speaker {
     }
   }
 
-  private EventFiFo eventFiFo;
+  private static final short DEFAULT_AMPLITUDE = 5000;
+
+  private final short[] ELONGATION = new short[3];
+
   private CPU cpu;
-  private long currentValueSinceWallClockTime;
-  private short currentValue;
-  private AudioRenderer audioRenderer;
+  private EventFiFo eventFiFo;
+  private short currentElongation;
+  private long currentElongationSince;
   private boolean active;
+  private AudioRenderer audioRenderer;
 
   public Speaker(CPU cpu) {
-    this.eventFiFo = new EventFiFo();
     this.cpu = cpu;
-    currentValueSinceWallClockTime = cpu.getWallClockTime();
+    eventFiFo = new EventFiFo();
+    currentElongation = 0;
+    currentElongationSince = cpu.getWallClockTime();
     try {
       active = true;
       audioRenderer = new AudioRenderer(this);
@@ -150,11 +160,20 @@ public class Speaker {
       System.err.println("WARNING: Failed opening audio stream.  " +
                          "No audio output will be produced.");
     }
+    setAmplitude(DEFAULT_AMPLITUDE);
   }
 
-  public void putEvent(short value, long wallClockTime) {
-    if (active && (value != currentValue)) {
-      eventFiFo.put(value, wallClockTime);
+  public void setAmplitude(short amplitude) {
+    ELONGATION[0] = (short)-amplitude;
+    ELONGATION[1] = 0;
+    ELONGATION[2] = amplitude;
+  }
+
+  public void putEvent(int plusPinValue, int minusPinValue,
+                       long wallClockTime) {
+    short elongation = ELONGATION[plusPinValue - minusPinValue + 1];
+    if (active && (elongation != currentElongation)) {
+      eventFiFo.put(elongation, wallClockTime);
     }
   }
 

@@ -68,14 +68,14 @@ public class AudioRenderer extends Thread {
       int bufferIndex = 0;
       while (frameIndex < BUFFER_FRAMES - 1) {
         speaker.getEvent(event, fullBufferTime - bufferTime);
-        bufferTime += event.deltaWallClockTime;
+        bufferTime += event.timeSpan;
         int nextFrameIndex = (int)(bufferFramesPerTime * bufferTime + 0.5);
         if (nextFrameIndex > BUFFER_FRAMES) {
           System.out.println("WARNING: rounding error: nextFrameIndex off by " +
                              (BUFFER_FRAMES - nextFrameIndex));
           nextFrameIndex = BUFFER_FRAMES;
         }
-        short sample = event.value;
+        short sample = event.elongation;
         byte sampleHi = (byte)(sample >> 8);
         byte sampleLo = (byte)(sample - sampleHi << 8);
         for (int i = frameIndex; i < nextFrameIndex; i++) {
