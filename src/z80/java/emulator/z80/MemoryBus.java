@@ -19,6 +19,7 @@ public class MemoryBus implements CPU.Memory {
   public interface BusReader {
     public void writeByte(int address, int value, long wallClockTime);
     public void writeShort(int address, int value, long wallClockTime);
+    public void resync(long wallClockTime);
   }
 
   /*
@@ -34,6 +35,7 @@ public class MemoryBus implements CPU.Memory {
 
     public int readByte(int address, long wallClockTime);
     public int readShort(int address, long wallClockTime);
+    public void resync(long wallClockTime);
   }
 
   public static MemoryBus createRAMMemoryBus(int baseAddress, int size)
@@ -90,6 +92,15 @@ public class MemoryBus implements CPU.Memory {
   public void writeShort(int address, int value, long wallClockTime) {
     for (BusReader reader : readers) {
       reader.writeShort(address, value, wallClockTime);
+    }
+  }
+
+  public void resync(long wallClockTime) {
+    for (BusReader reader : readers) {
+      reader.resync(wallClockTime);
+    }
+    for (BusWriter writer : writers) {
+      writer.resync(wallClockTime);
     }
   }
 }

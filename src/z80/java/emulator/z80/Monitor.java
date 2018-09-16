@@ -438,7 +438,7 @@ public class Monitor {
    * require high precision in the point of time of CPU instruction
    * execution.
    */
-  private static final boolean BUSY_WAIT = true;
+  private static final boolean BUSY_WAIT = false;
 
   /**
    * If BUSY_WAIT is turned on, use BUSY_WAIT_TIME to fine-control
@@ -489,6 +489,7 @@ public class Monitor {
         systemStartTime = System.nanoTime();
         long cpuStartTime = cpu.getWallClockTime();
         long deltaStartTime = cpuStartTime - systemStartTime;
+        cpu.resyncPeripherals();
 	while (!done) {
           long systemTime = System.nanoTime();
           long cpuTime = cpu.getWallClockTime();

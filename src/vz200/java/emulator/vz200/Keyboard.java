@@ -44,6 +44,8 @@ public class Keyboard extends JFrame implements MemoryBus.BusWriter {
     return (resultMSB << 8) | resultLSB;
   }
 
+  public void resync(long wallClockTime) {}
+
   private Keyboard() {}
 
   public Keyboard(int baseAddress) throws IOException {

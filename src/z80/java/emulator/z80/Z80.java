@@ -4416,6 +4416,11 @@ public class Z80 implements CPU {
 
   public String getProgramCounterName() { return regPC.getName(); }
 
+  public void resyncPeripherals() {
+    io.resync(wallClockTime);
+    memory.resync(wallClockTime);
+  }
+
   public Z80() {
     this(DEFAULT_CPU_FREQUENCY);
   }

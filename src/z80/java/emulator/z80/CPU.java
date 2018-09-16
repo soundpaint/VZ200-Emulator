@@ -8,6 +8,7 @@ public interface CPU {
     public int readShort(int address, long wallClockTime);
     public void writeByte(int address, int value, long wallClockTime);
     public void writeShort(int address, int value, long wallClockTime);
+    public void resync(long wallClockTime);
   }
 
   public interface NamedObject {
@@ -71,6 +72,14 @@ public interface CPU {
    * performed since CPU start.
    */
   public long getWallClockTime();
+
+  /**
+   * When pausing and then continuing the CPU to run, the emulated
+   * CPU's internal wall clock may need to be resync'd with real world
+   * time.  Call this method to (re-)announce the CPU's wall clock to
+   * all peripherals.
+   */
+  public void resyncPeripherals();
 
   public class MismatchException extends Exception {
     private static final long serialVersionUID = 3640134396555784341L;

@@ -14,6 +14,15 @@ public class Speaker {
      * have not changed.
      */
     public long timeSpan;
+
+    public String prettyTimeSpanString() {
+      return String.format("%fms", 0.000001 * timeSpan);
+    }
+
+    public String toString() {
+      return String.format("Speaker.Event{elongation=%d, timeSpan=%s}",
+                           elongation, prettyTimeSpanString());
+    }
   }
 
   /**
@@ -83,6 +92,18 @@ public class Speaker {
   private class EventFiFo {
     private static final int BUFFER_SIZE = 0x2800;
 
+    /**
+     * Increasing this value will reduce the likelyhood of audio
+     * glitches caused by buffer underruns.  However, increasing this
+     * value also means increasing overall audio latency, resulting in
+     * hearably delayed audio output.  150ms seems to be a good
+     * trade-off.  When using a kernel with realtime patches, you may
+     * want to decrease this value to reduce audio delay caused by
+     * latency.  However, if you still hear audio glitches, you may
+     * want to increase this value, yet accepting higher audio delay.
+     */
+    private static final long INITIAL_AUDIO_DELAY = 50000000; // [ns]
+
     private Event[] events;
     private int consumerIndex;
     private int producerIndex;
@@ -96,10 +117,18 @@ public class Speaker {
       producerIndex = 0;
     }
 
+    public synchronized void resync() {
+      events[producerIndex].timeSpan = INITIAL_AUDIO_DELAY;
+    }
+
     public synchronized void put(short elongation, long wallClockTime) {
       Event lastEvent = events[producerIndex];
-      lastEvent.timeSpan =
+      lastEvent.timeSpan +=
         wallClockTime - currentElongationSince;
+      if (lastEvent.timeSpan < 0) {
+        System.err.printf("Warning: Speaker event queue underflow: gap=%s%n",
+                          lastEvent.prettyTimeSpanString());
+      }
       producerIndex = (producerIndex + 1) % BUFFER_SIZE;
       if (producerIndex == consumerIndex) {
         System.err.println("Warning: Speaker event queue overflow");
@@ -113,25 +142,31 @@ public class Speaker {
     }
 
     private synchronized void get(Event result, long maxTimeSpan) {
-      if (consumerIndex == producerIndex) {
-        currentElongationSince = cpu.getWallClockTime();
-        result.elongation = currentElongation;
-        result.timeSpan = maxTimeSpan;
-      } else {
+      do {
         Event event = events[consumerIndex];
-        result.elongation = event.elongation;
-        if (event.timeSpan > maxTimeSpan) {
+        if (consumerIndex == producerIndex) {
+          result.elongation = currentElongation;
           result.timeSpan = maxTimeSpan;
           event.timeSpan -= maxTimeSpan;
         } else {
-          result.timeSpan = event.timeSpan;
-          consumerIndex = (consumerIndex + 1) % BUFFER_SIZE;
+          result.elongation = event.elongation;
+          if (event.timeSpan > maxTimeSpan) {
+            result.timeSpan = maxTimeSpan;
+            event.timeSpan -= maxTimeSpan;
+          } else {
+            result.timeSpan = event.timeSpan;
+            if (result.timeSpan >= 0) {
+              event.timeSpan = 0; // strictly not necessary, just to
+                                  // preserve data consistency
+              consumerIndex = (consumerIndex + 1) % BUFFER_SIZE;
+            } else {
+              event.timeSpan = INITIAL_AUDIO_DELAY;
+              System.out.printf("Warning: Speaker buffer underflow, gap=%s%n",
+                                result.prettyTimeSpanString());
+            }
+          }
         }
-      }
-    }
-
-    private synchronized int size() {
-      return (BUFFER_SIZE + producerIndex - consumerIndex) % BUFFER_SIZE;
+      } while (result.timeSpan <= 0);
     }
   }
 
@@ -163,6 +198,10 @@ public class Speaker {
     setAmplitude(DEFAULT_AMPLITUDE);
   }
 
+  public void resync() {
+    eventFiFo.resync();
+  }
+
   public void setAmplitude(short amplitude) {
     ELONGATION[0] = (short)-amplitude;
     ELONGATION[1] = 0;
@@ -178,11 +217,10 @@ public class Speaker {
   }
 
   public void getEvent(Event event, long maxTimeSpan) {
+    if (maxTimeSpan <= 0) {
+      throw new IllegalArgumentException("maxTimeSpan <= 0");
+    }
     eventFiFo.get(event, maxTimeSpan);
-  }
-
-  public int queueSize() {
-    return eventFiFo.size();
   }
 }
 

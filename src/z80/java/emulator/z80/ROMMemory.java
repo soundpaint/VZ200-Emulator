@@ -92,6 +92,7 @@ public class ROMMemory implements MemoryBus.BusWriter
 
   public void writeByte(int address, int value, long wallClockTime) {}
   public void writeShort(int address, int value, long wallClockTime) {}
+  public void resync(long wallClockTime) {}
 
   public String toString()
   {

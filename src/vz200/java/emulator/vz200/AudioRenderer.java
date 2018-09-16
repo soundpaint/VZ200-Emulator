@@ -9,7 +9,7 @@ import javax.sound.sampled.SourceDataLine;
 
 public class AudioRenderer extends Thread {
 
-  private static final int BUFFER_FRAMES = 0x1000;
+  private static final int BUFFER_FRAMES = 0x800;
   private static final int BYTES_PER_FRAME = 4;
   private static final float SAMPLE_RATE = 44100.0f;
 

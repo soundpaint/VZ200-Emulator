@@ -51,6 +51,8 @@ public class Video extends JFrame
     panel.invalidate(address);
   }
 
+  public void resync(long wallClockTime) {}
+
   public boolean hs() {
     return wallClockTime - prevHsCycleLowStart >= HS_CYCLE_LOW;
   }

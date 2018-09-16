@@ -29,6 +29,10 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
     speaker = new Speaker(cpu);
   }
 
+  public void resync(long wallClockTime) {
+    speaker.resync();
+  }
+
   public Video getVideo() { return video; }
 
   private void setCassetteOutput(int value, long wallClockTime) {
