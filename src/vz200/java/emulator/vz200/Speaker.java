@@ -15,6 +15,13 @@ public class Speaker {
      */
     public long timeSpan;
 
+    /**
+     * Used to supress buffer underflow warnings for ordinary, planned
+     * audio gaps, e.g. when halting the CPU while working with the
+     * CPU monitor.
+     */
+    public boolean plannedGap;
+
     public String prettyTimeSpanString() {
       return String.format("%fms", 0.000001 * timeSpan);
     }
@@ -102,7 +109,7 @@ public class Speaker {
      * latency.  However, if you still hear audio glitches, you may
      * want to increase this value, yet accepting higher audio delay.
      */
-    private static final long INITIAL_AUDIO_DELAY = 50000000; // [ns]
+    private static final long INITIAL_AUDIO_DELAY = 75000000; // [ns]
 
     private Event[] events;
     private int consumerIndex;
@@ -118,17 +125,13 @@ public class Speaker {
     }
 
     public synchronized void resync() {
-      events[producerIndex].timeSpan = INITIAL_AUDIO_DELAY;
+      events[consumerIndex].plannedGap = true;
     }
 
     public synchronized void put(short elongation, long wallClockTime) {
       Event lastEvent = events[producerIndex];
       lastEvent.timeSpan +=
         wallClockTime - currentElongationSince;
-      if (lastEvent.timeSpan < 0) {
-        System.err.printf("Warning: Speaker event queue underflow: gap=%s%n",
-                          lastEvent.prettyTimeSpanString());
-      }
       producerIndex = (producerIndex + 1) % BUFFER_SIZE;
       if (producerIndex == consumerIndex) {
         System.err.println("Warning: Speaker event queue overflow");
@@ -137,6 +140,7 @@ public class Speaker {
       Event event = events[producerIndex];
       event.elongation = elongation;
       event.timeSpan = 0;
+      event.plannedGap = false;
       currentElongationSince = wallClockTime;
       currentElongation = elongation;
     }
@@ -156,13 +160,13 @@ public class Speaker {
           } else {
             result.timeSpan = event.timeSpan;
             if (result.timeSpan >= 0) {
-              event.timeSpan = 0; // strictly not necessary, just to
-                                  // preserve data consistency
               consumerIndex = (consumerIndex + 1) % BUFFER_SIZE;
             } else {
               event.timeSpan = INITIAL_AUDIO_DELAY;
-              System.out.printf("Warning: Speaker buffer underflow, gap=%s%n",
-                                result.prettyTimeSpanString());
+              if (!event.plannedGap) {
+                System.out.printf("Warning: Speaker buffer underflow, gap=%s%n",
+                                  result.prettyTimeSpanString());
+              }
             }
           }
         }
