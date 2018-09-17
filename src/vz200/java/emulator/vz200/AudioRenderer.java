@@ -56,9 +56,9 @@ public class AudioRenderer extends Thread {
                                         SAMPLE_RATE, true));
   }
 
-  private int renderEvent(Speaker.Event event, int bufferIndex,
+  private int renderEvent(SignalEventQueue.Event event, int bufferIndex,
                           int frameIndex, int nextFrameIndex) {
-    short sample = event.elongation;
+    short sample = event.value;
     byte sampleHi = (byte)(sample >> 8);
     byte sampleLo = (byte)(sample - sampleHi << 8);
     for (int i = frameIndex; i < nextFrameIndex; i++) {
@@ -73,7 +73,7 @@ public class AudioRenderer extends Thread {
   }
 
   private void render(int fullBufferTime, double bufferFramesPerTime) {
-    Speaker.Event event = new Speaker.Event();
+    SignalEventQueue.Event event = new SignalEventQueue.Event();
     while (true) {
       int bufferTime = 0;
       int frameIndex = 0;

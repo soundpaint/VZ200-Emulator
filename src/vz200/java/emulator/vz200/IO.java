@@ -2,7 +2,6 @@ package emulator.vz200;
 
 import java.io.IOException;
 
-import emulator.z80.CPU;
 import emulator.z80.MemoryBus;
 import emulator.z80.Util;
 
@@ -17,16 +16,16 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
 
   private IO() { throw new UnsupportedOperationException(); }
 
-  public IO(CPU cpu) throws IOException {
-    this(cpu, DEFAULT_BASE_ADDRESS);
+  public IO(long currentWallClockTime) throws IOException {
+    this(currentWallClockTime, DEFAULT_BASE_ADDRESS);
   }
 
-  public IO(CPU cpu, int baseAddress) throws IOException {
+  public IO(long currentWallClockTime, int baseAddress) throws IOException {
     this.baseAddress = baseAddress;
     keyboard = new Keyboard(baseAddress);
     video = new Video();
     video.addKeyListener(keyboard.getKeyListener());
-    speaker = new Speaker(cpu);
+    speaker = new Speaker(currentWallClockTime);
   }
 
   public void resync(long wallClockTime) {
