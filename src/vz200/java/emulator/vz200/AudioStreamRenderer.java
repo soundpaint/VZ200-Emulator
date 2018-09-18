@@ -1,5 +1,6 @@
 package emulator.vz200;
 
+import java.io.IOException;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Line;
@@ -7,29 +8,38 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
 
-public class AudioRenderer extends Thread {
+public class AudioStreamRenderer extends Thread {
 
   private static final int BUFFER_FRAMES = 0xc00;
   private static final int BYTES_PER_FRAME = 4;
   private static final float SAMPLE_RATE = 44100.0f;
 
-  private Speaker speaker;
+  private SignalEventSource leftChannelSource, rightChannelSource;
   private Mixer.Info[] mixerInfo;
   private Mixer mixer;
   private Line.Info[] sourceLineInfo;
   private SourceDataLine sourceDataLine;
   private byte[] buffer;
 
-  private AudioRenderer() {}
-
-  public AudioRenderer(Speaker speaker) throws LineUnavailableException {
-    this.speaker = speaker;
+  public AudioStreamRenderer() throws IOException {
     buffer = new byte[BYTES_PER_FRAME * BUFFER_FRAMES];
-    selectSourceDataLine();
+    try {
+      selectSourceDataLine();
+    } catch (LineUnavailableException e) {
+      throw new IOException("failed opening audio stream", e);
+    }
+  }
+
+  public void setLeftChannelSource(SignalEventSource eventSource) {
+    this.leftChannelSource = eventSource;
+  }
+
+  public void setRightChannelSource(SignalEventSource eventSource) {
+    this.rightChannelSource = eventSource;
   }
 
   private void printMessage(String message) {
-    System.out.printf("AudioRenderer: %s%n", message);
+    System.out.printf("AudioStreamRenderer: %s%n", message);
   }
 
   private void selectSourceDataLine() throws LineUnavailableException {
@@ -56,41 +66,50 @@ public class AudioRenderer extends Thread {
                                         SAMPLE_RATE, true));
   }
 
-  private int renderEvent(SignalEventQueue.Event event, int bufferIndex,
+  private int renderEvent(short sample, int bufferIndex,
                           int frameIndex, int nextFrameIndex) {
-    short sample = event.value;
     byte sampleHi = (byte)(sample >> 8);
     byte sampleLo = (byte)(sample - sampleHi << 8);
     for (int i = frameIndex; i < nextFrameIndex; i++) {
-      // left channel
       buffer[bufferIndex++] = sampleLo;
       buffer[bufferIndex++] = sampleHi;
-      // right channel
-      buffer[bufferIndex++] = sampleLo;
-      buffer[bufferIndex++] = sampleHi;
+      bufferIndex += 2; // skip other channel
     }
     return bufferIndex;
+  }
+
+  private void renderChannel(SignalEventSource eventSource,
+                             int firstBufferIndex, SignalEventQueue.Event event,
+                             int fullBufferTime, double bufferFramesPerTime) {
+    if (eventSource == null) {
+      renderEvent((short)0, firstBufferIndex, 0, BUFFER_FRAMES);
+      return;
+    }
+    int bufferTime = 0;
+    int frameIndex = 0;
+    int bufferIndex = firstBufferIndex;
+    while (frameIndex < BUFFER_FRAMES - 1) {
+      eventSource.getEvent(event, fullBufferTime - bufferTime);
+      bufferTime += event.timeSpan;
+      int nextFrameIndex = (int)(bufferFramesPerTime * bufferTime + 0.5);
+      if (nextFrameIndex > BUFFER_FRAMES) {
+        printMessage("WARNING: rounding error: nextFrameIndex off by " +
+                     (BUFFER_FRAMES - nextFrameIndex));
+        nextFrameIndex = BUFFER_FRAMES;
+      }
+      bufferIndex =
+        renderEvent(event.value, bufferIndex, frameIndex, nextFrameIndex);
+      frameIndex = nextFrameIndex;
+    }
   }
 
   private void render(int fullBufferTime, double bufferFramesPerTime) {
     SignalEventQueue.Event event = new SignalEventQueue.Event();
     while (true) {
-      int bufferTime = 0;
-      int frameIndex = 0;
-      int bufferIndex = 0;
-      while (frameIndex < BUFFER_FRAMES - 1) {
-        speaker.getEvent(event, fullBufferTime - bufferTime);
-        bufferTime += event.timeSpan;
-        int nextFrameIndex = (int)(bufferFramesPerTime * bufferTime + 0.5);
-        if (nextFrameIndex > BUFFER_FRAMES) {
-          printMessage("WARNING: rounding error: nextFrameIndex off by " +
-                       (BUFFER_FRAMES - nextFrameIndex));
-          nextFrameIndex = BUFFER_FRAMES;
-        }
-        bufferIndex =
-          renderEvent(event, bufferIndex, frameIndex, nextFrameIndex);
-        frameIndex = nextFrameIndex;
-      }
+      renderChannel(leftChannelSource, 0, event,
+                    fullBufferTime, bufferFramesPerTime);
+      renderChannel(rightChannelSource, 2, event,
+                    fullBufferTime, bufferFramesPerTime);
       sourceDataLine.write(buffer, 0, buffer.length);
     }
   }

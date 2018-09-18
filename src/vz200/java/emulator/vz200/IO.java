@@ -13,6 +13,8 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
   private Video video;
   private Keyboard keyboard;
   private Speaker speaker;
+  private CassetteInterface cassetteInterface;
+  private AudioStreamRenderer audioStreamRenderer;
 
   private IO() { throw new UnsupportedOperationException(); }
 
@@ -25,18 +27,20 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
     keyboard = new Keyboard(baseAddress);
     video = new Video();
     video.addKeyListener(keyboard.getKeyListener());
+    audioStreamRenderer = new AudioStreamRenderer();
     speaker = new Speaker(currentWallClockTime);
+    cassetteInterface = new CassetteInterface(currentWallClockTime);
+    audioStreamRenderer.setLeftChannelSource(speaker);
+    audioStreamRenderer.setRightChannelSource(cassetteInterface);
+    audioStreamRenderer.start();
   }
 
   public void resync(long wallClockTime) {
     speaker.resync();
+    cassetteInterface.resync();
   }
 
   public Video getVideo() { return video; }
-
-  private void setCassetteOutput(int value, long wallClockTime) {
-    // TODO
-  }
 
   private boolean cassetteInputActive() {
     // TODO
@@ -67,7 +71,7 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
   public void writeByte(int address, int value, long wallClockTime) {
     int addressOffset = (address - baseAddress) & 0xffff;
     if (addressOffset < MEMORY_SIZE) {
-      setCassetteOutput((value >> 1) & 0x3, wallClockTime);
+      cassetteInterface.putEvent((value >> 1) & 0x3, wallClockTime);
       speaker.putEvent((value >> 5) & 0x1, value  & 0x1, wallClockTime);
       video.setDisplayMode((value & 0x08) != 0x0);
       video.setColorMode((value & 0x10) != 0x0);
