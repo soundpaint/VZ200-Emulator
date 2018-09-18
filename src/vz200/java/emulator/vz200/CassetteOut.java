@@ -1,13 +1,13 @@
 package emulator.vz200;
 
-public class CassetteInterface implements SignalEventSource {
+public class CassetteOut implements SignalEventSource {
   private static final short DEFAULT_AMPLITUDE = 5000;
 
   private final short[] VALUE = new short[4];
 
   private SignalEventQueue eventQueue;
 
-  public CassetteInterface(long currentWallClockTime) {
+  public CassetteOut(long currentWallClockTime) {
     eventQueue = new SignalEventQueue("cassette", currentWallClockTime);
     setAmplitude(DEFAULT_AMPLITUDE);
   }
