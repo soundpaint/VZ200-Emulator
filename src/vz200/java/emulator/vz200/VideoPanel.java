@@ -60,6 +60,7 @@ public class VideoPanel extends JPanel {
   private Dimension preferredSize;
   private int zoom;
   private boolean displayMode;
+  private boolean colorMode;
 
   // active window
   private int axleft;
@@ -95,6 +96,7 @@ public class VideoPanel extends JPanel {
 
     invalidator = new Invalidator();
     setZoom(1);
+    colorMode = COLOR_MODE_RED; // force initial update
     setColorMode(COLOR_MODE_GREEN);
     setDisplayMode(DISPLAY_MODE_TEXT);
   }
@@ -124,16 +126,19 @@ public class VideoPanel extends JPanel {
   public static boolean COLOR_MODE_RED = true;
 
   public void setColorMode(boolean colorMode) {
-    if (colorMode == COLOR_MODE_GREEN) {
-      frameColor = GREEN_FRAME_COLOR;
-      textColorTable = GREEN_TEXT_COLOR_TABLE;
-      graphicsColorTable = GREEN_GRAPHICS_COLOR_TABLE;
-    } else { // (colorMode == COLOR_MODE_RED)
-      frameColor = RED_FRAME_COLOR;
-      textColorTable = RED_TEXT_COLOR_TABLE;
-      graphicsColorTable = RED_GRAPHICS_COLOR_TABLE;
+    if (this.colorMode != colorMode) {
+      this.colorMode = colorMode;
+      if (colorMode == COLOR_MODE_GREEN) {
+        frameColor = GREEN_FRAME_COLOR;
+        textColorTable = GREEN_TEXT_COLOR_TABLE;
+        graphicsColorTable = GREEN_GRAPHICS_COLOR_TABLE;
+      } else { // (colorMode == COLOR_MODE_RED)
+        frameColor = RED_FRAME_COLOR;
+        textColorTable = RED_TEXT_COLOR_TABLE;
+        graphicsColorTable = RED_GRAPHICS_COLOR_TABLE;
+      }
+      invalidateAll();
     }
-    invalidateAll();
   }
 
   public static boolean DISPLAY_MODE_TEXT = false;

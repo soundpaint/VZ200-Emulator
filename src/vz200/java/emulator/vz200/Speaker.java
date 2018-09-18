@@ -6,17 +6,9 @@ public class Speaker implements SignalEventSource {
   private final short[] ELONGATION = new short[3];
 
   private SignalEventQueue eventQueue;
-  private boolean active;
 
   public Speaker(long currentWallClockTime) {
     eventQueue = new SignalEventQueue("speaker", currentWallClockTime);
-    try {
-      active = true;
-    } catch (Throwable t) {
-      active = false;
-      System.err.println("WARNING: Failed opening audio stream.  " +
-                         "No audio output will be produced.");
-    }
     setAmplitude(DEFAULT_AMPLITUDE);
   }
 
@@ -33,9 +25,7 @@ public class Speaker implements SignalEventSource {
   public void putEvent(int plusPinValue, int minusPinValue,
                        long wallClockTime) {
     short elongation = ELONGATION[plusPinValue - minusPinValue + 1];
-    if (active) {
-      eventQueue.put(elongation, wallClockTime);
-    }
+    eventQueue.put(elongation, wallClockTime);
   }
 
   public void getEvent(SignalEventQueue.Event event, long maxTimeSpan) {

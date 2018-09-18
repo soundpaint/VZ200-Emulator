@@ -6,17 +6,9 @@ public class CassetteInterface implements SignalEventSource {
   private final short[] VALUE = new short[4];
 
   private SignalEventQueue eventQueue;
-  private boolean active;
 
   public CassetteInterface(long currentWallClockTime) {
     eventQueue = new SignalEventQueue("cassette", currentWallClockTime);
-    try {
-      active = true;
-    } catch (Throwable t) {
-      active = false;
-      System.err.println("WARNING: Failed opening audio stream.  " +
-                         "No audio output will be produced.");
-    }
     setAmplitude(DEFAULT_AMPLITUDE);
   }
 
@@ -33,9 +25,7 @@ public class CassetteInterface implements SignalEventSource {
 
   public void putEvent(int dataValue, long wallClockTime) {
     short signalValue = VALUE[dataValue];
-    if (active) {
-      eventQueue.put(signalValue, wallClockTime);
-    }
+    eventQueue.put(signalValue, wallClockTime);
   }
 
   public void getEvent(SignalEventQueue.Event event, long maxTimeSpan) {

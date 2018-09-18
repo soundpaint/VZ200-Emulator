@@ -79,15 +79,15 @@ public class AudioStreamRenderer extends Thread {
   }
 
   private void renderChannel(SignalEventSource eventSource,
-                             int firstBufferIndex, SignalEventQueue.Event event,
+                             int bufferOffset, SignalEventQueue.Event event,
                              int fullBufferTime, double bufferFramesPerTime) {
     if (eventSource == null) {
-      renderEvent((short)0, firstBufferIndex, 0, BUFFER_FRAMES);
+      renderEvent((short)0, bufferOffset, 0, BUFFER_FRAMES);
       return;
     }
     int bufferTime = 0;
     int frameIndex = 0;
-    int bufferIndex = firstBufferIndex;
+    int bufferIndex = bufferOffset;
     while (frameIndex < BUFFER_FRAMES - 1) {
       eventSource.getEvent(event, fullBufferTime - bufferTime);
       bufferTime += event.timeSpan;
