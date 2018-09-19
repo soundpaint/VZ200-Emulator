@@ -22,6 +22,10 @@ public class Speaker implements SignalEventSource {
     ELONGATION[2] = amplitude;
   }
 
+  public long getAvailableNanoSeconds() {
+    return eventQueue.getAvailableNanoSeconds();
+  }
+
   public void putEvent(int plusPinValue, int minusPinValue,
                        long wallClockTime) {
     short elongation = ELONGATION[plusPinValue - minusPinValue + 1];

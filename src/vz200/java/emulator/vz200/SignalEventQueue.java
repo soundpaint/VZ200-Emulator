@@ -119,6 +119,7 @@ public class SignalEventQueue {
   private long currentValueSince;
   private int consumerIndex;
   private int producerIndex;
+  private long availableTimeSpan;
 
   public SignalEventQueue(String label, long currentWallClockTime) {
     this.label = label;
@@ -132,6 +133,13 @@ public class SignalEventQueue {
     producerIndex = 0;
   }
 
+  /**
+   * Amount of signal data available.
+   */
+  public long getAvailableNanoSeconds() {
+    return availableTimeSpan;
+  }
+
   public synchronized void resync() {
     events[consumerIndex].plannedGap = true;
   }
@@ -139,8 +147,9 @@ public class SignalEventQueue {
   public synchronized void put(short value, long wallClockTime) {
     if (value != currentValue) {
       Event lastEvent = events[producerIndex];
-      lastEvent.timeSpan +=
-        wallClockTime - currentValueSince;
+      long timeSpan = wallClockTime - currentValueSince;
+      lastEvent.timeSpan += timeSpan;
+      availableTimeSpan += timeSpan;
       producerIndex = (producerIndex + 1) % BUFFER_SIZE;
       if (producerIndex == consumerIndex) {
         System.err.printf("Warning: %s event queue overflow%n", label);
@@ -162,17 +171,21 @@ public class SignalEventQueue {
         result.value = currentValue;
         result.timeSpan = maxTimeSpan;
         event.timeSpan -= maxTimeSpan;
+        availableTimeSpan -= maxTimeSpan;
       } else {
         result.value = event.value;
         if (event.timeSpan > maxTimeSpan) {
           result.timeSpan = maxTimeSpan;
           event.timeSpan -= maxTimeSpan;
+          availableTimeSpan -= maxTimeSpan;
         } else {
           result.timeSpan = event.timeSpan;
+          availableTimeSpan -= event.timeSpan;
           if (result.timeSpan >= 0) {
             consumerIndex = (consumerIndex + 1) % BUFFER_SIZE;
           } else {
             event.timeSpan = INITIAL_AUDIO_DELAY;
+            availableTimeSpan += INITIAL_AUDIO_DELAY;
             if (!event.plannedGap) {
               System.out.printf("Warning: %s buffer underflow, gap=%s%n",
                                 label, result.prettyTimeSpanString());

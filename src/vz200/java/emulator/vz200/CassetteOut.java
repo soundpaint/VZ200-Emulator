@@ -23,6 +23,10 @@ public class CassetteOut implements SignalEventSource {
     VALUE[3] = amplitude;
   }
 
+  public long getAvailableNanoSeconds() {
+    return eventQueue.getAvailableNanoSeconds();
+  }
+
   public void putEvent(int dataValue, long wallClockTime) {
     short signalValue = VALUE[dataValue];
     eventQueue.put(signalValue, wallClockTime);
