@@ -87,7 +87,7 @@ public class FileStreamRenderer extends Thread {
       try {
         out.write(buffer, 0, buffer.length);
       } catch (IOException e) {
-        System.err.println("file stream buffer overflow: " + e);
+        System.err.printf("file stream buffer overflow: %s%n", e);
       }
     }
   }

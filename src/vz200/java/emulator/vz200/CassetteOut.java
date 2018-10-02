@@ -8,7 +8,7 @@ public class CassetteOut implements SignalEventSource {
   private SignalEventQueue eventQueue;
 
   public CassetteOut(long currentWallClockTime) {
-    eventQueue = new SignalEventQueue("cassette", currentWallClockTime);
+    eventQueue = new SignalEventQueue("cassette out", currentWallClockTime);
     setAmplitude(DEFAULT_AMPLITUDE);
   }
 

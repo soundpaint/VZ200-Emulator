@@ -15,6 +15,8 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
   private Speaker speaker;
   private CassetteOut cassetteOut;
   private AudioStreamRenderer audioStreamRenderer;
+  private FileStreamRenderer fileStreamRenderer;
+  private FileStreamSampler fileStreamSampler;
 
   private IO() { throw new UnsupportedOperationException(); }
 
@@ -33,12 +35,26 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
       System.err.println("WARNING: IO: failed opening audio stream.  " +
                          "No audio output will be produced.");
     }
+    try {
+      fileStreamRenderer = new FileStreamRenderer("cassette.out.raw");
+    } catch (Throwable t) {
+      System.err.println("WARNING: IO: failed opening file stream.  " +
+                         "No audio output will be saved.");
+    }
+    try {
+      fileStreamSampler = new FileStreamSampler("cassette.in.raw", 0);
+    } catch (Throwable t) {
+      System.err.println("WARNING: IO: failed opening file stream.  " +
+                         "No cassette input will be recognized.");
+    }
     if (audioStreamRenderer != null) {
       speaker = new Speaker(currentWallClockTime);
       cassetteOut = new CassetteOut(currentWallClockTime);
       audioStreamRenderer.setLeftChannelSource(speaker);
-      audioStreamRenderer.setRightChannelSource(cassetteOut);
+      //audioStreamRenderer.setRightChannelSource(cassetteOut);
       audioStreamRenderer.start();
+      fileStreamRenderer.setEventSource(cassetteOut);
+      fileStreamRenderer.start();
     }
   }
 
@@ -53,9 +69,14 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
 
   public Video getVideo() { return video; }
 
-  private boolean cassetteInputActive() {
-    // TODO
-    return false;
+  private boolean cassetteInputActive(long wallClockTime) {
+    if (fileStreamSampler != null) {
+      short value = fileStreamSampler.getValue(wallClockTime);
+      boolean active = value > 0;
+      return active;
+    } else {
+      return false;
+    }
   }
 
   public int readByte(int address, long wallClockTime) {
@@ -63,7 +84,7 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
     int data;
     if (addressOffset < MEMORY_SIZE) {
       data = keyboard.readByte(address, wallClockTime);
-      if (cassetteInputActive())
+      if (cassetteInputActive(wallClockTime))
         data |= 0x40;
       if (video.hs())
         data |= 0x80;
