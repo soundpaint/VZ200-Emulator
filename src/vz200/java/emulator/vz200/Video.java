@@ -103,8 +103,8 @@ public class Video extends JFrame
 
   public String toString()
   {
-    return "Video[baseAddress=" + Util.hexShortStr(baseAddress) +
-      ", videoRAM=" + videoRAM + "]";
+    return String.format("Video[baseAddress=%04xh, videoRAM=%s]",
+                         Util.hexShortStr(baseAddress), videoRAM);
   }
 
   /**

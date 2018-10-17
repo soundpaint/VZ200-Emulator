@@ -7,6 +7,7 @@ PLAIN_SRC	=	$(subst $(SRC_DIR),.,$(SRC))
 OBJ		=	$(subst .java,.class,$(subst \
 				$(SRC_DIR),$(BUILD_DIR),$(SRC)))
 ROM		=	$(wildcard $(SRC_DIR)/$(PKG)/*.rom)
+IMAGES		=	$(wildcard $(SRC_DIR)/$(PKG)/*.png)
 PLAIN_ROM	=	$(subst $(SRC_DIR),.,$(ROM))
 TIMESTAMP	=	$(BUILD_DIR)/$(PKG)/TIMESTAMP
 JAR_FILE	=	$(JAR_DIR)/vz200.jar
@@ -28,10 +29,11 @@ $(JAR_DIR):
 $(TARBALL_DIR):
 	mkdir -p $@
 
-$(TIMESTAMP) : $(SRC) $(ROM)
+$(TIMESTAMP) : $(SRC) $(ROM) $(IMAGES)
 	cd $(SRC_DIR) ; $(JAVAC) -classpath .:$(Z80_JAR) \
 		-d $(BUILD_DIR) $(PLAIN_SRC)
 	cp -a $(ROM) $(BUILD_DIR)/$(PKG)
+	cp -a $(IMAGES) $(BUILD_DIR)/$(PKG)
 	touch $@
 
 $(JAR_FILE) : $(JAR_DIR) $(TIMESTAMP)

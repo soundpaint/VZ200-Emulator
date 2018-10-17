@@ -1,17 +1,22 @@
 package emulator.vz200;
 
 import java.io.IOException;
+import java.io.File;
 
 import emulator.z80.MemoryBus;
 import emulator.z80.Util;
 
-public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
+public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter,
+                           CassetteTransportListener
+{
   private final static int DEFAULT_BASE_ADDRESS = 0x6800;
   private final static int MEMORY_SIZE = 0x0800;
 
+  private long wallClockTime;
   private int baseAddress;
   private Video video;
   private Keyboard keyboard;
+  private PeripheralsGUI peripheralsGUI;
   private Speaker speaker;
   private CassetteOut cassetteOut;
   private AudioStreamRenderer audioStreamRenderer;
@@ -29,32 +34,20 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
     keyboard = new Keyboard(baseAddress);
     video = new Video();
     video.addKeyListener(keyboard.getKeyListener());
+    peripheralsGUI = new PeripheralsGUI();
+    peripheralsGUI.addTransportListener(this);
     try {
       audioStreamRenderer = new AudioStreamRenderer();
     } catch (Throwable t) {
       System.err.println("WARNING: IO: failed opening audio stream.  " +
                          "No audio output will be produced.");
     }
-    try {
-      fileStreamRenderer = new FileStreamRenderer("cassette.out.raw");
-    } catch (Throwable t) {
-      System.err.println("WARNING: IO: failed opening file stream.  " +
-                         "No audio output will be saved.");
-    }
-    try {
-      fileStreamSampler = new FileStreamSampler("cassette.in.raw", 0);
-    } catch (Throwable t) {
-      System.err.println("WARNING: IO: failed opening file stream.  " +
-                         "No cassette input will be recognized.");
-    }
     if (audioStreamRenderer != null) {
       speaker = new Speaker(currentWallClockTime);
       cassetteOut = new CassetteOut(currentWallClockTime);
       audioStreamRenderer.setLeftChannelSource(speaker);
-      //audioStreamRenderer.setRightChannelSource(cassetteOut);
+      audioStreamRenderer.setRightChannelSource(cassetteOut);
       audioStreamRenderer.start();
-      fileStreamRenderer.setEventSource(cassetteOut);
-      fileStreamRenderer.start();
     }
   }
 
@@ -120,7 +113,44 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter {
   }
 
   public boolean updateWallClock(long wallClockCycles, long wallClockTime) {
+    this.wallClockTime = wallClockTime;
     return video.updateWallClock(wallClockCycles, wallClockTime);
+  }
+
+  public void startPlaying(File file) throws IOException {
+    try {
+      fileStreamSampler = new FileStreamSampler(wallClockTime, file, 0);
+
+      // FIXME: Introduce central event dispatcher rather than
+      // chaining listeners.
+      fileStreamSampler.addTransportListener(peripheralsGUI);
+    } catch (Throwable t) {
+      throw new IOException("WARNING: I/O: failed opening file stream: " +
+                            t.getMessage() +
+                            ".  No cassette input will be recognized.", t);
+    }
+  }
+
+  public void startRecording(File file) throws IOException {
+    try {
+      fileStreamRenderer = new FileStreamRenderer(file);
+    } catch (Throwable t) {
+      throw new IOException("WARNING: I/O: failed opening file stream: " +
+                            t.getMessage() +
+                            ".  No audio output will be saved.", t);
+    }
+    fileStreamRenderer.setEventSource(cassetteOut);
+    fileStreamRenderer.start();
+  }
+
+  public void stop() {
+    if (fileStreamSampler != null) {
+      System.out.printf("%s: aborted%n", fileStreamSampler.getFileName());
+      fileStreamSampler = null;
+    }
+    if (fileStreamRenderer != null) {
+      fileStreamRenderer = null;
+    }
   }
 
   public String toString()

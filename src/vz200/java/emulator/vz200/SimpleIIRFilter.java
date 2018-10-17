@@ -7,6 +7,7 @@ public class SimpleIIRFilter {
   private double alpha;
   private double beta;
   private long significantSamples;
+  private double initialValue;
   private double value;
 
   /**
@@ -29,6 +30,7 @@ public class SimpleIIRFilter {
       throw new IllegalArgumentException("alpha too near to 0.0 for acceptable number of significant samples; " +
                                          "please choose a higher value for alpha");
     }
+    this.initialValue = initialValue;
     value = initialValue;
   }
 
@@ -51,6 +53,15 @@ public class SimpleIIRFilter {
   public double addInputValue(double inputValue) {
     value = alpha * inputValue + beta * value;
     return value;
+  }
+
+  public double resetInputValue(double inputValue) {
+    value = inputValue;
+    return value;
+  }
+
+  public double resetInputValue() {
+    return resetInputValue(initialValue);
   }
 
   private static long getSignificantSamples(double alpha, double resolution) {

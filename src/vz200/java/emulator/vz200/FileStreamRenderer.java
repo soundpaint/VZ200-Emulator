@@ -1,5 +1,6 @@
 package emulator.vz200;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -14,18 +15,18 @@ public class FileStreamRenderer extends Thread {
   private static final int BYTES_PER_FRAME = 2;
   private static final float SAMPLE_RATE = 44100.0f;
 
-  private String filePath;
+  private File file;
   private byte[] buffer;
   private FileOutputStream out;
   private SignalEventSource eventSource;
 
-  public FileStreamRenderer(String filePath) throws IOException {
-    this.filePath = filePath;
+  public FileStreamRenderer(File file) throws IOException {
+    this.file = file;
     buffer = new byte[BYTES_PER_FRAME * BUFFER_FRAMES];
     try {
-      out = new FileOutputStream(filePath);
+      out = new FileOutputStream(file);
     } catch (IOException e) {
-      throw new IOException("failed opening file " + filePath, e);
+      throw new IOException("failed opening file " + file.getPath(), e);
     }
   }
 
@@ -97,17 +98,19 @@ public class FileStreamRenderer extends Thread {
     double inv_fullBufferTime = nanoSampleRate / BUFFER_FRAMES;
     int fullBufferTime = (int)(1.0 / inv_fullBufferTime + 0.5);
     double bufferFramesPerTime = BUFFER_FRAMES * inv_fullBufferTime;
-    printMessage("fullBufferTime=" + fullBufferTime);
-    printMessage("writing to file " + filePath);
+    printMessage(String.format("fullBufferTime=%d", fullBufferTime));
+    printMessage(String.format("writing to file %s", file.getName()));
     render(fullBufferTime, bufferFramesPerTime);
   }
 
   protected void finalize() {
     if (out != null) {
+      printMessage(String.format("closing file %s", file.getName()));
       try {
         out.close();
       } catch (Throwable t) {
-        printMessage("failed closing file: " + t);
+        printMessage(String.format("failed closing file %s: %s",
+                                   file.getName(), t));
       }
       out = null;
     }

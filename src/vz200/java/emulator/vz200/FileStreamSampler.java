@@ -1,7 +1,10 @@
 package emulator.vz200;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FileStreamSampler {
   private static final int BYTES_PER_FRAME = 2;
@@ -9,12 +12,14 @@ public class FileStreamSampler {
   private static final double INPUT_FILTER_ALPHA = 0.9;
   private static final long MAX_SIGNIFICANT_SAMPLES = 10;
 
+  private boolean stopped;
+  private List<CassetteTransportListener> listeners;
   private SimpleIIRFilter inputFilter;
   private long significantSamples;
-  private String filePath;
+  private File file;
   private long holdTime;
   private long timeOffs;
-  private FileInputStream in;
+  private FileInputStream inputStream;
   private long filePos;
   private double volume;
   private double framesPerNanoSecond;
@@ -24,23 +29,42 @@ public class FileStreamSampler {
     throw new UnsupportedOperationException("unsupported constructor");
   }
 
-  public FileStreamSampler(String filePath, long holdTime) throws IOException {
-    this.filePath = filePath;
+  public FileStreamSampler(long wallClockTime,
+                           File file, long holdTime) throws IOException {
+    stopped = false;
+    listeners = new ArrayList<CassetteTransportListener>();
+    this.file = file;
     this.holdTime = holdTime;
-    timeOffs = 20000000000L; // 20s delay
-    in = new FileInputStream(filePath);
+    timeOffs = wallClockTime;
+    inputStream = new FileInputStream(file);
     filePos = 0;
     volume = 1.0;
     framesPerNanoSecond = ((double)SAMPLE_RATE) * 0.000000001;
     previousValue = 0;
     inputFilter = new SimpleIIRFilter(INPUT_FILTER_ALPHA, Short.MAX_VALUE, 0.0);
     significantSamples = inputFilter.getSignificantSamples();
-    System.out.printf("%s: hold time [#samples]: %d%n",
-                      filePath, significantSamples);
+    System.out.printf("%s: start playing with #%d samples hold time%n",
+                      getFileName(), significantSamples);
     if (significantSamples > MAX_SIGNIFICANT_SAMPLES) {
       throw new IllegalArgumentException("number of max significant samples too high; " +
                                          "please choose higher value for alpha");
     }
+  }
+
+  public String getFileName() {
+    return file.getName();
+  }
+
+  public void addTransportListener(CassetteTransportListener listener) {
+    listeners.add(listener);
+  }
+
+  private void stop() {
+    stopped = true;
+    for (CassetteTransportListener listener : listeners) {
+      listener.stop();
+    }
+    inputFilter.resetInputValue(0.0);
   }
 
   public void setVolume(double volume) {
@@ -62,6 +86,10 @@ public class FileStreamSampler {
   }
 
   private void computeValue(long wallClockTime) {
+    if (stopped) {
+      // no more data available => keep previous value
+      return;
+    }
     try {
       long time = wallClockTime - timeOffs;
       if (time < 0) {
@@ -85,22 +113,30 @@ public class FileStreamSampler {
         nextFilePos - significantSamples * BYTES_PER_FRAME;
       long bytesToSkip = nextFilterFilePos - filePos;
       if (bytesToSkip > 0) {
-        filePos += in.skip(bytesToSkip);
+        filePos += inputStream.skip(bytesToSkip);
       }
       if (nextFilterFilePos > filePos) {
         // This happens when the end of the input stream has been
-        // reached.  In this case, perform a trivial extrapolation by
-        // keeping the previous value.
+        // reached.
+        stop();
         return;
       }
-      int sCount = 0;
-      for (; (filePos < nextFilePos) && (in.available() >= 2); filePos += 2) {
-        short value = (short)((in.read() & 0xff) | ((in.read() << 8) & 0xff00));
+      boolean eof = false;
+      for (; (filePos < nextFilePos); filePos += 2) {
+        if (inputStream.available() < 2) {
+          eof = true;
+          break;
+        }
+        short value = (short)((inputStream.read() & 0xff) |
+                              ((inputStream.read() << 8) & 0xff00));
         inputFilter.addInputValue(value);
-        sCount++;
       }
-      if (filePos < nextFilePos) {
-        System.out.println("WARNING: buffer underrun");
+      if (eof) {
+        for (; (filePos < nextFilePos); filePos += 2) {
+          inputFilter.addInputValue(0);
+        }
+        System.out.printf("%s: end of file reached%n", getFileName());
+        stop();
       }
     } catch (IOException e) {
       System.out.printf("WARNING: io exception: %s%n", e);

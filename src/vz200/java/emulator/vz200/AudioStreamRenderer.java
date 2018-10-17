@@ -48,7 +48,7 @@ public class AudioStreamRenderer extends Thread {
       throw new RuntimeException("no mixer found");
     }
     for (int i = 0; i < mixerInfo.length; i++) {
-      printMessage("found mixer: %s" + mixerInfo[i]);
+      printMessage(String.format("found mixer: %s", mixerInfo[i]));
     }
     mixer = AudioSystem.getMixer(mixerInfo[0]);
     printMessage("using mixer: " + mixer);
