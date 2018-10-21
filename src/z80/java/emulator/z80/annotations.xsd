@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE schema [
+  <!ENTITY ann "http://www.soundpaint.org/2018/Z80-Emulator/Annotations">
+]>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:ann="&ann;"
+           targetNamespace="&ann;"
+           elementFormDefault="qualified">
+  <xs:element name="annotations" type="ann:AnnotationsType" />
+
+  <xs:complexType name="AnnotationsType">
+    <xs:sequence>
+      <xs:element name="meta" type="ann:MetaType" minOccurs="0" />
+      <xs:sequence minOccurs="0" maxOccurs="unbounded">
+        <xs:choice>
+          <xs:element name="label" type="ann:LabelType" />
+          <xs:element name="comment" type="ann:CommentType" />
+          <xs:element name="db" type="ann:DataBytesType" />
+        </xs:choice>
+      </xs:sequence>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="MetaType" />
+
+  <xs:complexType name="LabelType">
+    <xs:all>
+      <xs:element name="at" type="ann:HexWordType" />
+      <xs:element name="text" type="xs:string" />
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="CommentType">
+    <xs:all>
+      <xs:element name="at" type="ann:HexWordType" />
+      <xs:element name="text" type="ann:CommentTextType" />
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="DataBytesType">
+    <xs:all>
+      <xs:element name="at" type="ann:HexWordType" />
+      <xs:element name="length" type="ann:HexWordType" />
+    </xs:all>
+  </xs:complexType>
+
+  <xs:simpleType name="HexWordType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="0[Xx][A-Fa-f0-9]{1,4}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="CommentTextType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[^\n\r\t]*"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
+
+<!--
+    Local Variables:
+      coding:utf-8
+      mode:xml
+    End:
+-->

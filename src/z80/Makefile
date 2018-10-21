@@ -6,6 +6,7 @@ SRC		=	$(wildcard $(SRC_DIR)/$(PKG)/*.java)
 PLAIN_SRC	=	$(subst $(SRC_DIR),.,$(SRC))
 OBJ		=	$(subst .java,.class,$(subst \
 				$(SRC_DIR),$(BUILD_DIR),$(SRC)))
+ANNOTATIONS_XSD	=	$(wildcard $(SRC_DIR)/$(PKG)/annotations.xsd)
 TIMESTAMP	=	$(BUILD_DIR)/$(PKG)/TIMESTAMP
 JAR_FILE	=	$(JAR_DIR)/z80.jar
 MANIFEST	=	$(PWD)/MANIFEST.MF
@@ -25,8 +26,9 @@ $(JAR_DIR):
 $(TARBALL_DIR):
 	mkdir -p $@
 
-$(TIMESTAMP) : $(SRC)
+$(TIMESTAMP) : $(SRC) $(ANNOTATIONS_XSD)
 	cd $(SRC_DIR) ; $(JAVAC) -d $(BUILD_DIR) $(PLAIN_SRC)
+	cp -a $(ANNOTATIONS_XSD) $(BUILD_DIR)/$(PKG)
 	touch $@
 
 $(JAR_FILE) : $(JAR_DIR) $(TIMESTAMP)

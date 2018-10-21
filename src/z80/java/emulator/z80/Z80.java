@@ -855,6 +855,10 @@ public class Z80 implements CPU {
       return concreteOpCode;
     }
 
+    public int getByteLength() {
+      return genericOperation.byteLength;
+    }
+
     public int getNextAddress() {
       return (address + genericOperation.byteLength) & 0xffff;
     }

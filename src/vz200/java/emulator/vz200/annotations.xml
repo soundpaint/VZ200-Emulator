@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<annotations
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://www.soundpaint.org/2018/Z80-Emulator/Annotations"
+    xsi:schemaLocation="device-schema.xsd">
+</annotations>
+
+<!--
+    Local Variables:
+      coding:utf-8
+      mode:xml
+    End:
+-->

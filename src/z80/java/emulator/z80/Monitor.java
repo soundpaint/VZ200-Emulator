@@ -3,6 +3,7 @@ package emulator.z80;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -17,6 +18,7 @@ public class Monitor {
   private CPU.Memory io;
   private CPU.Register[] registers;
   private CPU.Register regPC, regSP;
+  private Annotations annotations;
   private int address;
   private PushbackInputStream stdin;
   private PrintStream stdout, stderr;
@@ -490,7 +492,7 @@ public class Monitor {
         long cpuStartTime = cpu.getWallClockTime();
         long deltaStartTime = cpuStartTime - systemStartTime;
         cpu.resyncPeripherals();
-	while (!done) {
+        while (!done) {
           long systemTime = System.nanoTime();
           long cpuTime = cpu.getWallClockTime();
           jitter = systemTime - cpuTime + deltaStartTime;
@@ -519,7 +521,7 @@ public class Monitor {
               kbdCheckCount = 0;
             }
             busyTime += System.nanoTime() - systemTime;
-	  } else {
+          } else {
             // busy wait
             if (BUSY_WAIT) {
               while (System.nanoTime() - systemTime < BUSY_WAIT_TIME);
@@ -532,7 +534,7 @@ public class Monitor {
             }
             idleTime += System.nanoTime() - systemTime;
 	  }
-	}
+        }
         systemStopTime = System.nanoTime();
         if (haveBreakPoint && !trace) {
           printOperation(op, 0);
@@ -611,35 +613,99 @@ public class Monitor {
     }
   }
 
-  private int printOperation(CPU.ConcreteOperation op, int fallbackAddress) {
-    // TODO: have to know that regPC is a short
-    String address;
-    if (op == null) {
-      address = Util.hexShortStr(fallbackAddress) + "-";
-    } else if (!op.isSynthesizedCode()) {
-      address = Util.hexShortStr(op.getAddress()) + "-";
-    } else {
-      address = "INTR:";
+  private void loadAnnotationsFromFile(String filePath) {
+    File file = new File(filePath);
+    try {
+      annotations.loadFromFile(file);
+    } catch (ParseException e) {
+      stderr.println("warning: failed loading annotations from file " +
+                     filePath + ": " + e.getMessage());
     }
-    stdout.print(address);
-    stdout.print("  ");
+  }
+
+  private static String fill(char ch, int length) {
+    StringBuffer s = new StringBuffer(length);
+    for (int i = 0; i < length; i++) {
+      s.append(ch);
+    }
+    return s.toString();
+  }
+
+  private static final int MAX_LABEL_WIDTH = 8;
+  private static final String LABEL_FORMAT_STRING = "%" + MAX_LABEL_WIDTH + "s";
+  private static final String EMPTY_LABEL = fill(' ', MAX_LABEL_WIDTH);
+  private static final int COMMENT_POS = 50;
+
+  private int printOperation(CPU.ConcreteOperation op, int fallbackAddress) {
+    StringBuffer line = new StringBuffer();
+    // TODO: have to know that regPC is a short
+    int address;
+    String strAddress;
+    String label, comment;
+    boolean containsDataByte = false;
+    boolean isDataByte = false;
+    if ((op != null) && op.isSynthesizedCode()) {
+      address = 0;
+      strAddress = "INTR:";
+      label = null;
+      comment = null;
+    } else {
+      if (op == null) {
+        address = fallbackAddress;
+      } else {
+        address = op.getAddress();
+      }
+      strAddress = Util.hexShortStr(address) + "-";
+      label = annotations.getLabel(address);
+      comment = annotations.getComment(address);
+      for (int i = 0; i < op.getByteLength(); i++) {
+        // TODO: 0xffff is z80 specific
+        int opCodeByteAddress = (address + i) & 0xffff;
+        boolean opCodeByteIsDataByte =
+          annotations.isDataByte(opCodeByteAddress);
+        if (i == 0) {
+          isDataByte = opCodeByteIsDataByte;
+        }
+        containsDataByte |= opCodeByteIsDataByte;
+      }
+    }
+    line.append(strAddress);
+    line.append("  ");
+    line.append(String.format(LABEL_FORMAT_STRING,
+                              label != null ? label : EMPTY_LABEL));
+    line.append(" ");
     int length;
-    if (op != null) {
+    if ((op == null) || containsDataByte) {
+      int dataByte = memory.readByte(fallbackAddress, cpu.getWallClockCycles());
+      String strDataByte = Util.hexByteStr(dataByte);
+      line.append(" " + strDataByte + "               ");
+      if (isDataByte) {
+        line.append("DB $" + strDataByte);
+      } else {
+        line.append("???");
+      }
+      length = 1;
+    } else  {
       CPU.ConcreteOpCode opCode = op.createOpCode();
       length = opCode.getLength();
       for (int i = 0; i < length; i++) {
-        stdout.print(" " + Util.hexByteStr(opCode.getByte(i)));
+        line.append(" " + Util.hexByteStr(opCode.getByte(i)));
       }
       for (int i = 0; i < (6 - length); i++) {
-        stdout.print("   ");
+        line.append("   ");
       }
-      stdout.println(op.getConcreteMnemonic());
-    } else {
-      int dataByte = memory.readByte(fallbackAddress, cpu.getWallClockCycles());
-      stdout.println(" " + Util.hexByteStr(dataByte) +
-                     "               ???");
-      length = 1;
+      line.append(op.getConcreteMnemonic());
     }
+    if (comment != null) {
+      int prevLength = line.length();
+      line.setLength(COMMENT_POS);
+      for (int i = prevLength; i < line.length(); i++) {
+        line.setCharAt(i, ' ');
+      }
+      line.append(";");
+      line.append(comment);
+    }
+    stdout.println(line.toString());
     return length;
   }
 
@@ -808,6 +874,10 @@ public class Monitor {
     }
   }
 
+  private void annotate() {
+    // TODO
+  }
+
   private void help() {
     stdout.println("Commands");
     stdout.println("========");
@@ -880,6 +950,9 @@ public class Monitor {
       case 'r' :
 	registerAccess();
 	break;
+      case 'n' :
+        annotate();
+        break;
       case 'h' :
 	help();
 	break;
@@ -920,6 +993,8 @@ public class Monitor {
     registers = cpu.getAllRegisters();
     regPC = cpu.getProgramCounter();
     regSP = cpu.getStackPointer();
+    annotations = new Annotations();
+    loadAnnotationsFromFile("vz200/java/emulator/vz200/annotations.xml"); // TODO add command
     codeStartAddr = 0x0000;
     dataStartAddr = 0x0000;
     welcome();

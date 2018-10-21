@@ -30,6 +30,7 @@ public interface CPU {
   }
 
   public interface ConcreteOperation {
+    public int getByteLength();
     public String getConcreteMnemonic();
     public int getAddress();
     public boolean isSynthesizedCode();
