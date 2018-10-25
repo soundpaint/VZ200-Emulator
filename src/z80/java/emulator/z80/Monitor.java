@@ -642,6 +642,7 @@ public class Monitor {
     int address;
     String strAddress;
     String label, comment;
+    boolean containsInnerAnnotation = false;
     boolean containsDataByte = false;
     boolean isDataByte = false;
     if ((op != null) && op.isSynthesizedCode()) {
@@ -666,6 +667,11 @@ public class Monitor {
           annotations.isDataByte(opCodeByteAddress);
         if (i == 0) {
           isDataByte = opCodeByteIsDataByte;
+        } else {
+          containsInnerAnnotation |=
+            annotations.getLabel(opCodeByteAddress) != null;
+          containsInnerAnnotation |=
+            annotations.getComment(opCodeByteAddress) != null;
         }
         containsDataByte |= opCodeByteIsDataByte;
       }
@@ -676,11 +682,11 @@ public class Monitor {
                               label != null ? label : EMPTY_LABEL));
     line.append(" ");
     int length;
-    if ((op == null) || containsDataByte) {
+    if (op == null || containsDataByte || containsInnerAnnotation) {
       int dataByte = memory.readByte(fallbackAddress, cpu.getWallClockCycles());
       String strDataByte = Util.hexByteStr(dataByte);
       line.append(" " + strDataByte + "               ");
-      if (isDataByte) {
+      if (isDataByte || containsInnerAnnotation) {
         line.append("DB $" + strDataByte);
       } else {
         line.append("???");
