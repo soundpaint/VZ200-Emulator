@@ -10,38 +10,23 @@
 
   <xs:complexType name="AnnotationsType">
     <xs:sequence>
-      <xs:element name="meta" type="ann:MetaType" minOccurs="0" />
-      <xs:sequence minOccurs="0" maxOccurs="unbounded">
-        <xs:choice>
-          <xs:element name="label" type="ann:LabelType" />
-          <xs:element name="comment" type="ann:CommentType" />
-          <xs:element name="db" type="ann:DataBytesType" />
-        </xs:choice>
-      </xs:sequence>
+      <xs:element name="meta" type="ann:MetaElementType" minOccurs="0" />
+      <xs:element name="at" type="ann:AtElementType"
+                  minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="MetaType" />
+  <xs:complexType name="MetaElementType" />
 
-  <xs:complexType name="LabelType">
-    <xs:all>
-      <xs:element name="at" type="ann:HexWordType" />
-      <xs:element name="text" type="xs:string" />
-    </xs:all>
-  </xs:complexType>
-
-  <xs:complexType name="CommentType">
-    <xs:all>
-      <xs:element name="at" type="ann:HexWordType" />
-      <xs:element name="text" type="ann:CommentTextType" />
-    </xs:all>
-  </xs:complexType>
-
-  <xs:complexType name="DataBytesType">
-    <xs:all>
-      <xs:element name="at" type="ann:HexWordType" />
-      <xs:element name="length" type="ann:HexWordType" />
-    </xs:all>
+  <xs:complexType name="AtElementType">
+    <xs:sequence>
+      <xs:element name="label" type="ann:LabelTextType" minOccurs="0" />
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="comment" type="ann:CommentTextType" />
+        <xs:element name="data-bytes" type="ann:DataBytesElementType" />
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="address" type="ann:HexWordType" />
   </xs:complexType>
 
   <xs:simpleType name="HexWordType">
@@ -50,11 +35,21 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="LabelTextType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[A-Za-z_][0-9A-Za-z_-]*"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="CommentTextType">
     <xs:restriction base="xs:string">
       <xs:pattern value="[^\n\r\t]*"/>
     </xs:restriction>
   </xs:simpleType>
+
+  <xs:complexType name="DataBytesElementType">
+    <xs:attribute name="length" type="ann:HexWordType" />
+  </xs:complexType>
 </xs:schema>
 
 <!--

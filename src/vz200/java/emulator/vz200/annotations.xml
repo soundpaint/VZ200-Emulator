@@ -3,6 +3,154 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="http://www.soundpaint.org/2018/Z80-Emulator/Annotations"
     xsi:schemaLocation="device-schema.xsd">
+  <at address="0x010f">
+    <label>greettxt</label>
+    <comment>Manufacturer's name, "BASIC V2.0"</comment>
+    <data-bytes length="0x1f" />
+  </at>
+  <at address="0x0135">
+    <label>fn_set</label>
+    <comment>entry vector handler for BASIC command "SET"</comment>
+  </at>
+  <at address="0x0138">
+    <label>fn_reset</label>
+    <comment>entry vector handler for BASIC command "RESET"</comment>
+  </at>
+  <at address="0x014b">
+    <comment>SET: determine memory location to change check: y coordinate &lt;= 64</comment>
+  </at>
+  <at address="0x0150">
+    <comment>multiply y coordinate with 32 (bytes per row)</comment>
+  </at>
+  <at address="0x015a">
+    <comment>get x coordinate and divide by 4 (pixels per byte)</comment>
+  </at>
+  <at address="0x0162">
+    <comment>screen starts at 7000h</comment>
+  </at>
+  <at address="0x0167">
+    <comment>#pixel within screen byte</comment>
+  </at>
+  <at address="0x0169">
+    <comment>*=2 bits per pixel to shift</comment>
+  </at>
+  <at address="0x016a">
+    <comment>store as counter for upcoming DJNZ</comment>
+  </at>
+  <at address="0x0171">
+    <comment>fill C with 1 bits as reservoir for shifting in upcoming RRC instructions</comment>
+  </at>
+  <at address="0x0173">
+    <comment>get current 3 bit color code (in high nybble)</comment>
+  </at>
+  <at address="0x0176">
+    <comment>drop 3rd bit, shift others to MSB</comment>
+  </at>
+  <at address="0x017a">
+    <comment>loop: for # [NOTE: here is a performance bug.  If A=0 (which occurs for every 4th pixel), the loop wastes time by iterating 256 times, while it would not needed to be entered at all.]</comment>
+  </at>
+  <at address="0x01c9">
+    <comment>entry vector handler for BASIC command "CLS"</comment>
+  </at>
+  <at address="0x01d3">
+    <comment>entry vector handler for inactivated BASIC command with token 0xa6</comment>
+  </at>
+  <at address="0x030d">
+    <comment>screen editor: update cursor</comment>
+  </at>
+  <at address="0x032a">
+    <comment>cout callback before device branch (screen/printer/cassette), character in reg. A</comment>
+  </at>
+  <at address="0x033a">
+    <comment>entry for cout routine for screen device, character in reg. A</comment>
+  </at>
+  <at address="0x039c">
+    <comment>entry for cout routine for print device, character in reg. A</comment>
+  </at>
+  <at address="0x58d">
+    <comment>actual cout routine for print device, character in reg. C</comment>
+  </at>
+  <at address="0x5c4">
+    <comment>query printer status, result in reg. A, bit 0 (0=ready, 1=busy)</comment>
+  </at>
+  <at address="0x09d3">
+    <comment>push subroutine parameters onto stack: DE=source, HL=target, 0x78af=count</comment>
+  </at>
+  <at address="0x0e73">
+    <comment>expression parser: parse number</comment>
+  </at>
+  <at address="0x0e78">
+    <comment>expression parser: negative number sign?</comment>
+  </at>
+  <at address="0x0e7e">
+    <comment>expression parser: positive number sign?</comment>
+  </at>
+  <at address="0x0e83">
+    <comment>parse next character of expression</comment>
+  </at>
+  <at address="0x0e87">
+    <comment>number parser: found decimal point?</comment>
+  </at>
+  <at address="0x0e8c">
+    <comment>number parser: found exponent separator "e"</comment>
+  </at>
+  <at address="0x0e90">
+    <comment>parser: found "%" (int precision)?</comment>
+  </at>
+  <at address="0x0e95">
+    <comment>parser: found "#" (double precision)?</comment>
+  </at>
+  <at address="0x0e9a">
+    <comment>parser: found "!"?</comment>
+  </at>
+  <at address="0x0e9f">
+    <comment>parser: found "d" (double precision)?</comment>
+  </at>
+  <at address="0x0ec7">
+    <comment>number parser: end of number token reached</comment>
+  </at>
+  <at address="0x0ea3">
+    <comment>number parser: handle "d" (double precision)</comment>
+  </at>
+  <at address="0x0ea4">
+    <comment>number parser: handle exponent</comment>
+  </at>
+  <at address="0x0ee4">
+    <comment>number parser: found decimal point</comment>
+  </at>
+  <at address="0x0eee">
+    <comment>number parser: handle "%" (int precision)</comment>
+  </at>
+  <at address="0x0ef5">
+    <comment>number parser: handle "#" (double precision)</comment>
+  </at>
+  <at address="0x0ef6">
+    <comment>number parser: handle "!"</comment>
+  </at>
+  <at address="0x0f29">
+    <comment>number parser: digit found; handle it</comment>
+  </at>
+  <at address="0x0f40">
+    <comment>(DE, HL) &lt;- (HL, 10 * HL)</comment>
+  </at>
+  <at address="0x0f46">
+    <comment>number parser: add next parsed digit to integer value</comment>
+  </at>
+  <at address="0x0f49">
+    <comment>check: number too large to fit in signed integer?</comment>
+  </at>
+  <at address="0x0f4e">
+    <comment>number in range; store it; continue parsing</comment>
+  </at>
+  <at address="0x0f57">
+    <comment>number too large for signed integer</comment>
+  </at>
+  <at address="0x1291">
+    <comment>check for printing group separator "," or decimal separator "." while printing a number</comment>
+  </at>
+  <at address="0x1294">
+    <comment>print number decimal separator "." and prepare printing mantissa</comment>
+  </at>
 </annotations>
 
 <!--

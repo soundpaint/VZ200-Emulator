@@ -658,7 +658,8 @@ public class Monitor {
       strAddress = Util.hexShortStr(address) + "-";
       label = annotations.getLabel(address);
       comment = annotations.getComment(address);
-      for (int i = 0; i < op.getByteLength(); i++) {
+      int opCodeLength = op != null ? op.getByteLength() : 1;
+      for (int i = 0; i < opCodeLength; i++) {
         // TODO: 0xffff is z80 specific
         int opCodeByteAddress = (address + i) & 0xffff;
         boolean opCodeByteIsDataByte =

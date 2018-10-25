@@ -18,14 +18,14 @@ import org.w3c.dom.Text;
 
 public class Annotations {
   private static final String SCHEMA_RESOURCE_NAME = "./annotations.xsd";
+  private static final String ATTRIBUTE_NAME_ADDRESS = "address";
+  private static final String ATTRIBUTE_NAME_LENGTH = "length";
   private static final String TAG_NAME_ANNOTATIONS = "annotations";
   private static final String TAG_NAME_META = "meta";
+  private static final String TAG_NAME_AT = "at";
   private static final String TAG_NAME_LABEL = "label";
   private static final String TAG_NAME_COMMENT = "comment";
-  private static final String TAG_NAME_DB = "db";
-  private static final String TAG_NAME_AT = "at";
-  private static final String TAG_NAME_TEXT = "text";
-  private static final String TAG_NAME_LENGTH = "length";
+  private static final String TAG_NAME_DATA_BYTES = "data-bytes";
 
   private static boolean isIgnorableNodeType(final Node node)
   {
@@ -73,59 +73,86 @@ public class Annotations {
     }
   }
 
-  private Map<Integer, String> labels;
-  private Map<Integer, String> comments;
-  private Map<Integer, DataBytesRange> dataBytesRanges;
+  private Map<Integer, String> adr2label;
+  private Map<String, Integer> label2adr;
+  private Map<Integer, String> adr2comment;
+  private Map<Integer, DataBytesRange> adr2dbRange;
   private Element meta;
 
   public Annotations() {
-    labels = new HashMap<Integer, String>();
-    comments = new HashMap<Integer, String>();
-    dataBytesRanges = new TreeMap<Integer, DataBytesRange>();
+    label2adr = new HashMap<String, Integer>();
+    adr2label = new HashMap<Integer, String>();
+    adr2comment = new HashMap<Integer, String>();
+    adr2dbRange = new TreeMap<Integer, DataBytesRange>();
     meta = null;
   }
 
   public void clear() {
-    labels.clear();
-    comments.clear();
-    dataBytesRanges.clear();
+    label2adr.clear();
+    adr2label.clear();
+    adr2comment.clear();
+    adr2dbRange.clear();
   }
 
-  public void addLabel(int address, String text) {
-    labels.put(address, text);
+  public void addLabel(int address, String label) {
+    if (adr2label.containsKey(address)) {
+      System.out.println("WARNING: Annotations: " +
+                         "redefining label for address " + address);
+    }
+    adr2label.put(address, label);
+    label2adr.put(label, address);
   }
 
   public String getLabel(int address) {
-    return labels.get(address);
+    return adr2label.get(address);
+  }
+
+  public int resolveLabel(String label) {
+    return label2adr.get(label);
   }
 
   public void removeLabel(int address) {
-    labels.remove(address);
+    if (adr2label.containsKey(address)) {
+      String label = adr2label.remove(address);
+      label2adr.remove(label);
+    }
   }
 
   public void addComment(int address, String text) {
-    comments.put(address, text);
+    if (adr2comment.containsKey(address)) {
+      System.out.println("WARNING: Annotations: " +
+                         "redefining comment for address " + address);
+    }
+    adr2comment.put(address, text);
   }
 
   public String getComment(int address) {
-    return comments.get(address);
+    return adr2comment.get(address);
   }
 
   public void removeComment(int address) {
-    comments.remove(address);
+    if (adr2comment.containsKey(address)) {
+      adr2comment.remove(address);
+    }
   }
 
   public void addDataBytesRange(int address, int length) {
     // TODO: Check for clash with previously added ranges.
-    dataBytesRanges.put(address, new DataBytesRange(address, length));
+    if (adr2dbRange.containsKey(address)) {
+      System.out.println("WARNING: Annotations: " +
+                         "redefining data bytes range for address " + address);
+    }
+    adr2dbRange.put(address, new DataBytesRange(address, length));
   }
 
   public void removeDataBytesRange(int address) {
-    dataBytesRanges.remove(address);
+    if (adr2comment.containsKey(address)) {
+      adr2dbRange.remove(address);
+    }
   }
 
   public boolean isDataByte(int address) {
-    for (DataBytesRange range : dataBytesRanges.values()) {
+    for (DataBytesRange range : adr2dbRange.values()) {
       if (range.contains(address)) {
         return true;
       }
@@ -195,30 +222,57 @@ public class Annotations {
     }
   }
 
+  private void parseDataBytes(Element element, int address)
+    throws ParseException
+  {
+    int dataBytes =
+      parseShort(element,
+                 element.getAttribute(ATTRIBUTE_NAME_LENGTH)) & 0xffff;
+    addDataBytesRange(address, dataBytes);
+    final NodeList childNodes = element.getChildNodes();
+    for (int index = 0; index < childNodes.getLength(); index++) {
+      final Node childNode = childNodes.item(index);
+      if (childNode instanceof Element) {
+        final Element childElement = (Element)childNode;
+        final String childElementName = childElement.getTagName();
+        throw new ParseException(childElement, "unexpected element: " +
+                                 childElementName);
+      } else if (isWhiteSpace(childNode)) {
+        // ignore white space
+      } else if (isIgnorableNodeType(childNode)) {
+        // ignore comments, entities, etc.
+      } else {
+        throw new ParseException(childNode, "unsupported node");
+      }
+    }
+  }
+
   private void parseMeta(Element element) throws ParseException {
     throw new ParseException(element, "not yet implemented");
   }
 
-  private void parseLabel(Element element) throws ParseException {
-    Integer at = null;
-    String text = null;
+  private void parseAt(Element element) throws ParseException {
+    int address =
+      parseShort(element,
+                 element.getAttribute(ATTRIBUTE_NAME_ADDRESS)) & 0xffff;
+    String label = null;
     final NodeList childNodes = element.getChildNodes();
     for (int index = 0; index < childNodes.getLength(); index++) {
       final Node childNode = childNodes.item(index);
       if (childNode instanceof Element) {
         final Element childElement = (Element)childNode;
         final String childElementName = childElement.getTagName();
-        if (childElementName.equals(TAG_NAME_AT)) {
-          if (at != null) {
-            throwDuplicateException(childElement, TAG_NAME_AT);
+        if (childElementName.equals(TAG_NAME_LABEL)) {
+          if (label != null) {
+            throwDuplicateException(childElement, TAG_NAME_LABEL);
           }
-          // TODO: 0xffff is z80 specific
-          at = parseShort(childElement, childElement.getTextContent()) & 0xffff;
-        } else if (childElementName.equals(TAG_NAME_TEXT)) {
-          if (text != null) {
-            throwDuplicateException(childElement, TAG_NAME_TEXT);
-          }
-          text = childElement.getTextContent();
+          label = childElement.getTextContent();
+          addLabel(address, label);
+        } else if (childElementName.equals(TAG_NAME_COMMENT)) {
+          String comment = childElement.getTextContent();
+          addComment(address, comment);
+        } else if (childElementName.equals(TAG_NAME_DATA_BYTES)) {
+          parseDataBytes(childElement, address);
         } else {
           throw new ParseException(childElement, "unexpected element: " +
                                    childElementName);
@@ -231,79 +285,6 @@ public class Annotations {
         throw new ParseException(childNode, "unsupported node");
       }
     }
-    addLabel(at, text);
-  }
-
-  private void parseComment(Element element) throws ParseException {
-    Integer at = null;
-    String text = null;
-    final NodeList childNodes = element.getChildNodes();
-    for (int index = 0; index < childNodes.getLength(); index++) {
-      final Node childNode = childNodes.item(index);
-      if (childNode instanceof Element) {
-        final Element childElement = (Element)childNode;
-        final String childElementName = childElement.getTagName();
-        if (childElementName.equals(TAG_NAME_AT)) {
-          if (at != null) {
-            throwDuplicateException(childElement, TAG_NAME_AT);
-          }
-          // TODO: 0xffff is z80 specific
-          at = parseShort(childElement, childElement.getTextContent()) & 0xffff;
-        } else if (childElementName.equals(TAG_NAME_TEXT)) {
-          if (text != null) {
-            throwDuplicateException(childElement, TAG_NAME_TEXT);
-          }
-          text = childElement.getTextContent();
-        } else {
-          throw new ParseException(childElement, "unexpected element: " +
-                                   childElementName);
-        }
-      } else if (isWhiteSpace(childNode)) {
-        // ignore white space
-      } else if (isIgnorableNodeType(childNode)) {
-        // ignore comments, entities, etc.
-      } else {
-        throw new ParseException(childNode, "unsupported node");
-      }
-    }
-    addComment(at, text);
-  }
-
-  private void parseDB(Element element) throws ParseException {
-    Integer at = null;
-    Integer length = null;
-    final NodeList childNodes = element.getChildNodes();
-    for (int index = 0; index < childNodes.getLength(); index++) {
-      final Node childNode = childNodes.item(index);
-      if (childNode instanceof Element) {
-        final Element childElement = (Element)childNode;
-        final String childElementName = childElement.getTagName();
-        if (childElementName.equals(TAG_NAME_AT)) {
-          if (at != null) {
-            throwDuplicateException(childElement, TAG_NAME_AT);
-          }
-          // TODO: 0xffff is z80 specific
-          at = parseShort(childElement, childElement.getTextContent()) & 0xffff;
-        } else if (childElementName.equals(TAG_NAME_LENGTH)) {
-          if (length != null) {
-            throwDuplicateException(childElement, TAG_NAME_LENGTH);
-          }
-          // TODO: 0xffff is z80 specific
-          length =
-            parseShort(childElement, childElement.getTextContent()) & 0xffff;
-        } else {
-          throw new ParseException(childElement, "unexpected element: " +
-                                   childElementName);
-        }
-      } else if (isWhiteSpace(childNode)) {
-        // ignore white space
-      } else if (isIgnorableNodeType(childNode)) {
-        // ignore comments, entities, etc.
-      } else {
-        throw new ParseException(childNode, "unsupported node");
-      }
-    }
-    addDataBytesRange(at, length);
   }
 
   private void parse(Document document) throws ParseException {
@@ -329,12 +310,8 @@ public class Annotations {
           }
           parseMeta(childElement);
           meta = childElement;
-        } else if (childElementName.equals(TAG_NAME_LABEL)) {
-          parseLabel(childElement);
-        } else if (childElementName.equals(TAG_NAME_COMMENT)) {
-          parseComment(childElement);
-        } else if (childElementName.equals(TAG_NAME_DB)) {
-          parseDB(childElement);
+        } else if (childElementName.equals(TAG_NAME_AT)) {
+          parseAt(childElement);
         } else {
           throw new ParseException(childElement, "unexpected element: " +
                                    childElementName);
