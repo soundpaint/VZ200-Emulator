@@ -151,6 +151,608 @@
   <at address="0x1294">
     <comment>print number decimal separator "." and prepare printing mantissa</comment>
   </at>
+  <at address="0x129e">
+    <comment>print number group separator ","</comment>
+  </at>
+  <at address="0x132f">
+    <comment>print integer value stored at 7921h as decimal</comment>
+  </at>
+  <at address="0x1335">
+    <comment>outer loop for repeated printing of digits until decimal representation of integer is complete</comment>
+  </at>
+  <at address="0x1348">
+    <comment>inner loop for repeated subtraction for determining next decimal digit of integer</comment>
+  </at>
+  <at address="0x13d8">
+    <comment>value 0x2710 (=10000) (used for hex->dec conversion)</comment>
+  </at>
+  <at address="0x13da">
+    <comment>value 0x03e8 (=1000)  (used for hex->dec conversion)</comment>
+  </at>
+  <at address="0x13dc">
+    <comment>value 0x0064 (=100)   (used for hex->dec conversion)</comment>
+  </at>
+  <at address="0x13de">
+    <comment>value 0x000a (=10)    (used for hex->dec conversion)</comment>
+  </at>
+  <at address="0x13e0">
+    <comment>value 0x0001 (=1)     (used for hex->dec conversion)</comment>
+  </at>
+  <at address="0x1650">
+    <comment>token "END"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x1653">
+    <comment>token "FOR"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x1656">
+    <comment>token "RESET"</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x165b">
+    <comment>token "SET"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x165e">
+    <comment>token "CLS"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x166a">
+    <comment>token "NEXT"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x166e">
+    <comment>token "DATA"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1672">
+    <comment>token "INPUT"</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x1677">
+    <comment>token "DIM"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x167a">
+    <comment>token "READ"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x167e">
+    <comment>token "LET"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x1681">
+    <comment>token "GOTO"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1685">
+    <comment>token "RUN"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x1688">
+    <comment>token "IF"</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x168a">
+    <comment>token "RESTORE"</comment>
+    <data-bytes length="0x07" />
+  </at>
+  <at address="0x1691">
+    <comment>token "GOSUB"</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x1696">
+    <comment>token "RETURN"</comment>
+    <data-bytes length="0x06" />
+  </at>
+  <at address="0x169c">
+    <comment>token "REM"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x169f">
+    <comment>token "STOP"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x16a3">
+    <comment>token "ELSE"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x16a7">
+    <comment>token "COPY"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x16ab">
+    <comment>token "COLOR"</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x16b0">
+    <comment>token "VERIFY"</comment>
+    <data-bytes length="0x06" />
+  </at>
+  <at address="0x16c8">
+    <comment>token "CRUN"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x16cc">
+    <comment>token "MODE"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x16d0">
+    <comment>token "SOUND"</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x16db">
+    <comment>token "OUT"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x1717">
+    <comment>token "LPRINT"</comment>
+    <data-bytes length="0x06" />
+  </at>
+  <at address="0x1720">
+    <comment>token "POKE"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1724">
+    <comment>token "PRINT"</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x1729">
+    <comment>token "CONT"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x172d">
+    <comment>token "LIST"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1731">
+    <comment>token "LLIST"</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x1740">
+    <comment>token "CLEAR"</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x1745">
+    <comment>token "CLOAD"</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x174a">
+    <comment>token "CSAVE"</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x174f">
+    <comment>token "NEW"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x1752">
+    <comment>token "TAB("</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1756">
+    <comment>token "TO"</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x175a">
+    <comment>token "USING"</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x1765">
+    <comment>token "USR"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x177a">
+    <comment>token "POINT"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1787">
+    <comment>token "INKEY$"</comment>
+    <data-bytes length="0x06" />
+  </at>
+  <at address="0x178d">
+    <comment>token "THEN"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1791">
+    <comment>token "NOT"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x1794">
+    <comment>token "STEP"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1798">
+    <comment>token "+"</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x1799">
+    <comment>token "-"</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x179a">
+    <comment>token "*"</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x179b">
+    <comment>token "/"</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x179c">
+    <comment>token "^"</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x179d">
+    <comment>token "AND"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17a0">
+    <comment>token "OR"</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x17a2">
+    <comment>token ">"</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x17a3">
+    <comment>token "="</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x17a4">
+    <comment>token "&lt;"</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x17a5">
+    <comment>token "SGN"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17a8">
+    <comment>token "INT"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17ab">
+    <comment>token "ABS"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17b1">
+    <comment>token "INP"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17b7">
+    <comment>token "SQR"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17ba">
+    <comment>token "RND"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17bd">
+    <comment>token "LOG"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17c0">
+    <comment>token "EXP"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17c3">
+    <comment>token "COS"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17c6">
+    <comment>token "SIN"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17c9">
+    <comment>token "TAN"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17cc">
+    <comment>token "ATN"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17cf">
+    <comment>token "PEEK"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1800">
+    <comment>token "LEN"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x1803">
+    <comment>token "STR$"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1807">
+    <comment>token "VAL"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x180a">
+    <comment>token "ASC"</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x180d">
+    <comment>token "CHR$"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1816">
+    <comment>token "RIGHT$"</comment>
+    <data-bytes length="0x06" />
+  </at>
+  <at address="0x181c">
+    <comment>token "MID$"</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1820">
+    <comment>token "'"</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x1822">
+    <comment>vector to handler for token 80h ("END")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1824">
+    <comment>vector to handler for token 81h ("FOR")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1826">
+    <comment>vector to handler for token 82h ("RESET")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1828">
+    <comment>vector to handler for token 83h ("SET")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x182a">
+    <comment>vector to handler for token 84h ("CLS")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x182c">
+    <comment>vector to handler for token 85h (undefined)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x182e">
+    <comment>vector to handler for token 86h (undefined)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1830">
+    <comment>vector to handler for token 87h ("NEXT")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1832">
+    <comment>vector to handler for token 88h ("DATA")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1834">
+    <comment>vector to handler for token 89h ("INPUT")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1836">
+    <comment>vector to handler for token 8ah ("DIM")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1838">
+    <comment>vector to handler for token 8bh ("READ")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x183a">
+    <comment>vector to handler for token 8ch ("LET")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x183c">
+    <comment>vector to handler for token 8dh ("GOTO")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x183e">
+    <comment>vector to handler for token 8eh ("RUN")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1840">
+    <comment>vector to handler for token 8fh ("IF")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1842">
+    <comment>vector to handler for token 90h ("RESTORE")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1844">
+    <comment>vector to handler for token 91h ("GOSUB")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1846">
+    <comment>vector to handler for token 92h ("RETURN")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1848">
+    <comment>vector to handler for token 93h ("REM")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x184a">
+    <comment>vector to handler for token 94h ("STOP")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x184c">
+    <comment>vector to handler for token 95h (hidden, equals "REM")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x184e">
+    <comment>vector to handler for token 96h ("COPY")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1850">
+    <comment>vector to handler for token 97h ("COLOR")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1852">
+    <comment>vector to handler for token 98h ("VERIFY")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1854">
+    <comment>vector to handler for token 99h (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1856">
+    <comment>vector to handler for token 9ah (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1858">
+    <comment>vector to handler for token 9bh (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x185a">
+    <comment>vector to handler for token 9ch ("CRUN")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x185c">
+    <comment>vector to handler for token 9dh ("MODE")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x185e">
+    <comment>vector to handler for token 9eh ("SOUND")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1860">
+    <comment>vector to handler for token 9fh (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1862">
+    <comment>vector to handler for token a0h ("OUT")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1864">
+    <comment>vector to handler for token a1h (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1866">
+    <comment>vector to handler for token a2h (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1868">
+    <comment>vector to handler for token a3h (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x186a">
+    <comment>vector to handler for token a4h (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x186c">
+    <comment>vector to handler for token a5h (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x186e">
+    <comment>vector to handler for token a6h (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1870">
+    <comment>vector to handler for token a7h (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1872">
+    <comment>vector to handler for token a8h (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1874">
+    <comment>vector to handler for token a9h (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1876">
+    <comment>vector to handler for token aah (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1878">
+    <comment>vector to handler for token abh (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x187a">
+    <comment>vector to handler for token ach (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x187c">
+    <comment>vector to handler for token adh (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x187e">
+    <comment>vector to handler for token aeh (hidden, equals cold reset)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1880">
+    <comment>vector to handler for token afh ("LPRINT")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1882">
+    <comment>vector to handler for token b0h (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1884">
+    <comment>vector to handler for token b1h ("POKE")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1886">
+    <comment>vector to handler for token b2h ("PRINT")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1888">
+    <comment>vector to handler for token b3h ("CONT")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x188a">
+    <comment>vector to handler for token b4h ("LIST")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x188c">
+    <comment>vector to handler for token b5h ("LLIST")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x188e">
+    <comment>vector to handler for token b6h (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1890">
+    <comment>vector to handler for token b7h (hidden)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1892">
+    <comment>vector to handler for token b8h ("CLEAR")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1894">
+    <comment>vector to handler for token b9h ("CLOAD")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1896">
+    <comment>vector to handler for token bah ("CSAVE")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1898">
+    <comment>vector to handler for token bbh ("NEW")</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x191d">
+    <comment>" Error" (appended to error messages)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x1924">
+    <comment>" IN " (appended to error message when line number available)</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1929">
+    <comment>"READY\n"</comment>
+    <data-bytes length="0x06" />
+  </at>
+  <at address="0x1930">
+    <comment>"BREAK"</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x1b49">
+    <comment>handler for token bbh ("NEW")</comment>
+  </at>
+  <at address="0x1c90">
+    <label>rst_18</label>
+    <comment>RST 18H: compare unsigned DE &amp; HL register pairs result</comment>
+  </at>
+  <at address="0x1c96">
+    <label>rst_08</label>
+    <comment>RST 08H: parse token char</comment>
+  </at>
 </annotations>
 
 <!--
