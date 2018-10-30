@@ -22,11 +22,23 @@
     <xs:sequence>
       <xs:element name="label" type="ann:LabelTextType" minOccurs="0" />
       <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="comment" type="ann:CommentTextType" />
+        <xs:element name="header" type="ann:MultiLineTextType" />
+        <xs:element name="footer" type="ann:MultiLineTextType" />
+        <xs:element name="comment" type="ann:MultiLineTextType" />
         <xs:element name="data-bytes" type="ann:DataBytesElementType" />
       </xs:choice>
     </xs:sequence>
     <xs:attribute name="address" type="ann:HexWordType" />
+  </xs:complexType>
+
+  <xs:complexType name="DataBytesElementType" mixed="true">
+    <xs:attribute name="length" type="ann:HexWordType" default="0x01" />
+  </xs:complexType>
+
+  <xs:complexType name="MultiLineTextType" mixed="true">
+    <xs:sequence>
+      <xs:element name="br" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
   </xs:complexType>
 
   <xs:simpleType name="HexWordType">
@@ -40,16 +52,6 @@
       <xs:pattern value="[A-Za-z_][0-9A-Za-z_-]*"/>
     </xs:restriction>
   </xs:simpleType>
-
-  <xs:simpleType name="CommentTextType">
-    <xs:restriction base="xs:string">
-      <xs:pattern value="[^\n\r\t]*"/>
-    </xs:restriction>
-  </xs:simpleType>
-
-  <xs:complexType name="DataBytesElementType">
-    <xs:attribute name="length" type="ann:HexWordType" />
-  </xs:complexType>
 </xs:schema>
 
 <!--

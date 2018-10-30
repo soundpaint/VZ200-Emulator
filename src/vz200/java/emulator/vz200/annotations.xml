@@ -1,32 +1,91 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE author [
+  <!ENTITY nbsp "&#xa0;">
+]>
 <annotations
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="http://www.soundpaint.org/2018/Z80-Emulator/Annotations"
     xsi:schemaLocation="device-schema.xsd">
-  <at address="0x010f">
+  <at address="0x0000">
+    <label>rst00</label>
+    <header>-------- BASIC V2.0 --------</header>
+    <comment>cold entry point</comment>
+  </at>
+  <at address="0x0008">
+    <label>rst08</label>
+    <comment>RST 08 entry point</comment>
+  </at>
+  <at address="0x0010">
+    <label>rst10</label>
+    <comment>RST 10 entry point</comment>
+  </at>
+  <at address="0x0018">
+    <label>rst18</label>
+    <comment>RST 18 entry point</comment>
+  </at>
+  <at address="0x0020">
+    <label>rst20</label>
+    <comment>RST 20 entry point</comment>
+  </at>
+  <at address="0x0028">
+    <label>rst28</label>
+    <comment>RST 28 entry point</comment>
+  </at>
+  <at address="0x0030">
+    <label>rst30</label>
+    <comment>RST 30 entry point</comment>
+  </at>
+  <at address="0x0038">
+    <label>rst38</label>
+    <comment>RST 38 entry point</comment>
+  </at>
+  <at address="0x010e">
     <label>greettxt</label>
-    <comment>Manufacturer's name, "BASIC V2.0"</comment>
-    <data-bytes length="0x1f" />
+    <comment>Manufacturer's name</comment>
+    <data-bytes length="0x1f">"BASIC V2.0"</data-bytes>
   </at>
   <at address="0x0135">
     <label>fn_set</label>
-    <comment>entry vector handler for BASIC command "SET"</comment>
+    <comment>
+      entry vector handler for<br />
+      BASIC command "SET"
+    </comment>
   </at>
   <at address="0x0138">
     <label>fn_reset</label>
-    <comment>entry vector handler for BASIC command "RESET"</comment>
+    <comment>
+      entry vector handler for<br />
+      BASIC command "RESET"
+    </comment>
+  </at>
+  <at address="0x013c">
+    <data-bytes length="0x01">"("</data-bytes>
+    <comment>left parenthesis</comment>
+  </at>
+  <at address="0x0147">
+    <data-bytes length="0x01">","</data-bytes>
+    <comment>comma</comment>
   </at>
   <at address="0x014b">
-    <comment>SET: determine memory location to change check: y coordinate &lt;= 64</comment>
+    <comment>
+      SET: determine memory location to<br />
+      change check: y coordinate &lt;= 64
+    </comment>
   </at>
   <at address="0x0150">
-    <comment>multiply y coordinate with 32 (bytes per row)</comment>
+    <comment>
+      multiply y coordinate with<br />
+      32 (bytes per row)
+    </comment>
   </at>
   <at address="0x015a">
-    <comment>get x coordinate and divide by 4 (pixels per byte)</comment>
+    <comment>
+      get x coordinate and divide by<br />
+      4 (pixels per byte)
+    </comment>
   </at>
   <at address="0x0162">
-    <comment>screen starts at 7000h</comment>
+    <comment>screen starts at 0x7000</comment>
   </at>
   <at address="0x0167">
     <comment>#pixel within screen byte</comment>
@@ -38,43 +97,88 @@
     <comment>store as counter for upcoming DJNZ</comment>
   </at>
   <at address="0x0171">
-    <comment>fill C with 1 bits as reservoir for shifting in upcoming RRC instructions</comment>
+    <comment>
+      fill C with 1 bits as reservoir for<br />
+      shifting in upcoming RRC instructions
+    </comment>
   </at>
   <at address="0x0173">
-    <comment>get current 3 bit color code (in high nybble)</comment>
+    <comment>
+      get current 3 bit color code<br />
+      (in high nybble)
+    </comment>
   </at>
   <at address="0x0176">
     <comment>drop 3rd bit, shift others to MSB</comment>
   </at>
   <at address="0x017a">
-    <comment>loop: for # [NOTE: here is a performance bug.  If A=0 (which occurs for every 4th pixel), the loop wastes time by iterating 256 times, while it would not needed to be entered at all.]</comment>
+    <comment>
+      loop: for #<br />
+      [NOTE: here is a performance bug:<br />
+      If A=0 (which occurs for every 4th pixel),<br />
+      the loop wastes time by iterating 256 times,<br />
+      while it would not needed to be entered at all.]
+    </comment>
   </at>
   <at address="0x01c9">
-    <comment>entry vector handler for BASIC command "CLS"</comment>
+    <comment>
+      entry vector handler for<br />
+      BASIC command "CLS"
+    </comment>
   </at>
   <at address="0x01d3">
-    <comment>entry vector handler for inactivated BASIC command with token 0xa6</comment>
+    <comment>
+      entry vector handler for<br />
+      inactivated BASIC command with token 0xa6
+    </comment>
   </at>
   <at address="0x030d">
     <comment>screen editor: update cursor</comment>
   </at>
   <at address="0x032a">
-    <comment>cout callback before device branch (screen/printer/cassette), character in reg. A</comment>
+    <comment>
+      cout callback before device branch<br />
+      (screen/printer/cassette), character in reg. A
+    </comment>
   </at>
   <at address="0x033a">
-    <comment>entry for cout routine for screen device, character in reg. A</comment>
+    <comment>
+      entry for cout routine for screen device,<br />
+      character in reg. A
+    </comment>
+  </at>
+  <at address="0x0380">
+    <data-bytes length="0x04">"OK\r\0"</data-bytes>
+  </at>
+  <at address="0x0384">
+    <data-bytes length="0x07">"ERROR\r\0"</data-bytes>
   </at>
   <at address="0x039c">
-    <comment>entry for cout routine for print device, character in reg. A</comment>
+    <comment>
+      entry for cout routine for print device,<br />
+      character in reg. A
+    </comment>
+  </at>
+  <at address="0x0570">
+    <data-bytes length="0x04">"RUN\0"</data-bytes>
   </at>
   <at address="0x58d">
-    <comment>actual cout routine for print device, character in reg. C</comment>
+    <comment>
+      actual cout routine for print device,<br />
+      character in reg. C
+    </comment>
   </at>
   <at address="0x5c4">
-    <comment>query printer status, result in reg. A, bit 0 (0=ready, 1=busy)</comment>
+    <comment>
+      query printer status,<br />
+      result in reg. A, bit 0 (0=ready, 1=busy)
+    </comment>
   </at>
   <at address="0x09d3">
-    <comment>push subroutine parameters onto stack: DE=source, HL=target, 0x78af=count</comment>
+    <comment>
+      push subroutine parameters onto stack:<br />
+      DE=source, HL=target, 0x78af=count
+    </comment>
   </at>
   <at address="0x0e73">
     <comment>expression parser: parse number</comment>
@@ -146,612 +250,1559 @@
     <comment>number too large for signed integer</comment>
   </at>
   <at address="0x1291">
-    <comment>check for printing group separator "," or decimal separator "." while printing a number</comment>
+    <comment>
+      check for printing group separator "," or<br />
+      decimal separator "." while printing a number
+    </comment>
   </at>
   <at address="0x1294">
-    <comment>print number decimal separator "." and prepare printing mantissa</comment>
+    <comment>
+      print number decimal separator "."<br />
+      and prepare printing mantissa
+    </comment>
   </at>
   <at address="0x129e">
     <comment>print number group separator ","</comment>
   </at>
   <at address="0x132f">
-    <comment>print integer value stored at 7921h as decimal</comment>
+    <comment>
+      print integer value stored at<br />
+      0x7921 as decimal
+    </comment>
   </at>
   <at address="0x1335">
-    <comment>outer loop for repeated printing of digits until decimal representation of integer is complete</comment>
+    <comment>
+      outer loop for repeated printing of<br />
+      digits until decimal representation of<br />
+      integer is complete
+    </comment>
   </at>
   <at address="0x1348">
-    <comment>inner loop for repeated subtraction for determining next decimal digit of integer</comment>
+    <comment>
+      inner loop for repeated subtraction for<br />
+      determining next decimal digit of integer
+    </comment>
   </at>
   <at address="0x13d8">
-    <comment>value 0x2710 (=10000) (used for hex->dec conversion)</comment>
+    <comment>
+      value 0x2710 (=10000)<br />
+      (used for hex->dec conversion)
+    </comment>
   </at>
   <at address="0x13da">
-    <comment>value 0x03e8 (=1000)  (used for hex->dec conversion)</comment>
+    <comment>
+      value 0x03e8 (=1000)<br />
+      (used for hex->dec conversion)
+    </comment>
   </at>
   <at address="0x13dc">
-    <comment>value 0x0064 (=100)   (used for hex->dec conversion)</comment>
+    <comment>
+      value 0x0064 (=100)<br />
+      (used for hex->dec conversion)
+    </comment>
   </at>
   <at address="0x13de">
-    <comment>value 0x000a (=10)    (used for hex->dec conversion)</comment>
+    <comment>
+      value 0x000a (=10)<br />
+      (used for hex->dec conversion)
+    </comment>
   </at>
   <at address="0x13e0">
-    <comment>value 0x0001 (=1)     (used for hex->dec conversion)</comment>
+    <comment>
+      value 0x0001 (=1)<br />
+      (used for hex->dec conversion)
+    </comment>
   </at>
   <at address="0x1650">
-    <comment>token "END"</comment>
-    <data-bytes length="0x03" />
+    <header>
+      ---- START BASIC TOKENS TABLE ----<br />
+      (first character of each token marked by bit 8=1)
+    </header>
+    <comment>token 0x80 "END"</comment>
+    <data-bytes length="0x03">"END"</data-bytes>
   </at>
   <at address="0x1653">
-    <comment>token "FOR"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0x81 "FOR"</comment>
+    <data-bytes length="0x03">"FOR"</data-bytes>
   </at>
   <at address="0x1656">
-    <comment>token "RESET"</comment>
-    <data-bytes length="0x05" />
+    <comment>token 0x82 "RESET"</comment>
+    <data-bytes length="0x05">"RESET"</data-bytes>
   </at>
   <at address="0x165b">
-    <comment>token "SET"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0x83 "SET"</comment>
+    <data-bytes length="0x03">"SET"</data-bytes>
   </at>
   <at address="0x165e">
-    <comment>token "CLS"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0x84 "CLS"</comment>
+    <data-bytes length="0x03">"CLS"</data-bytes>
   </at>
   <at address="0x166a">
-    <comment>token "NEXT"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0x87 "NEXT"</comment>
+    <data-bytes length="0x04">"NEXT"</data-bytes>
   </at>
   <at address="0x166e">
-    <comment>token "DATA"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0x88 "DATA"</comment>
+    <data-bytes length="0x04">"DATA"</data-bytes>
   </at>
   <at address="0x1672">
-    <comment>token "INPUT"</comment>
-    <data-bytes length="0x05" />
+    <comment>token 0x89 "INPUT"</comment>
+    <data-bytes length="0x05">"INPUT"</data-bytes>
   </at>
   <at address="0x1677">
-    <comment>token "DIM"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0x8a "DIM"</comment>
+    <data-bytes length="0x03">"DIM"</data-bytes>
   </at>
   <at address="0x167a">
-    <comment>token "READ"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0x8b "READ"</comment>
+    <data-bytes length="0x04">"READ"</data-bytes>
   </at>
   <at address="0x167e">
-    <comment>token "LET"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0x8c "LET"</comment>
+    <data-bytes length="0x03">"LET"</data-bytes>
   </at>
   <at address="0x1681">
-    <comment>token "GOTO"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0x8d "GOTO"</comment>
+    <data-bytes length="0x04">"GOTO"</data-bytes>
   </at>
   <at address="0x1685">
-    <comment>token "RUN"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0x8e "RUN"</comment>
+    <data-bytes length="0x03">"RUN"</data-bytes>
   </at>
   <at address="0x1688">
-    <comment>token "IF"</comment>
-    <data-bytes length="0x02" />
+    <comment>token 0x8f "IF"</comment>
+    <data-bytes length="0x02">"IF"</data-bytes>
   </at>
   <at address="0x168a">
-    <comment>token "RESTORE"</comment>
-    <data-bytes length="0x07" />
+    <comment>token 0x90 "RESTORE"</comment>
+    <data-bytes length="0x07">"RESTORE"</data-bytes>
   </at>
   <at address="0x1691">
-    <comment>token "GOSUB"</comment>
-    <data-bytes length="0x05" />
+    <comment>token 0x91 "GOSUB"</comment>
+    <data-bytes length="0x05">"GOSUB"</data-bytes>
   </at>
   <at address="0x1696">
-    <comment>token "RETURN"</comment>
-    <data-bytes length="0x06" />
+    <comment>token 0x92 "RETURN"</comment>
+    <data-bytes length="0x06">"RETURN"</data-bytes>
   </at>
   <at address="0x169c">
-    <comment>token "REM"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0x93 "REM"</comment>
+    <data-bytes length="0x03">"REM"</data-bytes>
   </at>
   <at address="0x169f">
-    <comment>token "STOP"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0x94 "STOP"</comment>
+    <data-bytes length="0x04">"STOP"</data-bytes>
   </at>
   <at address="0x16a3">
-    <comment>token "ELSE"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0x95 "ELSE"</comment>
+    <data-bytes length="0x04">"ELSE"</data-bytes>
   </at>
   <at address="0x16a7">
-    <comment>token "COPY"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0x96 "COPY"</comment>
+    <data-bytes length="0x04">"COPY"</data-bytes>
   </at>
   <at address="0x16ab">
-    <comment>token "COLOR"</comment>
-    <data-bytes length="0x05" />
+    <comment>token 0x97 "COLOR"</comment>
+    <data-bytes length="0x05">"COLOR"</data-bytes>
   </at>
   <at address="0x16b0">
-    <comment>token "VERIFY"</comment>
-    <data-bytes length="0x06" />
+    <comment>token 0x98 "VERIFY"</comment>
+    <data-bytes length="0x06">"VERIFY"</data-bytes>
   </at>
   <at address="0x16c8">
-    <comment>token "CRUN"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0x9c "CRUN"</comment>
+    <data-bytes length="0x04">"CRUN"</data-bytes>
   </at>
   <at address="0x16cc">
-    <comment>token "MODE"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0x9d "MODE"</comment>
+    <data-bytes length="0x04">"MODE"</data-bytes>
   </at>
   <at address="0x16d0">
-    <comment>token "SOUND"</comment>
-    <data-bytes length="0x05" />
+    <comment>token 0x9e "SOUND"</comment>
+    <data-bytes length="0x05">"SOUND"</data-bytes>
   </at>
   <at address="0x16db">
-    <comment>token "OUT"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xa0 "OUT"</comment>
+    <data-bytes length="0x03">"OUT"</data-bytes>
   </at>
   <at address="0x1717">
-    <comment>token "LPRINT"</comment>
-    <data-bytes length="0x06" />
+    <comment>token 0xaf "LPRINT"</comment>
+    <data-bytes length="0x06">"LPRINT"</data-bytes>
   </at>
   <at address="0x1720">
-    <comment>token "POKE"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0xb1 "POKE"</comment>
+    <data-bytes length="0x04">"POKE"</data-bytes>
   </at>
   <at address="0x1724">
-    <comment>token "PRINT"</comment>
-    <data-bytes length="0x05" />
+    <comment>token 0xb2 "PRINT"</comment>
+    <data-bytes length="0x05">"PRINT"</data-bytes>
   </at>
   <at address="0x1729">
-    <comment>token "CONT"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0xb3 "CONT"</comment>
+    <data-bytes length="0x04">"CONT"</data-bytes>
   </at>
   <at address="0x172d">
-    <comment>token "LIST"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0xb4 "LIST"</comment>
+    <data-bytes length="0x04">"LIST"</data-bytes>
   </at>
   <at address="0x1731">
-    <comment>token "LLIST"</comment>
-    <data-bytes length="0x05" />
+    <comment>token 0xb5 "LLIST"</comment>
+    <data-bytes length="0x05">"LLIST"</data-bytes>
   </at>
   <at address="0x1740">
-    <comment>token "CLEAR"</comment>
-    <data-bytes length="0x05" />
+    <comment>token 0xb8 "CLEAR"</comment>
+    <data-bytes length="0x05">"CLEAR"</data-bytes>
   </at>
   <at address="0x1745">
-    <comment>token "CLOAD"</comment>
-    <data-bytes length="0x05" />
+    <comment>token 0xb9 "CLOAD"</comment>
+    <data-bytes length="0x05">"CLOAD"</data-bytes>
   </at>
   <at address="0x174a">
-    <comment>token "CSAVE"</comment>
-    <data-bytes length="0x05" />
+    <comment>token 0xba "CSAVE"</comment>
+    <data-bytes length="0x05">"CSAVE"</data-bytes>
   </at>
   <at address="0x174f">
-    <comment>token "NEW"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xbb "NEW"</comment>
+    <data-bytes length="0x03">"NEW"</data-bytes>
   </at>
   <at address="0x1752">
-    <comment>token "TAB("</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0xbc "TAB("</comment>
+    <data-bytes length="0x04">"TAB("</data-bytes>
   </at>
   <at address="0x1756">
-    <comment>token "TO"</comment>
-    <data-bytes length="0x02" />
+    <comment>token 0xbd "TO"</comment>
+    <data-bytes length="0x02">"TO"</data-bytes>
   </at>
   <at address="0x175a">
-    <comment>token "USING"</comment>
-    <data-bytes length="0x05" />
+    <comment>token 0xbf "USING"</comment>
+    <data-bytes length="0x05">"USING"</data-bytes>
   </at>
   <at address="0x1765">
-    <comment>token "USR"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xc1 "USR"</comment>
+    <data-bytes length="0x03">"USR"</data-bytes>
   </at>
   <at address="0x177a">
-    <comment>token "POINT"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0xc6 "POINT"</comment>
+    <data-bytes length="0x04">"POINT"</data-bytes>
   </at>
   <at address="0x1787">
-    <comment>token "INKEY$"</comment>
-    <data-bytes length="0x06" />
+    <comment>token 0xc9 "INKEY$"</comment>
+    <data-bytes length="0x06">"INKEY$"</data-bytes>
   </at>
   <at address="0x178d">
-    <comment>token "THEN"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0xca "THEN"</comment>
+    <data-bytes length="0x04">"THEN"</data-bytes>
   </at>
   <at address="0x1791">
-    <comment>token "NOT"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xcb "NOT"</comment>
+    <data-bytes length="0x03">"NOT"</data-bytes>
   </at>
   <at address="0x1794">
-    <comment>token "STEP"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0xcc "STEP"</comment>
+    <data-bytes length="0x04">"STEP"</data-bytes>
   </at>
   <at address="0x1798">
-    <comment>token "+"</comment>
-    <data-bytes length="0x01" />
+    <comment>token 0xcd "+"</comment>
+    <data-bytes length="0x01">"+"</data-bytes>
   </at>
   <at address="0x1799">
-    <comment>token "-"</comment>
-    <data-bytes length="0x01" />
+    <comment>token 0xce "-"</comment>
+    <data-bytes length="0x01">"-"</data-bytes>
   </at>
   <at address="0x179a">
-    <comment>token "*"</comment>
-    <data-bytes length="0x01" />
+    <comment>token 0xcf "*"</comment>
+    <data-bytes length="0x01">"*"</data-bytes>
   </at>
   <at address="0x179b">
-    <comment>token "/"</comment>
-    <data-bytes length="0x01" />
+    <comment>token 0xd0 "/"</comment>
+    <data-bytes length="0x01">"/"</data-bytes>
   </at>
   <at address="0x179c">
-    <comment>token "^"</comment>
-    <data-bytes length="0x01" />
+    <comment>token 0xd1 "^"</comment>
+    <data-bytes length="0x01">"^"</data-bytes>
   </at>
   <at address="0x179d">
-    <comment>token "AND"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xd2 "AND"</comment>
+    <data-bytes length="0x03">"AND"</data-bytes>
   </at>
   <at address="0x17a0">
-    <comment>token "OR"</comment>
-    <data-bytes length="0x02" />
+    <comment>token 0xd3 "OR"</comment>
+    <data-bytes length="0x02">"OR"</data-bytes>
   </at>
   <at address="0x17a2">
-    <comment>token ">"</comment>
-    <data-bytes length="0x01" />
+    <comment>token 0xd4 ">"</comment>
+    <data-bytes length="0x01">">"</data-bytes>
   </at>
   <at address="0x17a3">
-    <comment>token "="</comment>
-    <data-bytes length="0x01" />
+    <comment>token 0xd5 "="</comment>
+    <data-bytes length="0x01">"="</data-bytes>
   </at>
   <at address="0x17a4">
-    <comment>token "&lt;"</comment>
-    <data-bytes length="0x01" />
+    <comment>token 0xd6 "&lt;"</comment>
+    <data-bytes length="0x01">"&lt;"</data-bytes>
   </at>
   <at address="0x17a5">
-    <comment>token "SGN"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xd7 "SGN"</comment>
+    <data-bytes length="0x03">"SGN"</data-bytes>
   </at>
   <at address="0x17a8">
-    <comment>token "INT"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xd8 "INT"</comment>
+    <data-bytes length="0x03">"INT"</data-bytes>
   </at>
   <at address="0x17ab">
-    <comment>token "ABS"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xd9 "ABS"</comment>
+    <data-bytes length="0x03">"ABS"</data-bytes>
   </at>
   <at address="0x17b1">
-    <comment>token "INP"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xdb "INP"</comment>
+    <data-bytes length="0x03">"INP"</data-bytes>
   </at>
   <at address="0x17b7">
-    <comment>token "SQR"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xdd "SQR"</comment>
+    <data-bytes length="0x03">"SQR"</data-bytes>
   </at>
   <at address="0x17ba">
-    <comment>token "RND"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xde "RND"</comment>
+    <data-bytes length="0x03">"RND"</data-bytes>
   </at>
   <at address="0x17bd">
-    <comment>token "LOG"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xdf "LOG"</comment>
+    <data-bytes length="0x03">"LOG"</data-bytes>
   </at>
   <at address="0x17c0">
-    <comment>token "EXP"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xe0 "EXP"</comment>
+    <data-bytes length="0x03">"EXP"</data-bytes>
   </at>
   <at address="0x17c3">
-    <comment>token "COS"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xe1 "COS"</comment>
+    <data-bytes length="0x03">"COS"</data-bytes>
   </at>
   <at address="0x17c6">
-    <comment>token "SIN"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xe2 "SIN"</comment>
+    <data-bytes length="0x03">"SIN"</data-bytes>
   </at>
   <at address="0x17c9">
-    <comment>token "TAN"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xe3 "TAN"</comment>
+    <data-bytes length="0x03">"TAN"</data-bytes>
   </at>
   <at address="0x17cc">
-    <comment>token "ATN"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xe4 "ATN"</comment>
+    <data-bytes length="0x03">"ATN"</data-bytes>
   </at>
   <at address="0x17cf">
-    <comment>token "PEEK"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0xe5 "PEEK"</comment>
+    <data-bytes length="0x04">"PEEK"</data-bytes>
   </at>
   <at address="0x1800">
-    <comment>token "LEN"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xf3 "LEN"</comment>
+    <data-bytes length="0x03">"LEN"</data-bytes>
   </at>
   <at address="0x1803">
-    <comment>token "STR$"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0xf4 "STR$"</comment>
+    <data-bytes length="0x04">"STR$"</data-bytes>
   </at>
   <at address="0x1807">
-    <comment>token "VAL"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xf5 "VAL"</comment>
+    <data-bytes length="0x03">"VAL"</data-bytes>
   </at>
   <at address="0x180a">
-    <comment>token "ASC"</comment>
-    <data-bytes length="0x03" />
+    <comment>token 0xf6 "ASC"</comment>
+    <data-bytes length="0x03">"ASC"</data-bytes>
   </at>
   <at address="0x180d">
-    <comment>token "CHR$"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0xf7 "CHR$"</comment>
+    <data-bytes length="0x04">"CHR$"</data-bytes>
+  </at>
+  <at address="0x1810">
+    <comment>token 0xf8 "LEFT$"</comment>
+    <data-bytes length="0x05">"LEFT$"</data-bytes>
   </at>
   <at address="0x1816">
-    <comment>token "RIGHT$"</comment>
-    <data-bytes length="0x06" />
+    <comment>token 0xf9 "RIGHT$"</comment>
+    <data-bytes length="0x06">"RIGHT$"</data-bytes>
   </at>
   <at address="0x181c">
-    <comment>token "MID$"</comment>
-    <data-bytes length="0x04" />
+    <comment>token 0xfa "MID$"</comment>
+    <data-bytes length="0x04">"MID$"</data-bytes>
+  </at>
+  <at address="0x181f">
+    <footer>
+      ---- END BASIC TOKENS TABLE ----
+    </footer>
   </at>
   <at address="0x1820">
     <comment>token "'"</comment>
-    <data-bytes length="0x01" />
+    <data-bytes length="0x01">"'"</data-bytes>
   </at>
   <at address="0x1822">
-    <comment>vector to handler for token 80h ("END")</comment>
+    <comment>vector to handler for token 0x80 ("END")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1824">
-    <comment>vector to handler for token 81h ("FOR")</comment>
+    <comment>vector to handler for token 0x81 ("FOR")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1826">
-    <comment>vector to handler for token 82h ("RESET")</comment>
+    <comment>vector to handler for token 0x82 ("RESET")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1828">
-    <comment>vector to handler for token 83h ("SET")</comment>
+    <comment>vector to handler for token 0x83 ("SET")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x182a">
-    <comment>vector to handler for token 84h ("CLS")</comment>
+    <comment>vector to handler for token 0x84 ("CLS")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x182c">
-    <comment>vector to handler for token 85h (undefined)</comment>
+    <comment>vector to handler for token 0x85 (undefined)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x182e">
-    <comment>vector to handler for token 86h (undefined)</comment>
+    <comment>vector to handler for token 0x86 (undefined)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1830">
-    <comment>vector to handler for token 87h ("NEXT")</comment>
+    <comment>vector to handler for token 0x87 ("NEXT")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1832">
-    <comment>vector to handler for token 88h ("DATA")</comment>
+    <comment>vector to handler for token 0x88 ("DATA")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1834">
-    <comment>vector to handler for token 89h ("INPUT")</comment>
+    <comment>vector to handler for token 0x89 ("INPUT")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1836">
-    <comment>vector to handler for token 8ah ("DIM")</comment>
+    <comment>vector to handler for token 0x8a ("DIM")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1838">
-    <comment>vector to handler for token 8bh ("READ")</comment>
+    <comment>vector to handler for token 0x8b ("READ")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x183a">
-    <comment>vector to handler for token 8ch ("LET")</comment>
+    <comment>vector to handler for token 0x8c ("LET")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x183c">
-    <comment>vector to handler for token 8dh ("GOTO")</comment>
+    <comment>vector to handler for token 0x8d ("GOTO")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x183e">
-    <comment>vector to handler for token 8eh ("RUN")</comment>
+    <comment>vector to handler for token 0x8e ("RUN")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1840">
-    <comment>vector to handler for token 8fh ("IF")</comment>
+    <comment>vector to handler for token 0x8f ("IF")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1842">
-    <comment>vector to handler for token 90h ("RESTORE")</comment>
+    <comment>vector to handler for token 0x90 ("RESTORE")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1844">
-    <comment>vector to handler for token 91h ("GOSUB")</comment>
+    <comment>vector to handler for token 0x91 ("GOSUB")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1846">
-    <comment>vector to handler for token 92h ("RETURN")</comment>
+    <comment>vector to handler for token 0x92 ("RETURN")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1848">
-    <comment>vector to handler for token 93h ("REM")</comment>
+    <comment>vector to handler for token 0x93 ("REM")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x184a">
-    <comment>vector to handler for token 94h ("STOP")</comment>
+    <comment>vector to handler for token 0x94 ("STOP")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x184c">
-    <comment>vector to handler for token 95h (hidden, equals "REM")</comment>
+    <comment>vector to handler for token 0x95 ("ELSE")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x184e">
-    <comment>vector to handler for token 96h ("COPY")</comment>
+    <comment>vector to handler for token 0x96 ("COPY")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1850">
-    <comment>vector to handler for token 97h ("COLOR")</comment>
+    <comment>vector to handler for token 0x97 ("COLOR")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1852">
-    <comment>vector to handler for token 98h ("VERIFY")</comment>
+    <comment>vector to handler for token 0x98 ("VERIFY")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1854">
-    <comment>vector to handler for token 99h (hidden)</comment>
+    <comment>vector to handler for token 0x99 (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1856">
-    <comment>vector to handler for token 9ah (hidden)</comment>
+    <comment>vector to handler for token 0x9a (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1858">
-    <comment>vector to handler for token 9bh (hidden)</comment>
+    <comment>vector to handler for token 0x9b (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x185a">
-    <comment>vector to handler for token 9ch ("CRUN")</comment>
+    <comment>vector to handler for token 0x9c ("CRUN")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x185c">
-    <comment>vector to handler for token 9dh ("MODE")</comment>
+    <comment>vector to handler for token 0x9d ("MODE")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x185e">
-    <comment>vector to handler for token 9eh ("SOUND")</comment>
+    <comment>vector to handler for token 0x9e ("SOUND")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1860">
-    <comment>vector to handler for token 9fh (hidden)</comment>
+    <comment>vector to handler for token 0x9f (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1862">
-    <comment>vector to handler for token a0h ("OUT")</comment>
+    <comment>vector to handler for token 0xa0 ("OUT")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1864">
-    <comment>vector to handler for token a1h (hidden)</comment>
+    <comment>vector to handler for token 0xa1 (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1866">
-    <comment>vector to handler for token a2h (hidden)</comment>
+    <comment>vector to handler for token 0xa2 (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1868">
-    <comment>vector to handler for token a3h (hidden)</comment>
+    <comment>vector to handler for token 0xa3 (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x186a">
-    <comment>vector to handler for token a4h (hidden)</comment>
+    <comment>vector to handler for token 0xa4 (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x186c">
-    <comment>vector to handler for token a5h (hidden)</comment>
+    <comment>vector to handler for token 0xa5 (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x186e">
-    <comment>vector to handler for token a6h (hidden)</comment>
+    <comment>vector to handler for token 0xa6 (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1870">
-    <comment>vector to handler for token a7h (hidden)</comment>
+    <comment>vector to handler for token 0xa7 (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1872">
-    <comment>vector to handler for token a8h (hidden)</comment>
+    <comment>vector to handler for token 0xa8 (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1874">
-    <comment>vector to handler for token a9h (hidden)</comment>
+    <comment>vector to handler for token 0xa9 (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1876">
-    <comment>vector to handler for token aah (hidden)</comment>
+    <comment>vector to handler for token 0xaa (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1878">
-    <comment>vector to handler for token abh (hidden)</comment>
+    <comment>vector to handler for token 0xab (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x187a">
-    <comment>vector to handler for token ach (hidden)</comment>
+    <comment>vector to handler for token 0xac (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x187c">
-    <comment>vector to handler for token adh (hidden)</comment>
+    <comment>vector to handler for token 0xad (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x187e">
-    <comment>vector to handler for token aeh (hidden, equals cold reset)</comment>
+    <comment>
+      vector to handler for token 0xae<br />
+      (hidden, equals cold reset)
+    </comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1880">
-    <comment>vector to handler for token afh ("LPRINT")</comment>
+    <comment>vector to handler for token 0xaf ("LPRINT")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1882">
-    <comment>vector to handler for token b0h (hidden)</comment>
+    <comment>vector to handler for token 0xb0 (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1884">
-    <comment>vector to handler for token b1h ("POKE")</comment>
+    <comment>vector to handler for token 0xb1 ("POKE")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1886">
-    <comment>vector to handler for token b2h ("PRINT")</comment>
+    <comment>vector to handler for token 0xb2 ("PRINT")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1888">
-    <comment>vector to handler for token b3h ("CONT")</comment>
+    <comment>vector to handler for token 0xb3 ("CONT")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x188a">
-    <comment>vector to handler for token b4h ("LIST")</comment>
+    <comment>vector to handler for token 0xb4 ("LIST")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x188c">
-    <comment>vector to handler for token b5h ("LLIST")</comment>
+    <comment>vector to handler for token 0xb5 ("LLIST")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x188e">
-    <comment>vector to handler for token b6h (hidden)</comment>
+    <comment>vector to handler for token 0xb6 (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1890">
-    <comment>vector to handler for token b7h (hidden)</comment>
+    <comment>vector to handler for token 0xb7 (hidden)</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1892">
-    <comment>vector to handler for token b8h ("CLEAR")</comment>
+    <comment>vector to handler for token 0xb8 ("CLEAR")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1894">
-    <comment>vector to handler for token b9h ("CLOAD")</comment>
+    <comment>vector to handler for token 0xb9 ("CLOAD")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1896">
-    <comment>vector to handler for token bah ("CSAVE")</comment>
+    <comment>vector to handler for token 0xba ("CSAVE")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x1898">
-    <comment>vector to handler for token bbh ("NEW")</comment>
+    <comment>vector to handler for token 0xbb ("NEW")</comment>
     <data-bytes length="0x02" />
   </at>
   <at address="0x191d">
-    <comment>" Error" (appended to error messages)</comment>
-    <data-bytes length="0x02" />
+    <comment>" ERROR\0" (appended to error messages)</comment>
+    <data-bytes length="0x07" />
   </at>
   <at address="0x1924">
-    <comment>" IN " (appended to error message when line number available)</comment>
-    <data-bytes length="0x04" />
+    <comment>
+      appended to error message when<br />
+      line number available
+    </comment>
+    <data-bytes length="0x05">" IN \0"</data-bytes>
   </at>
   <at address="0x1929">
-    <comment>"READY\n"</comment>
-    <data-bytes length="0x06" />
+    <data-bytes length="0x07">"READY\r\0"</data-bytes>
   </at>
   <at address="0x1930">
-    <comment>"BREAK"</comment>
-    <data-bytes length="0x05" />
+    <data-bytes length="0x06">"BREAK\0"</data-bytes>
+  </at>
+  <at address="0x19e5">
+    <label>emit_err</label>
+    <comment>error code in reg E</comment>
+  </at>
+  <at address="0x19e5">
+    <comment>flush output</comment>
+  </at>
+  <at address="0x19e9">
+    <comment>start of error messages table</comment>
+  </at>
+  <at address="0x19ec">
+    <comment>error messages callback</comment>
+  </at>
+  <at address="0x19f0">
+    <comment>start err message with "?" char</comment>
+  </at>
+  <at address="0x19f5">
+    <comment>print err message text</comment>
+  </at>
+  <at address="0x19fe">
+    <comment>finish err message with " ERROR"</comment>
+  </at>
+  <at address="0x1b1e">
+    <data-bytes length="0x01">0xce</data-bytes>
+    <comment>"N" with bit 8=1</comment>
   </at>
   <at address="0x1b49">
-    <comment>handler for token bbh ("NEW")</comment>
+    <comment>handler for token 0xbb ("NEW")</comment>
   </at>
   <at address="0x1c90">
     <label>rst_18</label>
-    <comment>RST 18H: compare unsigned DE &amp; HL register pairs result</comment>
+    <comment>
+      RST 18H<br />
+      Compare unsigned DE &amp; HL register pairs<br />
+      Result:<br />
+      * HL &lt; DE => C=1<br />
+      * HL >= DE => C=0<br />
+      * HL != DE => Z=0<br />
+      * HL == DE => Z=1
+    </comment>
   </at>
   <at address="0x1c96">
     <label>rst_08</label>
-    <comment>RST 08H: parse token char</comment>
+    <comment>
+      RST 08H: parse token char<br />
+      * HL points to current char of string to check.<br />
+      * The expected char to be parsed is fetched from<br />
+      memory location immediately following the RST command.<br />
+      * On failure, jump to routine that prints "?syntax error"<br />
+      and continues editing.<br />
+      * On success, control flow will return to two bytes after<br />
+      previous RST 08H command (such as to skip the char data<br />
+      byte to be compared).
+    </comment>
+  </at>
+  <at address="0x1ca1">
+    <comment>handler for token 0x81 ("FOR")</comment>
+  </at>
+  <at address="0x1cc6">
+    <data-bytes length="0x01">0xbd</data-bytes>
+    <comment>"=" with bit 8=1</comment>
+  </at>
+  <at address="0x1d78">
+    <header>
+      ---- START Implementation of RST 10H ---- <br />
+      Load &amp; check next character in string<br />
+      (BASIC parser)<br />
+      * if char is higher than the digit "9",<br />
+      &nbsp; then return with C=0,<br />
+      * else if char is any of white space (20h),<br />
+      &nbsp; tab (09h) or LF (0ah), then skip that char<br />
+      &nbsp; and try again with next char,<br />
+      * else set C=1 if and only if char is a digit<br />
+      &nbsp; and set Z=1 if and only if char is 0<br />
+      &nbsp; and set S=0<br />
+      &nbsp; and set H=1 if and only if (char &amp; 0fh)=0fh<br />
+      &nbsp; and set P=1 if char contains even # of 1<br />
+      &nbsp; and set N=1<br />
+      <br />
+      * HL points to previous char<br />
+      * skip 09h and 0bh<br />
+      * return char in register A<br />
+      * return C=0 if alphabetic char<br />
+      * return C=1 if alphanumeric char
+    </header>
+  </at>
+  <at address="0x1d91">
+    <footer>
+      ---- END Implementation of RST 10H ---- <br />
+    </footer>
+  </at>
+  <at address="0x1d91">
+    <comment>handler for token 0x90 ("RESTORE")</comment>
+  </at>
+  <at address="0x1da9">
+    <comment>handler for token 0x94 ("STOP")</comment>
+  </at>
+  <at address="0x1dae">
+    <comment>handler for token 0x80 ("END")</comment>
+  </at>
+  <at address="0x1de4">
+    <comment>handler for token 0xb3 ("CONT")</comment>
+  </at>
+  <at address="0x1e03">
+    <comment>handler for token 0x99 (hidden)</comment>
+  </at>
+  <at address="0x1e06">
+    <comment>handler for token 0x9a (hidden)</comment>
+  </at>
+  <at address="0x1e09">
+    <comment>handler for token 0x9b (hidden)</comment>
+  </at>
+  <at address="0x1e4a">
+    <comment>generate error "FUNCTION CODE ERROR"</comment>
+  </at>
+  <at address="0x1e7a">
+    <comment>handler for token 0xb8 ("CLEAR")</comment>
+  </at>
+  <at address="0x1ea3">
+    <comment>handler for token 0x8e ("RUN")</comment>
+  </at>
+  <at address="0x1eb1">
+    <comment>handler for token 0x91 ("GOSUB")</comment>
+  </at>
+  <at address="0x1ec2">
+    <comment>handler for token 0x8d ("GOTO")</comment>
+  </at>
+  <at address="0x1ede">
+    <comment>handler for token 0x92 ("RETURN")</comment>
+  </at>
+  <at address="0x1f05">
+    <comment>handler for token 0x88 ("DATA")</comment>
+  </at>
+  <at address="0x1f07">
+    <comment>
+      handler for token 0x93 ("REM")<br />
+      handler for token 0x95 ("ELSE")
+    </comment>
+  </at>
+  <at address="0x1f21">
+    <comment>handler for token 0x8c ("LET")</comment>
+  </at>
+  <at address="0x1f25">
+    <data-bytes length="0x01">0xd5</data-bytes>
+    <comment>"U" with bit 8=1</comment>
+  </at>
+  <at address="0x1f6c">
+    <comment>handler for token 0xa1 (hidden)</comment>
+  </at>
+  <at address="0x1f72">
+    <data-bytes length="0x01">0x8d</data-bytes>
+    <comment>CR with bit 8=1</comment>
+  </at>
+  <at address="0x1f9f">
+    <data-bytes length="0x01">0x8d</data-bytes>
+    <comment>CR with bit 8=1</comment>
+  </at>
+  <at address="0x1faf">
+    <comment>handler for token 0x9f (hidden)</comment>
+  </at>
+  <at address="0x2008">
+    <comment>handler for token 0xb7 (hidden)</comment>
+  </at>
+  <at address="0x2017">
+    <data-bytes length="0x01">","</data-bytes>
+    <comment>comma separator</comment>
+  </at>
+  <at address="0x2039">
+    <comment>handler for token 0x8f ("IF")</comment>
+  </at>
+  <at address="0x2067">
+    <comment>handler for token 0xaf ("LPRINT")</comment>
+  </at>
+  <at address="0x206f">
+    <comment>handler for token 0xb2 ("PRINT")</comment>
+  </at>
+  <at address="0x2076">
+    <comment>
+      parse "x" in "PRINT @x,y"<br />
+      (positional print)
+    </comment>
+  </at>
+  <at address="0x208d">
+    <comment>parse "," in "PRINT @x,y"</comment>
+  </at>
+  <at address="0x208e">
+    <data-bytes length="0x01">","</data-bytes>
+    <comment>comma separator</comment>
+  </at>
+  <at address="0x2093">
+    <comment>handle "PRINT #" (print to file)</comment>
+  </at>
+  <at address="0x2096">
+    <comment>redirect output onto cassette recorder</comment>
+  </at>
+  <at address="0x209b">
+    <comment>handle ordinary "PRINT"</comment>
+  </at>
+  <at address="0x213e">
+    <data-bytes length="0x01">")"</data-bytes>
+    <comment>right parenthesis</comment>
+  </at>
+  <at address="0x2178">
+    <data-bytes length="0x07">"?REDO\r\0"</data-bytes>
+  </at>
+  <at address="0x219a">
+    <comment>handler for token 0x89 ("INPUT")</comment>
+  </at>
+  <at address="0x21d5">
+    <data-bytes length="0x01">";"</data-bytes>
+    <comment>semicolon separator</comment>
+  </at>
+  <at address="0x21ef">
+    <comment>handler for token 0x8b ("READ")</comment>
+  </at>
+  <at address="0x21fc">
+    <data-bytes length="0x01">","</data-bytes>
+    <comment>comma separator</comment>
+  </at>
+  <at address="0x22b6">
+    <comment>handler for token 0x87 ("NEXT")</comment>
+  </at>
+  <at address="0x2286">
+    <data-bytes length="0x10">"?EXTRA IGNORED\r\0"</data-bytes>
+  </at>
+  <at address="0x2336">
+    <data-bytes length="0x01">"("</data-bytes>
+    <comment>left parenthesis</comment>
+  </at>
+  <at address="0x24ed">
+    <data-bytes length="0x01">"("</data-bytes>
+    <comment>left parenthesis</comment>
+  </at>
+  <at address="0x24f2">
+    <data-bytes length="0x01">")"</data-bytes>
+    <comment>right parenthesis</comment>
+  </at>
+  <at address="0x2530">
+    <data-bytes length="0x01">")"</data-bytes>
+    <comment>right parenthesis</comment>
+  </at>
+  <at address="0x255d">
+    <data-bytes length="0x01">","</data-bytes>
+    <comment>comma separator</comment>
+  </at>
+  <at address="0x2607">
+    <data-bytes length="0x01">","</data-bytes>
+    <comment>comma separator</comment>
+  </at>
+  <at address="0x25d9">
+    <header>
+      ---- START Implementation of RST 20H ----<br />
+      Return the number of parameters to be<br />
+      copied for a subroutine call minus 3,<br />
+      and set the C flag if the returned<br />
+      number is smaller than 5
+    </header>
+  </at>
+  <at address="0x25e8">
+    <footer>
+      ---- END Implementation of RST 20H ----
+    </footer>
+  </at>
+  <at address="0x2608">
+    <comment>handler for token 0x8a ("DIM")</comment>
+  </at>
+  <at address="0x2702">
+    <data-bytes length="0x01">")"</data-bytes>
+    <comment>right parenthesis</comment>
+  </at>
+  <at address="0x28a7">
+    <comment>
+      Print \0-terminated<br />
+      String with special handling for<br />
+      surrounding quote characters<br />
+      Parameters: HL = start address of<br />
+      string
+    </comment>
+  </at>
+  <at address="0x2a31">
+    <data-bytes length="0x01">"("</data-bytes>
+    <comment>left parenthesis</comment>
+  </at>
+  <at address="0x2a37">
+    <data-bytes length="0x01">","</data-bytes>
+    <comment>comma separator</comment>
+  </at>
+  <at address="0x2a3c">
+    <data-bytes length="0x01">")"</data-bytes>
+    <comment>right parenthesis</comment>
+  </at>
+  <at address="0x2aac">
+    <data-bytes length="0x01">","</data-bytes>
+    <comment>comma separator</comment>
+  </at>
+  <at address="0x2ab1">
+    <data-bytes length="0x01">")"</data-bytes>
+    <comment>right parenthesis</comment>
+  </at>
+  <at address="0x2ae1">
+    <data-bytes length="0x01">")"</data-bytes>
+    <comment>right parenthesis</comment>
+  </at>
+  <at address="0x2afb">
+    <comment>handler for token 0xa0 ("OUT")</comment>
+  </at>
+  <at address="0x2b18">
+    <data-bytes length="0x01">","</data-bytes>
+    <comment>comma separator</comment>
+  </at>
+  <at address="0x2b29">
+    <comment>handler for token 0xb5 ("LLIST")</comment>
+  </at>
+  <at address="0x2b2e">
+    <comment>handler for token 0xb4 ("LIST")</comment>
+  </at>
+  <at address="0x2bc6">
+    <comment>handler for token 0xb6 (hidden)</comment>
+  </at>
+  <at address="0x2bf5">
+    <comment>handler for token 0x9e ("SOUND")</comment>
+  </at>
+  <at address="0x2c01">
+    <data-bytes length="0x01">","</data-bytes>
+    <comment>comma separator</comment>
+  </at>
+  <at address="0x2cb1">
+    <comment>handler for token 0xb1 ("POKE")</comment>
+  </at>
+  <at address="0x2cb6">
+    <data-bytes length="0x01">","</data-bytes>
+    <comment>comma separator</comment>
+  </at>
+  <at address="0x2cc4">
+    <data-bytes length="0x01">";"</data-bytes>
+    <comment>semicolon separator</comment>
+  </at>
+  <at address="0x2e63">
+    <comment>handler for token 0x9d ("MODE")</comment>
+  </at>
+  <at address="0x2a64">
+    <data-bytes length="0x01">"("</data-bytes>
+    <comment>left parenthesis</comment>
+  </at>
+  <at address="0x2e71">
+    <label>mode1_1</label>
+  </at>
+  <at address="0x2e87">
+    <label>mode1_2</label>
+  </at>
+  <at address="0x2e9b">
+    <data-bytes length="0x01">")"</data-bytes>
+    <comment>right parenthesis</comment>
+  </at>
+  <at address="0x2eb8">
+    <header>
+      ---- START IRQ handler for key press / kbd matrix scan ----
+    </header>
+  </at>
+  <at address="0x2eda">
+    <footer>
+      ---- END IRQ handler for key press / kbd matrix scan ----
+    </footer>
+  </at>
+  <at address="0x2ef4">
+    <comment>do single kbd matrix scan</comment>
+  </at>
+  <at address="0x301d">
+    <comment>
+      screen editor: check for key press &amp;<br />
+      handle key press (e.g. edit current line)
+    </comment>
+  </at>
+  <at address="0x3039">
+    <label>cout1</label>
+  </at>
+  <at address="0x307c">
+    <label>cout2</label>
+  </at>
+  <at address="0x3082">
+    <label>cout3</label>
+  </at>
+  <at address="0x308b">
+    <label>cout</label>
+    <comment>
+      character out main entry<br />
+      switch to MODE(0) if in MODE(1)<br />
+      mark char in reg A for output in<br />
+      screen buffer
+    </comment>
+  </at>
+  <at address="0x30aa">
+    <label>cout_mode0</label>
+    <comment>now sure that in MODE(0)</comment>
+  </at>
+  <at address="0x30b8">
+    <label>cout_ctrl</label>
+    <comment>
+      CTRL char => wait until<br />
+      screen print buffer is empty
+    </comment>
+  </at>
+  <at address="0x30c0">
+    <header>
+      ---- START critical section ----<br />
+      put char into screen print buffer<br />
+      after that wait until IRQ has consumed the buffer
+    </header>
+  </at>
+  <at address="0x30d6">
+    <footer>
+      ---- END critical section ----
+    </footer>
+  </at>
+  <at address="0x30e8">
+    <header>
+      ---- START IRQ Handler Screen Buffer Copy ----<br />
+      copy screen buffer chars to Video RAM and clear the buffer
+    </header>
+  </at>
+  <at address="0x3105">
+    <footer>
+      ---- END IRQ Handler Screen Buffer Copy ----
+    </footer>
+  </at>
+  <at address="0x315a">
+    <label>kbdin</label>
+    <comment>
+      screen editor: handle key press<br />
+      (e.g. edit current line)
+    </comment>
+  </at>
+  <at address="0x31b8">
+    <label>cursor_right</label>
+    <comment>
+      CHR$(9) / CHR$(25):<br />
+      move cursor one column to the right
+    </comment>
+  </at>
+  <at address="0x3227">
+    <label>cursor_left</label>
+    <comment>
+      CHR$(8) / CHR$(24):<br />
+      move cursor one column to the left
+    </comment>
+  </at>
+  <at address="0x3253">
+    <label>cursor_up</label>
+    <comment>
+      CHR$(27):<br />
+      move cursor one line up
+    </comment>
+  </at>
+  <at address="0x326d">
+    <label>cursor_down</label>
+    <comment>
+      CHR$(10):<br />
+      move cursor one line down
+    </comment>
+  </at>
+  <at address="0x3287">
+    <label>cursor_home</label>
+    <comment>
+      CHR$(28):<br />
+      move cursor to left upper corner
+    </comment>
+  </at>
+  <at address="0x3292">
+    <label>cout_ff</label>
+    <comment>
+      CHR$(31):<br />
+      form feed (clear screen)
+    </comment>
+  </at>
+  <at address="0x32b4">
+    <label>cout_cr</label>
+    <comment>
+      CHR$(29):<br />
+      carriage return
+    </comment>
+  </at>
+  <at address="0x32c6">
+    <label>cout_ins</label>
+    <comment>
+      CHR$(21):<br />
+      insert character
+    </comment>
+  </at>
+  <at address="0x332c">
+    <label>cursor_bottom</label>
+    <comment>
+      move cursor to first column of<br />
+      bottom line
+    </comment>
+  </at>
+  <at address="0x33cb">
+    <label>cout_del</label>
+    <comment>
+      CHR$(127):<br />
+      rubout character
+    </comment>
+  </at>
+  <at address="0x33f3">
+    <label>scrn_scroll</label>
+    <comment>scroll screen by one line</comment>
+  </at>
+  <at address="0x3450">
+    <label>beep</label>
+    <comment>generate key press click sound</comment>
+  </at>
+  <at address="0x345c">
+    <label>sound</label>
+    <comment>generate sound</comment>
+  </at>
+  <at address="0x34a9">
+    <comment>handler for token 0xba ("CSAVE")</comment>
+  </at>
+  <at address="0x3511">
+    <header>
+      ---- START character out (1 byte) to cassette port ----<br />
+      * start with short cycle (via 3542h)<br />
+      * for each of the 8 bits of the byte,<br />
+      &nbsp; starting with the uppermost bit, do:<br />
+      &nbsp; * if bit is 1, then produce two<br />
+      &nbsp;   short cycles (via 3542h),<br />
+      &nbsp; * otherwise (bit is 0) produce one<br />
+      &nbsp;   long cycle (via 352bh)
+    </header>
+  </at>
+  <at address="0x352a">
+    <footer>
+      ---- END character out (1 byte) to cassette port ----<br />
+    </footer>
+  </at>
+  <at address="0x352b">
+    <header>
+      ---- START cassette out: long cycle ----<br />
+      Cassette out: Long cycle<br />
+      Status "11" for ca. 128µs<br />
+      (~470 CPU clock cycles), then<br />
+      status "00" for ca. 128µs<br />
+      (~461 CPU clock cycles),<br />
+      then goto 3524h to continue with next<br />
+      bit of the current byte to write
+    </header>
+  </at>
+  <at address="0x3540">
+    <footer>
+      ---- END cassette out: long cycle ----<br />
+    </footer>
+  </at>
+  <at address="0x3542">
+    <header>
+      ---- START cassette out: short cycle ----<br />
+      Cassette out: Short cyle<br />
+      Status "11" for ca. 64µs<br />
+      (~230 CPU clock cycles), then<br />
+      status "00" for ca. 64µs<br />
+      (~230 CPU clock cycles)
+    </header>
+  </at>
+  <at address="0x3557">
+    <footer>
+      ---- END cassette out: short cycle ----<br />
+    </footer>
+  </at>
+  <at address="0x3558">
+    <header>
+      ---- START cassette out: write file header ----<br />
+    </header>
+    <comment>parse file name</comment>
+  </at>
+  <at address="0x355b">
+    <comment>
+      write value 0x80 255 times, but<br />
+      abort on key press "BREAK"
+    </comment>
+  </at>
+  <at address="0x3562">
+    <comment>check for "BREAK"</comment>
+  </at>
+  <at address="0x3568">
+    <comment>
+      write value 0xfe 5 times, but<br />
+      abort on key press "BREAK"
+    </comment>
+  </at>
+  <at address="0x356f">
+    <comment>check for "BREAK"</comment>
+  </at>
+  <at address="0x3575">
+    <comment>
+      write value of register C, but<br />
+      abort on key press "BREAK"
+    </comment>
+  </at>
+  <at address="0x3579">
+    <comment>check for "BREAK"</comment>
+  </at>
+  <at address="0x357d">
+    <comment>write file name into file header</comment>
+  </at>
+  <at address="0x358c">
+    <comment>prepare parsing the file header</comment>
+  </at>
+  <at address="0x3599">
+    <comment>
+      copy file name (w/o surrounding quotes)<br />
+      from (HL) to (DE), DE=0x7a9d
+    </comment>
+  </at>
+  <at address="0x359a">
+    <data-bytes length="0x01">'"'</data-bytes>
+    <comment>quote char</comment>
+  </at>
+  <at address="0x35a0">
+    <comment>check for closing quote char</comment>
+  </at>
+  <at address="0x35a8">
+    <comment>
+      add trailing 0-byte to file name and<br />
+      save file name length
+    </comment>
+  </at>
+  <at address="0x35b0">
+    <footer>
+      ---- END cassette out: write file header ----<br />
+    </footer>
+  </at>
+  <at address="0x35b1">
+    <header>
+      ---- START prepare screen for CLOAD / CRUN / VERIFY ----<br />
+    </header>
+  </at>
+  <at address="0x35b6">
+    <comment>still in graphics mode?</comment>
+  </at>
+  <at address="0x35bd">
+    <comment>yes => switch to text mode</comment>
+  </at>
+  <at address="0x35c5">
+    <comment>clear screen</comment>
+  </at>
+  <at address="0x35c8">
+    <comment>move cursor to lower right corner</comment>
+  </at>
+  <at address="0x35d0">
+    <comment>
+      bottom line joined with previous line as<br />
+      double line?
+    </comment>
+  </at>
+  <at address="0x35d8">
+    <comment>no => done</comment>
+  </at>
+  <at address="0x35d9">
+    <comment>yes => decouple bottom line from previous line</comment>
+  </at>
+  <at address="0x35e0">
+    <footer>
+      ---- END prepare screen for CLOAD / CRUN / VERIFY ----<br />
+    </footer>
+  </at>
+  <at address="0x35e1">
+    <comment>print "CLOAD" at bottom left corner</comment>
+  </at>
+  <at address="0x3656">
+    <comment>handler for token 0xb9 ("CLOAD")</comment>
+  </at>
+  <at address="0x36cf">
+    <comment>print "READY"</comment>
+  </at>
+  <at address="0x372e">
+    <comment>handler for token 0x9c ("CRUN")</comment>
+  </at>
+  <at address="0x3738">
+    <comment>handler for token 0x98 ("VERIFY")</comment>
+  </at>
+  <at address="0x376c">
+    <data-bytes length="0x09">"\rVERIFY \0"</data-bytes>
+  </at>
+  <at address="0x3842">
+    <data-bytes length="0x08">"WAITING\0"</data-bytes>
+  </at>
+  <at address="0x384a">
+    <data-bytes length="0x10">"\rLOADING ERROR\r\0"</data-bytes>
+  </at>
+  <at address="0x385a">
+    <data-bytes length="0x06">"FOUND\0"</data-bytes>
+  </at>
+  <at address="0x3860">
+    <data-bytes length="0x08">"LOADING\0"</data-bytes>
+  </at>
+  <at address="0x389d">
+    <comment>handler for token 0x97 ("COLOR")</comment>
+  </at>
+  <at address="0x38c3">
+    <data-bytes length="0x01">","</data-bytes>
+    <comment>comma separator</comment>
+  </at>
+  <at address="0x390f">
+    <data-bytes length="0x01">")"</data-bytes>
+    <comment>right parenthesis</comment>
+  </at>
+  <at address="0x3912">
+    <comment>handler for token 0x96 ("COPY")</comment>
+  </at>
+  <at address="0x3b64">
+    <data-bytes length="0x01">'"'</data-bytes>
+    <comment>quote char</comment>
+  </at>
+  <at address="0x3b66">
+    <data-bytes length="0x01">","</data-bytes>
+    <comment>comma separator</comment>
+  </at>
+  <at address="0x3b6f">
+    <data-bytes length="0x01">'"'</data-bytes>
+    <comment>quote char</comment>
+  </at>
+  <at address="0x3b71">
+    <data-bytes length="0x01">","</data-bytes>
+    <comment>comma separator</comment>
+  </at>
+  <at address="0x3cd4">
+    <comment>
+      print error message<br />
+      error code in register E
+    </comment>
+  </at>
+  <at address="0x3cd9">
+    <comment>start of next message reached?</comment>
+  </at>
+  <at address="0x3cda">
+    <comment>no => try next char</comment>
+  </at>
+  <at address="0x3cdd">
+    <comment>is this the right message?</comment>
+  </at>
+  <at address="0x3cde">
+    <comment>no => search for next message</comment>
+  </at>
+  <at address="0x3ce0">
+    <comment>yes => clear msg start marker</comment>
+  </at>
+  <at address="0x3ce2">
+    <comment>print char of msg</comment>
+  </at>
+  <at address="0x3ce5">
+    <comment>fetch next char of msg</comment>
+  </at>
+  <at address="0x3ce7">
+    <comment>end of msg reached?</comment>
+  </at>
+  <at address="0x3ce8">
+    <comment>no => continue printing</comment>
+  </at>
+  <at address="0x3ceb">
+    <comment>yes => done</comment>
+    <footer>
+      NOTE: There is no stop marker (value >=0x80) behind<br />
+      the last error code message "DISK COMMAND"<br />
+      (error code 0x2c), such that this subroutine will print<br />
+      too many chars for that message.
+    </footer>
+  </at>
+  <at address="0x3cec">
+    <header>
+      ---- START ERROR MESSAGES TABLE ----<br />
+      (first character of each message marked by bit 8=1)<br />
+      error codes are given wrt value of register E when<br />
+      when calling the print error message subroutine
+    </header>
+    <comment>error 0x00</comment>
+    <data-bytes length="0x10">"NEXT WITHOUT FOR"</data-bytes>
+  </at>
+  <at address="0x3cfc">
+    <comment>error 0x02</comment>
+    <data-bytes length="0x06">"SYNTAX"</data-bytes>
+  </at>
+  <at address="0x3d02">
+    <comment>error 0x04</comment>
+    <data-bytes length="0x13">"RET'N WITHOUT GOSUB"</data-bytes>
+  </at>
+  <at address="0x3d15">
+    <comment>error 0x06</comment>
+    <data-bytes length="0x0b">"OUT OF DATA"</data-bytes>
+  </at>
+  <at address="0x3d20">
+    <comment>error 0x08</comment>
+    <data-bytes length="0x0d">"FUNCTION CODE"</data-bytes>
+  </at>
+  <at address="0x3d2d">
+    <comment>error 0x0a</comment>
+    <data-bytes length="0x08">"OVERFLOW"</data-bytes>
+  </at>
+  <at address="0x3d35">
+    <comment>error 0x0c</comment>
+    <data-bytes length="0x0d">"OUT OF MEMORY"</data-bytes>
+  </at>
+  <at address="0x3d42">
+    <comment>error 0x0e</comment>
+    <data-bytes length="0x11">"UNDEF'D STATEMENT"</data-bytes>
+  </at>
+  <at address="0x3d53">
+    <comment>error 0x10</comment>
+    <data-bytes length="0x0d">"BAD SUBSCRIPT"</data-bytes>
+  </at>
+  <at address="0x3d60">
+    <comment>error 0x12</comment>
+    <data-bytes length="0x0d">"REDIM'D ARRAY"</data-bytes>
+  </at>
+  <at address="0x3d6d">
+    <comment>error 0x14</comment>
+    <data-bytes length="0x10">"DIVISION BY ZERO"</data-bytes>
+  </at>
+  <at address="0x3d7d">
+    <comment>error 0x16</comment>
+    <data-bytes length="0x0e">"ILLEGAL DIRECT"</data-bytes>
+  </at>
+  <at address="0x3d8b">
+    <comment>error 0x18</comment>
+    <data-bytes length="0x0d">"TYPE MISMATCH"</data-bytes>
+  </at>
+  <at address="0x3d98">
+    <comment>error 0x1a</comment>
+    <data-bytes length="0x0c">"OUT OF SPACE"</data-bytes>
+  </at>
+  <at address="0x3da4">
+    <comment>error 0x1c</comment>
+    <data-bytes length="0x0f">"STRING TOO LONG"</data-bytes>
+  </at>
+  <at address="0x3db3">
+    <comment>error 0x1e</comment>
+    <data-bytes length="0x13">"FORMULA TOO COMPLEX"</data-bytes>
+  </at>
+  <at address="0x3dc6">
+    <comment>error 0x20</comment>
+    <data-bytes length="0x0a">"CAN'T CONT"</data-bytes>
+  </at>
+  <at address="0x3dd0">
+    <comment>error 0x22</comment>
+    <data-bytes length="0x09">"NO RESUME"</data-bytes>
+  </at>
+  <at address="0x3dd9">
+    <comment>error 0x24</comment>
+    <data-bytes length="0x0e">"RESUME WITHOUT"</data-bytes>
+  </at>
+  <at address="0x3de7">
+    <comment>error 0x26</comment>
+    <data-bytes length="0x0b">"UNPRINTABLE"</data-bytes>
+  </at>
+  <at address="0x3df2">
+    <comment>error 0x28</comment>
+    <data-bytes length="0x0f">"MISSING OPERAND"</data-bytes>
+  </at>
+  <at address="0x3e01">
+    <comment>error 0x2a</comment>
+    <data-bytes length="0x0d">"BAD FILE DATA"</data-bytes>
+  </at>
+  <at address="0x3e0e">
+    <comment>error 0x2c</comment>
+    <data-bytes length="0x0c">"DISK COMMAND"</data-bytes>
+  </at>
+  <at address="0x3e19">
+    <footer>
+      ---- END ERROR MESSAGES TABLE ----
+    </footer>
+  </at>
+  <at address="0x3e1a">
+    <data-bytes length="0x0f">"?SYNTAX ERROR\r\0"</data-bytes>
+  </at>
+  <at address="0x3f0e">
+    <header>print cassette status</header>
+    <comment>video buffer address of bottom text line</comment>
+  </at>
+  <at address="0x3f11">
+    <comment>check for normal / inverse mode</comment>
+  </at>
+  <at address="0x3f17">
+    <comment>get next char</comment>
+  </at>
+  <at address="0x3f18">
+    <comment>end of text reached?</comment>
+  </at>
+  <at address="0x3f19">
+    <comment>yes => done</comment>
+  </at>
+  <at address="0x3f1a">
+    <comment>convert char for inverse mode</comment>
+  </at>
+  <at address="0x3f1c">
+    <comment>put char into video RAM</comment>
+  </at>
+  <at address="0x3f1d">
+    <comment>next video RAM address</comment>
+  </at>
+  <at address="0x3f1e">
+    <comment>next character address</comment>
+  </at>
+  <at address="0x3f1f">
+    <comment>continue with next character</comment>
+  </at>
+  <at address="0x3fb7">
+    <data-bytes length="0x39">FILL(00, 39)</data-bytes>
+    <comment>reserved spare bytes</comment>
+  </at>
+  <at address="0x3ff0">
+    <data-bytes length="0x10" />
+    <comment>unused</comment>
   </at>
 </annotations>
 

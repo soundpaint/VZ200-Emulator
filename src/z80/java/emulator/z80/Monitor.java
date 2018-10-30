@@ -11,6 +11,8 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PushbackInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Monitor {
   private CPU cpu;
@@ -631,24 +633,29 @@ public class Monitor {
     return s.toString();
   }
 
-  private static final int MAX_LABEL_WIDTH = 8;
-  private static final String LABEL_FORMAT_STRING = "%" + MAX_LABEL_WIDTH + "s";
-  private static final String EMPTY_LABEL = fill(' ', MAX_LABEL_WIDTH);
+  private static final int MAX_LABEL_LENGTH = 12;
+  private static final String LABEL_FORMAT_STRING =
+    "%" + MAX_LABEL_LENGTH + "s";
+  private static final String EMPTY_LABEL = fill(' ', MAX_LABEL_LENGTH);
   private static final int COMMENT_POS = 50;
 
   private int printOperation(CPU.ConcreteOperation op, int fallbackAddress) {
-    StringBuffer line = new StringBuffer();
+    List<String> lines = new ArrayList<String>();
+    StringBuffer lineBuffer = new StringBuffer();
     // TODO: have to know that regPC is a short
     int address;
     String strAddress;
-    String label, comment;
+    String label;
+    List<String> header, footer, comment;
     boolean containsInnerAnnotation = false;
     boolean containsDataByte = false;
     boolean isDataByte = false;
-    if ((op != null) && op.isSynthesizedCode()) {
+    if (op != null && op.isSynthesizedCode()) {
       address = 0;
       strAddress = "INTR:";
       label = null;
+      header = null;
+      footer = null;
       comment = null;
     } else {
       if (op == null) {
@@ -658,6 +665,8 @@ public class Monitor {
       }
       strAddress = Util.hexShortStr(address) + "-";
       label = annotations.getLabel(address);
+      header = annotations.getHeader(address);
+      footer = annotations.getFooter(address);
       comment = annotations.getComment(address);
       int opCodeLength = op != null ? op.getByteLength() : 1;
       for (int i = 0; i < opCodeLength; i++) {
@@ -671,48 +680,82 @@ public class Monitor {
           containsInnerAnnotation |=
             annotations.getLabel(opCodeByteAddress) != null;
           containsInnerAnnotation |=
+            annotations.getHeader(opCodeByteAddress) != null;
+          containsInnerAnnotation |=
+            annotations.getFooter(opCodeByteAddress) != null;
+          containsInnerAnnotation |=
             annotations.getComment(opCodeByteAddress) != null;
         }
         containsDataByte |= opCodeByteIsDataByte;
       }
     }
-    line.append(strAddress);
-    line.append("  ");
-    line.append(String.format(LABEL_FORMAT_STRING,
-                              label != null ? label : EMPTY_LABEL));
-    line.append(" ");
+    if (header != null) {
+      lines.add("");
+      for (String line : header) {
+        lines.add("      ;" + line);
+      }
+    }
+    lineBuffer.append(strAddress);
+    lineBuffer.append("  ");
+    lineBuffer.append(String.format(LABEL_FORMAT_STRING,
+                                    label != null ? label : EMPTY_LABEL));
+    lineBuffer.append(" ");
     int length;
     if (op == null || containsDataByte || containsInnerAnnotation) {
       int dataByte = memory.readByte(fallbackAddress, cpu.getWallClockCycles());
       String strDataByte = Util.hexByteStr(dataByte);
-      line.append(" " + strDataByte + "               ");
+      lineBuffer.append(" " + strDataByte + "               ");
       if (isDataByte || containsInnerAnnotation) {
-        line.append("DB $" + strDataByte);
+        String mnemonic = annotations.getDataBytesMnemonic(address);
+        if (mnemonic != null) {
+          lineBuffer.append(mnemonic);
+        } else {
+          lineBuffer.append("DB $" + strDataByte);
+        }
       } else {
-        line.append("???");
+        lineBuffer.append("???");
       }
       length = 1;
     } else  {
       CPU.ConcreteOpCode opCode = op.createOpCode();
       length = opCode.getLength();
       for (int i = 0; i < length; i++) {
-        line.append(" " + Util.hexByteStr(opCode.getByte(i)));
+        lineBuffer.append(" " + Util.hexByteStr(opCode.getByte(i)));
       }
       for (int i = 0; i < (6 - length); i++) {
-        line.append("   ");
+        lineBuffer.append("   ");
       }
-      line.append(op.getConcreteMnemonic());
+      lineBuffer.append(op.getConcreteMnemonic());
     }
     if (comment != null) {
-      int prevLength = line.length();
-      line.setLength(COMMENT_POS);
-      for (int i = prevLength; i < line.length(); i++) {
-        line.setCharAt(i, ' ');
+      for (String commentLine : comment) {
+        int prevLength = lineBuffer.length();
+        if (COMMENT_POS < prevLength) {
+          lines.add(lineBuffer.toString());
+          prevLength = 0;
+        }
+        lineBuffer.setLength(COMMENT_POS);
+        for (int i = prevLength; i < lineBuffer.length(); i++) {
+          lineBuffer.setCharAt(i, ' ');
+        }
+        lineBuffer.append(";");
+        lineBuffer.append(commentLine);
+        lines.add(lineBuffer.toString());
+        lineBuffer.setLength(0);
       }
-      line.append(";");
-      line.append(comment);
     }
-    stdout.println(line.toString());
+    if (lineBuffer.length() > 0) {
+      lines.add(lineBuffer.toString());
+    }
+    if (footer != null) {
+      for (String line : footer) {
+        lines.add("      ;" + line);
+      }
+      lines.add("");
+    }
+    for (String line : lines) {
+      stdout.println(line);
+    }
     return length;
   }
 
@@ -751,7 +794,7 @@ public class Monitor {
   "                                                ";
 
   private static boolean isPrintableChar(int ch) {
-    return (ch >= 0x20) && (ch != 0x7f) && (ch <= 0x80);
+    return (ch >= 0x20) && (ch < 0x7f);
   }
 
   private static char renderDataByteAsChar(int dataByte) {
@@ -900,14 +943,14 @@ public class Monitor {
     stdout.println("  d[<startaddr>][-<stopaddr>]      dump data");
     stdout.println();
     stdout.println("Code / Data Entry");
-    stdout.println("  a[<addr>]                        assemble");
+    stdout.println("  a[<addr>]                        assemble <not yet implemented>");
     stdout.println("  e[<addr>]                        enter data");
     stdout.println();
     stdout.println("I/O");
     stdout.println("  p<addr>[=<data>]                 port access");
     stdout.println();
     stdout.println("CPU Status");
-    stdout.println("  r[<name>[=<data>]]               register access");
+    stdout.println("  r[<regname>[=<data>]]            register access");
     stdout.println();
     stdout.println("Load / Save");
     stdout.println("  s<name>=<startaddr>-<stopaddr>   save data to disk");

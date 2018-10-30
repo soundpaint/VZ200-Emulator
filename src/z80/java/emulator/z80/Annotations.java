@@ -3,7 +3,9 @@ package emulator.z80;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import org.w3c.dom.Comment;
@@ -24,7 +26,10 @@ public class Annotations {
   private static final String TAG_NAME_META = "meta";
   private static final String TAG_NAME_AT = "at";
   private static final String TAG_NAME_LABEL = "label";
+  private static final String TAG_NAME_HEADER = "header";
+  private static final String TAG_NAME_FOOTER = "footer";
   private static final String TAG_NAME_COMMENT = "comment";
+  private static final String TAG_NAME_BR = "br";
   private static final String TAG_NAME_DATA_BYTES = "data-bytes";
 
   private static boolean isIgnorableNodeType(final Node node)
@@ -52,8 +57,9 @@ public class Annotations {
     private int firstAddress;
     private int primaryLastAddress;
     private int wrappedLastAddress;
+    private String mnemonic;
 
-    public DataBytesRange(int address, int length) {
+    public DataBytesRange(int address, int length, String mnemonic) {
       firstAddress = address & MAX_ADDRESS;
       int lastAddress = firstAddress + length - 1;
       if (lastAddress <= MAX_ADDRESS) {
@@ -63,6 +69,16 @@ public class Annotations {
         primaryLastAddress = MAX_ADDRESS;
         wrappedLastAddress = lastAddress & MAX_ADDRESS;
       }
+      this.mnemonic = mnemonic;
+    }
+
+    public String getMnemonic() {
+      return mnemonic;
+    }
+
+    public boolean startsWith(int address) {
+      address &= MAX_ADDRESS;
+      return address == firstAddress;
     }
 
     public boolean contains(int address) {
@@ -75,14 +91,18 @@ public class Annotations {
 
   private Map<Integer, String> adr2label;
   private Map<String, Integer> label2adr;
-  private Map<Integer, String> adr2comment;
+  private Map<Integer, List<String>> adr2header;
+  private Map<Integer, List<String>> adr2footer;
+  private Map<Integer, List<String>> adr2comment;
   private Map<Integer, DataBytesRange> adr2dbRange;
   private Element meta;
 
   public Annotations() {
     label2adr = new HashMap<String, Integer>();
     adr2label = new HashMap<Integer, String>();
-    adr2comment = new HashMap<Integer, String>();
+    adr2header = new HashMap<Integer, List<String>>();
+    adr2footer = new HashMap<Integer, List<String>>();
+    adr2comment = new HashMap<Integer, List<String>>();
     adr2dbRange = new TreeMap<Integer, DataBytesRange>();
     meta = null;
   }
@@ -90,14 +110,17 @@ public class Annotations {
   public void clear() {
     label2adr.clear();
     adr2label.clear();
+    adr2header.clear();
+    adr2footer.clear();
     adr2comment.clear();
     adr2dbRange.clear();
   }
 
   public void addLabel(int address, String label) {
     if (adr2label.containsKey(address)) {
+      String strAddress = Util.hexShortStr(address);
       System.out.println("WARNING: Annotations: " +
-                         "redefining label for address " + address);
+                         "redefining label for address " + strAddress);
     }
     adr2label.put(address, label);
     label2adr.put(label, address);
@@ -118,15 +141,54 @@ public class Annotations {
     }
   }
 
-  public void addComment(int address, String text) {
-    if (adr2comment.containsKey(address)) {
+  public void addHeader(int address, List<String> text) {
+    if (adr2header.containsKey(address)) {
+      String strAddress = Util.hexShortStr(address);
       System.out.println("WARNING: Annotations: " +
-                         "redefining comment for address " + address);
+                         "redefining header for address " + strAddress);
+    }
+    adr2header.put(address, text);
+  }
+
+  public List<String> getHeader(int address) {
+    return adr2header.get(address);
+  }
+
+  public void removeHeader(int address) {
+    if (adr2header.containsKey(address)) {
+      adr2header.remove(address);
+    }
+  }
+
+  public void addFooter(int address, List<String> text) {
+    if (adr2footer.containsKey(address)) {
+      String strAddress = Util.hexShortStr(address);
+      System.out.println("WARNING: Annotations: " +
+                         "redefining footer for address " + strAddress);
+    }
+    adr2footer.put(address, text);
+  }
+
+  public List<String> getFooter(int address) {
+    return adr2footer.get(address);
+  }
+
+  public void removeFooter(int address) {
+    if (adr2footer.containsKey(address)) {
+      adr2footer.remove(address);
+    }
+  }
+
+  public void addComment(int address, List<String> text) {
+    if (adr2comment.containsKey(address)) {
+      String strAddress = Util.hexShortStr(address);
+      System.out.println("WARNING: Annotations: " +
+                         "redefining comment for address " + strAddress);
     }
     adr2comment.put(address, text);
   }
 
-  public String getComment(int address) {
+  public List<String> getComment(int address) {
     return adr2comment.get(address);
   }
 
@@ -136,17 +198,17 @@ public class Annotations {
     }
   }
 
-  public void addDataBytesRange(int address, int length) {
+  public void addDataBytesRange(int address, int length, String mnemonic) {
     // TODO: Check for clash with previously added ranges.
     if (adr2dbRange.containsKey(address)) {
       System.out.println("WARNING: Annotations: " +
                          "redefining data bytes range for address " + address);
     }
-    adr2dbRange.put(address, new DataBytesRange(address, length));
+    adr2dbRange.put(address, new DataBytesRange(address, length, mnemonic));
   }
 
   public void removeDataBytesRange(int address) {
-    if (adr2comment.containsKey(address)) {
+    if (adr2dbRange.containsKey(address)) {
       adr2dbRange.remove(address);
     }
   }
@@ -158,6 +220,17 @@ public class Annotations {
       }
     }
     return false;
+  }
+
+  public String getDataBytesMnemonic(int address) {
+    for (DataBytesRange range : adr2dbRange.values()) {
+      if (range.startsWith(address)) {
+        return range.getMnemonic();
+      } else if (range.contains(address)) {
+        return "";
+      }
+    }
+    return null;
   }
 
   private void throwDuplicateException(final Element element,
@@ -222,21 +295,33 @@ public class Annotations {
     }
   }
 
-  private void parseDataBytes(Element element, int address)
+  private List<String> parseMultiLineText(Element element)
     throws ParseException
   {
-    int dataBytes =
-      parseShort(element,
-                 element.getAttribute(ATTRIBUTE_NAME_LENGTH)) & 0xffff;
-    addDataBytesRange(address, dataBytes);
+    StringBuffer line = new StringBuffer();
+    String trimmedLine;
+    List<String> lines = new ArrayList<String>();
     final NodeList childNodes = element.getChildNodes();
     for (int index = 0; index < childNodes.getLength(); index++) {
       final Node childNode = childNodes.item(index);
       if (childNode instanceof Element) {
         final Element childElement = (Element)childNode;
         final String childElementName = childElement.getTagName();
-        throw new ParseException(childElement, "unexpected element: " +
-                                 childElementName);
+        if (childElementName.equals(TAG_NAME_BR)) {
+          lines.add(line.toString());
+          line.setLength(0);
+        } else {
+          throw new ParseException(childElement, "unexpected element: " +
+                                   childElementName);
+        }
+      } else if (childNode instanceof Text) {
+        String trimmedText = childNode.getTextContent().trim();
+        if (!trimmedText.isEmpty()) {
+          if (line.length() > 0) {
+            line.append(" ");
+          }
+          line.append(trimmedText);
+        }
       } else if (isWhiteSpace(childNode)) {
         // ignore white space
       } else if (isIgnorableNodeType(childNode)) {
@@ -245,6 +330,42 @@ public class Annotations {
         throw new ParseException(childNode, "unsupported node");
       }
     }
+    lines.add(line.toString());
+    return lines;
+  }
+
+  private void parseDataBytes(Element element, int address)
+    throws ParseException
+  {
+    StringBuffer line = new StringBuffer();
+    int dataBytes =
+      parseShort(element,
+                 element.getAttribute(ATTRIBUTE_NAME_LENGTH)) & 0xffff;
+    final NodeList childNodes = element.getChildNodes();
+    for (int index = 0; index < childNodes.getLength(); index++) {
+      final Node childNode = childNodes.item(index);
+      if (childNode instanceof Element) {
+        final Element childElement = (Element)childNode;
+        final String childElementName = childElement.getTagName();
+        throw new ParseException(childElement, "unexpected element: " +
+                                 childElementName);
+      } else if (childNode instanceof Text) {
+        String trimmedText = childNode.getTextContent().trim();
+        if (!trimmedText.isEmpty()) {
+          if (line.length() > 0) {
+            line.append(" ");
+          }
+          line.append(trimmedText);
+        }
+      } else if (isWhiteSpace(childNode)) {
+        // ignore white space
+      } else if (isIgnorableNodeType(childNode)) {
+        // ignore comments, entities, etc.
+      } else {
+        throw new ParseException(childNode, "unsupported node");
+      }
+    }
+    addDataBytesRange(address, dataBytes, line.toString());
   }
 
   private void parseMeta(Element element) throws ParseException {
@@ -268,9 +389,15 @@ public class Annotations {
           }
           label = childElement.getTextContent();
           addLabel(address, label);
+        } else if (childElementName.equals(TAG_NAME_HEADER)) {
+          List<String> lines = parseMultiLineText(childElement);
+          addHeader(address, lines);
+        } else if (childElementName.equals(TAG_NAME_FOOTER)) {
+          List<String> lines = parseMultiLineText(childElement);
+          addFooter(address, lines);
         } else if (childElementName.equals(TAG_NAME_COMMENT)) {
-          String comment = childElement.getTextContent();
-          addComment(address, comment);
+          List<String> lines = parseMultiLineText(childElement);
+          addComment(address, lines);
         } else if (childElementName.equals(TAG_NAME_DATA_BYTES)) {
           parseDataBytes(childElement, address);
         } else {
