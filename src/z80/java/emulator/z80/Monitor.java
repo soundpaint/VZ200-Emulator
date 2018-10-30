@@ -637,7 +637,8 @@ public class Monitor {
   private static final String LABEL_FORMAT_STRING =
     "%" + MAX_LABEL_LENGTH + "s";
   private static final String EMPTY_LABEL = fill(' ', MAX_LABEL_LENGTH);
-  private static final int COMMENT_POS = 50;
+  private static final int MAX_DATA_BYTES = 5;
+  private static final int COMMENT_POS = 52;
 
   private int printOperation(CPU.ConcreteOperation op, int fallbackAddress) {
     List<String> lines = new ArrayList<String>();
@@ -702,20 +703,39 @@ public class Monitor {
     lineBuffer.append(" ");
     int length;
     if (op == null || containsDataByte || containsInnerAnnotation) {
-      int dataByte = memory.readByte(fallbackAddress, cpu.getWallClockCycles());
-      String strDataByte = Util.hexByteStr(dataByte);
-      lineBuffer.append(" " + strDataByte + "               ");
+      int dataBytesLength;
+      if (isDataByte) {
+        dataBytesLength = annotations.getRemainingDataBytes(address);
+      } else {
+        dataBytesLength = 1;
+      }
+      lineBuffer.append(" ");
+      StringBuffer strDataBytes = new StringBuffer();
+      for (int i = 0; i < MAX_DATA_BYTES; i++) {
+        if (i < dataBytesLength) {
+          int dataByte = memory.readByte(fallbackAddress + i,
+                                         cpu.getWallClockCycles());
+          String strDataByte = Util.hexByteStr(dataByte);
+          lineBuffer.append(strDataByte);
+          strDataBytes.append(strDataByte);
+        } else {
+          lineBuffer.append("  ");
+        }
+        lineBuffer.append(" ");
+      }
+      lineBuffer.append("  ");
       if (isDataByte || containsInnerAnnotation) {
         String mnemonic = annotations.getDataBytesMnemonic(address);
         if (mnemonic != null) {
           lineBuffer.append(mnemonic);
         } else {
-          lineBuffer.append("DB $" + strDataByte);
+          lineBuffer.append("DB " + strDataBytes);
         }
       } else {
         lineBuffer.append("???");
       }
-      length = 1;
+      length = dataBytesLength < MAX_DATA_BYTES ?
+        dataBytesLength : MAX_DATA_BYTES;
     } else  {
       CPU.ConcreteOpCode opCode = op.createOpCode();
       length = opCode.getLength();

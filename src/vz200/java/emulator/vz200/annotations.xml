@@ -337,6 +337,14 @@
     <comment>token 0x84 "CLS"</comment>
     <data-bytes length="0x03">"CLS"</data-bytes>
   </at>
+  <at address="0x1661">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x1664">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x06" />
+  </at>
   <at address="0x166a">
     <comment>token 0x87 "NEXT"</comment>
     <data-bytes length="0x04">"NEXT"</data-bytes>
@@ -409,6 +417,18 @@
     <comment>token 0x98 "VERIFY"</comment>
     <data-bytes length="0x06">"VERIFY"</data-bytes>
   </at>
+  <at address="0x16b6">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x06" />
+  </at>
+  <at address="0x16bc">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x06" />
+  </at>
+  <at address="0x16c2">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x06" />
+  </at>
   <at address="0x16c8">
     <comment>token 0x9c "CRUN"</comment>
     <data-bytes length="0x04">"CRUN"</data-bytes>
@@ -421,13 +441,77 @@
     <comment>token 0x9e "SOUND"</comment>
     <data-bytes length="0x05">"SOUND"</data-bytes>
   </at>
+  <at address="0x16d5">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x06" />
+  </at>
   <at address="0x16db">
     <comment>token 0xa0 "OUT"</comment>
     <data-bytes length="0x03">"OUT"</data-bytes>
   </at>
+  <at address="0x16de">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x16e0">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x16e4">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x16e9">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x16ec">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x16ef">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x16f4">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x16f8">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x16fd">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1701">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1705">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1709">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x170d">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x1711">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x06" />
+  </at>
   <at address="0x1717">
     <comment>token 0xaf "LPRINT"</comment>
     <data-bytes length="0x06">"LPRINT"</data-bytes>
+  </at>
+  <at address="0x171d">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
   </at>
   <at address="0x1720">
     <comment>token 0xb1 "POKE"</comment>
@@ -448,6 +532,14 @@
   <at address="0x1731">
     <comment>token 0xb5 "LLIST"</comment>
     <data-bytes length="0x05">"LLIST"</data-bytes>
+  </at>
+  <at address="0x1736">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x06" />
+  </at>
+  <at address="0x173c">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x04" />
   </at>
   <at address="0x1740">
     <comment>token 0xb8 "CLEAR"</comment>
@@ -473,17 +565,49 @@
     <comment>token 0xbd "TO"</comment>
     <data-bytes length="0x02">"TO"</data-bytes>
   </at>
+  <at address="0x1758">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x02" />
+  </at>
   <at address="0x175a">
     <comment>token 0xbf "USING"</comment>
     <data-bytes length="0x05">"USING"</data-bytes>
+  </at>
+  <at address="0x175f">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x06" />
   </at>
   <at address="0x1765">
     <comment>token 0xc1 "USR"</comment>
     <data-bytes length="0x03">"USR"</data-bytes>
   </at>
+  <at address="0x1768">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x176b">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x176e">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x07" />
+  </at>
+  <at address="0x1775">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x05" />
+  </at>
   <at address="0x177a">
     <comment>token 0xc6 "POINT"</comment>
-    <data-bytes length="0x04">"POINT"</data-bytes>
+    <data-bytes length="0x05">"POINT"</data-bytes>
+  </at>
+  <at address="0x177f">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x05" />
+  </at>
+  <at address="0x1784">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
   </at>
   <at address="0x1787">
     <comment>token 0xc9 "INKEY$"</comment>
@@ -553,9 +677,17 @@
     <comment>token 0xd9 "ABS"</comment>
     <data-bytes length="0x03">"ABS"</data-bytes>
   </at>
+  <at address="0x17ae">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
+  </at>
   <at address="0x17b1">
     <comment>token 0xdb "INP"</comment>
     <data-bytes length="0x03">"INP"</data-bytes>
+  </at>
+  <at address="0x17b4">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
   </at>
   <at address="0x17b7">
     <comment>token 0xdd "SQR"</comment>
@@ -593,6 +725,58 @@
     <comment>token 0xe5 "PEEK"</comment>
     <data-bytes length="0x04">"PEEK"</data-bytes>
   </at>
+  <at address="0x17d3">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17d6">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17d9">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17dc">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17df">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17e2">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
+  </at>
+  <at address="0x17e5">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x17e9">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x17ed">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x17f1">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x17f5">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x17f9">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x04" />
+  </at>
+  <at address="0x17fd">
+    <comment>reserved for future extensions</comment>
+    <data-bytes length="0x03" />
+  </at>
   <at address="0x1800">
     <comment>token 0xf3 "LEN"</comment>
     <data-bytes length="0x03">"LEN"</data-bytes>
@@ -613,7 +797,7 @@
     <comment>token 0xf7 "CHR$"</comment>
     <data-bytes length="0x04">"CHR$"</data-bytes>
   </at>
-  <at address="0x1810">
+  <at address="0x1811">
     <comment>token 0xf8 "LEFT$"</comment>
     <data-bytes length="0x05">"LEFT$"</data-bytes>
   </at>
@@ -625,14 +809,16 @@
     <comment>token 0xfa "MID$"</comment>
     <data-bytes length="0x04">"MID$"</data-bytes>
   </at>
-  <at address="0x181f">
-    <footer>
-      ---- END BASIC TOKENS TABLE ----
-    </footer>
-  </at>
   <at address="0x1820">
     <comment>token "'"</comment>
     <data-bytes length="0x01">"'"</data-bytes>
+  </at>
+  <at address="0x1821">
+    <comment>table end marker</comment>
+    <footer>
+      ---- END BASIC TOKENS TABLE ----
+    </footer>
+    <data-bytes length="0x01" />
   </at>
   <at address="0x1822">
     <comment>vector to handler for token 0x80 ("END")</comment>
@@ -896,10 +1082,10 @@
   </at>
   <at address="0x19e5">
     <label>emit_err</label>
-    <comment>error code in reg E</comment>
-  </at>
-  <at address="0x19e5">
-    <comment>flush output</comment>
+    <comment>
+      error code in reg E<br />
+      flush output
+    </comment>
   </at>
   <at address="0x19e9">
     <comment>start of error messages table</comment>

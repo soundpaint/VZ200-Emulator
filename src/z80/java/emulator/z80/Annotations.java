@@ -57,9 +57,17 @@ public class Annotations {
     private int firstAddress;
     private int primaryLastAddress;
     private int wrappedLastAddress;
+    private int length;
     private String mnemonic;
 
+    private DataBytesRange() {
+      throw new UnsupportedOperationException("unsupported constructor");
+    }
+
     public DataBytesRange(int address, int length, String mnemonic) {
+      if (length <= 0) {
+        throw new IllegalArgumentException("length > 0: " + length);
+      }
       firstAddress = address & MAX_ADDRESS;
       int lastAddress = firstAddress + length - 1;
       if (lastAddress <= MAX_ADDRESS) {
@@ -69,6 +77,7 @@ public class Annotations {
         primaryLastAddress = MAX_ADDRESS;
         wrappedLastAddress = lastAddress & MAX_ADDRESS;
       }
+      this.length = length;
       this.mnemonic = mnemonic;
     }
 
@@ -86,6 +95,18 @@ public class Annotations {
       return
         ((address >= firstAddress) && (address <= primaryLastAddress)) ||
         (address <= wrappedLastAddress);
+    }
+
+    public int getRemainingDataBytes(int address) {
+      address &= MAX_ADDRESS;
+      int offs = (address - firstAddress) & 0xffff;
+      int remainingDataBytes = length - offs;
+      if (remainingDataBytes < 1) {
+        String message = String.format("address %i not range %s",
+                                       address, this);
+        throw new IllegalArgumentException(message);
+      }
+      return remainingDataBytes;
     }
   }
 
@@ -198,11 +219,25 @@ public class Annotations {
     }
   }
 
+  private void checkForClash(int address, int length) {
+    // TODO: Performance!!!
+    for (int i = 0; i < length; i++) {
+      if (isDataByte(address + i)) {
+        String strAddress = Util.hexShortStr(address + i);
+        System.out.println("WARNING: Annotations: " +
+                           "data bytes range clash for address " +
+                           strAddress);
+      }
+    }
+  }
+
   public void addDataBytesRange(int address, int length, String mnemonic) {
-    // TODO: Check for clash with previously added ranges.
+    checkForClash(address, length);
     if (adr2dbRange.containsKey(address)) {
+      String strAddress = Util.hexShortStr(address);
       System.out.println("WARNING: Annotations: " +
-                         "redefining data bytes range for address " + address);
+                         "redefining data bytes range for address " +
+                         strAddress);
     }
     adr2dbRange.put(address, new DataBytesRange(address, length, mnemonic));
   }
@@ -222,12 +257,24 @@ public class Annotations {
     return false;
   }
 
+  public int getRemainingDataBytes(int address) {
+    for (DataBytesRange range : adr2dbRange.values()) {
+      if (range.contains(address)) {
+        return range.getRemainingDataBytes(address);
+      }
+    }
+    return 0;
+  }
+
   public String getDataBytesMnemonic(int address) {
     for (DataBytesRange range : adr2dbRange.values()) {
+      // TODO: Performance: replace linear search with
+      // hashed lookup
+      String mnemonic = range.getMnemonic();
       if (range.startsWith(address)) {
-        return range.getMnemonic();
+        return mnemonic;
       } else if (range.contains(address)) {
-        return "";
+        return mnemonic != null ? "" : null;
       }
     }
     return null;
@@ -337,7 +384,7 @@ public class Annotations {
   private void parseDataBytes(Element element, int address)
     throws ParseException
   {
-    StringBuffer line = new StringBuffer();
+    StringBuffer line = null;
     int dataBytes =
       parseShort(element,
                  element.getAttribute(ATTRIBUTE_NAME_LENGTH)) & 0xffff;
@@ -352,6 +399,9 @@ public class Annotations {
       } else if (childNode instanceof Text) {
         String trimmedText = childNode.getTextContent().trim();
         if (!trimmedText.isEmpty()) {
+          if (line == null) {
+            line = new StringBuffer();
+          }
           if (line.length() > 0) {
             line.append(" ");
           }
@@ -365,7 +415,8 @@ public class Annotations {
         throw new ParseException(childNode, "unsupported node");
       }
     }
-    addDataBytesRange(address, dataBytes, line.toString());
+    addDataBytesRange(address, dataBytes,
+                      line != null ? line.toString() : null);
   }
 
   private void parseMeta(Element element) throws ParseException {
