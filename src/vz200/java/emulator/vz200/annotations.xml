@@ -88,7 +88,7 @@
     <comment>screen starts at 0x7000</comment>
   </at>
   <at address="0x0167">
-    <comment>#pixel within screen byte</comment>
+    <comment>#pixels within screen byte</comment>
   </at>
   <at address="0x0169">
     <comment>*=2 bits per pixel to shift</comment>
@@ -113,7 +113,7 @@
   </at>
   <at address="0x017a">
     <comment>
-      loop: for #<br />
+      loop: #B iterations<br />
       [NOTE: here is a performance bug:<br />
       If A=0 (which occurs for every 4th pixel),<br />
       the loop wastes time by iterating 256 times,<br />
@@ -1156,7 +1156,7 @@
       &nbsp; and set Z=1 if and only if char is 0<br />
       &nbsp; and set S=0<br />
       &nbsp; and set H=1 if and only if (char &amp; 0fh)=0fh<br />
-      &nbsp; and set P=1 if char contains even # of 1<br />
+      &nbsp; and set P=1 if char contains even # of 1s<br />
       &nbsp; and set N=1<br />
       <br />
       * HL points to previous char<br />
@@ -1746,8 +1746,53 @@
   <at address="0x35e1">
     <comment>print "CLOAD" at bottom left corner</comment>
   </at>
+  <at address="0x35e7">
+    <comment>check for "BREAK"</comment>
+  </at>
+  <at address="0x35ea">
+    <comment>check cassette input</comment>
+  </at>
+  <at address="0x35ed">
+    <comment>got "1"?</comment>
+  </at>
+  <at address="0x35ef">
+    <comment>no => continue waiting</comment>
+  </at>
+  <at address="0x35f1">
+    <comment>yes => get next bit</comment>
+  </at>
+  <at address="0x35f4">
+    <comment>got no valid bit => continue waiting</comment>
+  </at>
+  <at address="0x35f6">
+    <comment>got "0" => get next bit</comment>
+  </at>
+  <at address="0x35fa">
+    <comment>else: wait for another 7 "0"s</comment>
+  </at>
+  <at address="0x35ff">
+    <comment>restart if see "1" inbetween</comment>
+  </at>
+  <at address="0x3638">
+    <comment>print "FOUND" at bottom left corner</comment>
+  </at>
   <at address="0x3656">
     <comment>handler for token 0xb9 ("CLOAD")</comment>
+  </at>
+  <at address="0x365f">
+    <comment>
+      shared code for CLOAD, CRUN and VERIFY;<br />
+      uses address 0x7839 to distinguish mode
+    </comment>
+  </at>
+  <at address="0x3664">
+    <comment>call routine for preparing screen</comment>
+  </at>
+  <at address="0x3667">
+    <comment>load address of status message</comment>
+  </at>
+  <at address="0x366a">
+    <comment>call routine for printing status line</comment>
   </at>
   <at address="0x36cf">
     <comment>print "READY"</comment>
@@ -1760,6 +1805,130 @@
   </at>
   <at address="0x376c">
     <data-bytes length="0x09">"\rVERIFY \0"</data-bytes>
+  </at>
+  <at address="0x3790">
+    <comment>
+      wait for cassette in value "0", but time out<br />
+      after 0x0800 loop iterations
+    </comment>
+  </at>
+  <at address="0x3793">
+    <comment>next try</comment>
+  </at>
+  <at address="0x3796">
+    <comment>got "0"?</comment>
+  </at>
+  <at address="0x3798">
+    <comment>yes => continue at 0x37a2</comment>
+  </at>
+  <at address="0x379a">
+    <comment>prepare next try</comment>
+  </at>
+  <at address="0x379b">
+    <comment>timed out?</comment>
+  </at>
+  <at address="0x379d">
+    <comment>no => continue</comment>
+  </at>
+  <at address="0x379f">
+    <comment>yes => set carry flag, restart</comment>
+  </at>
+  <at address="0x37a2">
+    <comment>still get "0", or just got jitter?</comment>
+  </at>
+  <at address="0x37a7">
+    <comment>just jitter => wait again for stable "0"</comment>
+  </at>
+  <at address="0x37a9">
+    <comment>still get "0", or just got jitter?</comment>
+  </at>
+  <at address="0x37ae">
+    <comment>just jitter => wait again for stable "0"</comment>
+  </at>
+  <at address="0x37b0">
+    <comment>skip remaining "0" phase (0x52 iterations)</comment>
+  </at>
+  <at address="0x37b4">
+    <comment>now in "1" phase?</comment>
+  </at>
+  <at address="0x37b9">
+    <comment>yes => jump to 0x37c4</comment>
+  </at>
+  <at address="0x37bb">
+    <comment>wait for cassette in value "1"</comment>
+  </at>
+  <at address="0x37c0">
+    <comment>"0"? => continue waiting</comment>
+  </at>
+  <at address="0x37c2">
+    <comment>jump to 0x3790</comment>
+  </at>
+  <at address="0x37c4">
+    <comment>
+      test if cassette in value keeps "1"<br />
+      for at least 0x5a loop iterations
+    </comment>
+  </at>
+  <at address="0x37c8">
+    <comment>next try</comment>
+  </at>
+  <at address="0x37cb">
+    <comment>got "0"?</comment>
+  </at>
+  <at address="0x37cd">
+    <comment>yes => test failed => goto 0x37da</comment>
+  </at>
+  <at address="0x37cf">
+    <comment>no => ok, continue test</comment>
+  </at>
+  <at address="0x37d1">
+    <comment>test succeeded, add bit "1"</comment>
+  </at>
+  <at address="0x37da">
+    <comment>test failed, check if stable "0"</comment>
+  </at>
+  <at address="0x37dd">
+    <comment>still get "0", or just got jitter?</comment>
+  </at>
+  <at address="0x37df">
+    <comment>just jitter => jump to 0x37cf</comment>
+  </at>
+  <at address="0x37e4">
+    <comment>still get "0", or just got jitter?</comment>
+  </at>
+  <at address="0x37e6">
+    <comment>just jitter => jump to 0x37cf</comment>
+  </at>
+  <at address="0x37e8">
+    <comment>is this a stable "0" phase?</comment>
+  </at>
+  <at address="0x37ec">
+    <comment>got "0"?</comment>
+  </at>
+  <at address="0x37ee">
+    <comment>no => test failed => goto 0x37cf</comment>
+  </at>
+  <at address="0x37f0">
+    <comment>next try</comment>
+  </at>
+  <at address="0x37f2">
+    <comment>timeout => test succeeded, add bit "1"</comment>
+  </at>
+  <at address="0x37f4">
+    <header>---- START print status message in bottom line ----</header>
+  </at>
+  <at address="0x37f9">
+    <comment>load video screen address of bottom line</comment>
+  </at>
+  <at address="0x37fc">
+    <comment>clear bottom line</comment>
+  </at>
+  <at address="0x3809">
+    <footer>---- END print status message in bottom line ----</footer>
+    <comment>
+      jump to actual status printing routine<br />
+      (will return to caller of caller)
+    </comment>
   </at>
   <at address="0x3842">
     <data-bytes length="0x08">"WAITING\0"</data-bytes>
@@ -1780,20 +1949,105 @@
     <data-bytes length="0x01">","</data-bytes>
     <comment>comma separator</comment>
   </at>
+  <at address="0x3903">
+    <header>
+      ---- START SET(x, y) ----<br />
+      function for setting a pixel on<br />
+      the graphics screen<br />
+      <br />
+      Register DE contains the pre-computed<br />
+      memory address to change.<br />
+      <br />
+      Register C contains the pre-computed<br />
+      AND bit mask of those bits to leave<br />
+      unchanged.<br />
+      <br />
+      Register A contains the code of current<br />
+      color (i.e. the bits to set) in those<br />
+      2 bits to bet set; all other bits are 0<br />
+      (i.e. it can be used as OR bist mask).<br />
+      <br />
+      NOTE: The code unneccessarily performs<br />
+      two write accesses to the video buffer,<br />
+      first effectively doing an UNSET(x, y),<br />
+      and then writing the final, correct value
+    </header>
+  </at>
+  <at address="0x3906">
+    <comment>write the UNSET(x, y) value into video RAM</comment>
+  </at>
+  <at address="0x3907">
+    <comment>check: also do SET(x, y)?</comment>
+  </at>
+  <at address="0x390e">
+    <comment>write SET(x, y) value into video RAM</comment>
+  </at>
   <at address="0x390f">
+    <comment>parser: consume closing ")" character</comment>
+  </at>
+  <at address="0x3910">
     <data-bytes length="0x01">")"</data-bytes>
     <comment>right parenthesis</comment>
   </at>
+  <at address="0x3911">
+    <footer>---- END SET(x, y) ----</footer>
+  </at>
   <at address="0x3912">
     <comment>handler for token 0x96 ("COPY")</comment>
+  </at>
+  <at address="0x3ae2">
+    <comment>CR+LF an Drucker senden</comment>
+  </at>
+  <at address="0x3ae8">
+    <header>
+      ---- START scan for "BREAK" key ----<br />
+      if pressed, set flag C=1,<br />
+      otherwise C=0
+    </header>
+  </at>
+  <at address="0x3af7">
+    <footer>---- END scan for "BREAK" key ----</footer>
+  </at>
+  <at address="0x3af8">
+    <header>
+      ---- START check for "BREAK" ----<br />
+      abort CLOAD / CRUN / VERIFY, if<br />
+      "BREAK" is pressed
+    </header>
+    <comment>"BREAK" pressed?</comment>
+  </at>
+  <at address="0x3afb">
+    <comment>no => continue cassette command</comment>
+  </at>
+  <at address="0x3afc">
+    <comment>kick off cassette command stack frame</comment>
+  </at>
+  <at address="0x3afe">
+    <comment>clean-up cassette command mode</comment>
+  </at>
+  <at address="0x3b09">
+    <comment>call soft reset</comment>
+    <footer>---- END check for "BREAK" ----</footer>
+  </at>
+  <at address="0x3b54">
+    <header>---- START cout for cassette ----</header>
+  </at>
+  <at address="0x3b63">
+    <comment>read file name: parse '"'</comment>
   </at>
   <at address="0x3b64">
     <data-bytes length="0x01">'"'</data-bytes>
     <comment>quote char</comment>
   </at>
+  <at address="0x3b65">
+    <comment>read file name: parse ','</comment>
+  </at>
   <at address="0x3b66">
     <data-bytes length="0x01">","</data-bytes>
     <comment>comma separator</comment>
+  </at>
+  <at address="0x3b67">
+    <footer>---- END cout for cassette ----</footer>
   </at>
   <at address="0x3b6f">
     <data-bytes length="0x01">'"'</data-bytes>
@@ -1804,10 +2058,10 @@
     <comment>comma separator</comment>
   </at>
   <at address="0x3cd4">
-    <comment>
-      print error message<br />
+    <header>
+      ---- START print error message ----<br />
       error code in register E
-    </comment>
+    </header>
   </at>
   <at address="0x3cd9">
     <comment>start of next message reached?</comment>
@@ -1839,6 +2093,7 @@
   <at address="0x3ceb">
     <comment>yes => done</comment>
     <footer>
+      ---- END print error message ----<br />
       NOTE: There is no stop marker (value >=0x80) behind<br />
       the last error code message "DISK COMMAND"<br />
       (error code 0x2c), such that this subroutine will print<br />
