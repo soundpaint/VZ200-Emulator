@@ -667,7 +667,6 @@ public class Monitor {
       strAddress = Util.hexShortStr(address) + "-";
       label = annotations.getLabel(address);
       header = annotations.getHeader(address);
-      footer = annotations.getFooter(address);
       comment = annotations.getComment(address);
       int opCodeLength = op != null ? op.getByteLength() : 1;
       for (int i = 0; i < opCodeLength; i++) {
@@ -683,9 +682,11 @@ public class Monitor {
           containsInnerAnnotation |=
             annotations.getHeader(opCodeByteAddress) != null;
           containsInnerAnnotation |=
-            annotations.getFooter(opCodeByteAddress) != null;
-          containsInnerAnnotation |=
             annotations.getComment(opCodeByteAddress) != null;
+        }
+        if (i < opCodeLength - 1) {
+          containsInnerAnnotation |=
+            annotations.getFooter(opCodeByteAddress) != null;
         }
         containsDataByte |= opCodeByteIsDataByte;
       }
@@ -767,6 +768,7 @@ public class Monitor {
     if (lineBuffer.length() > 0) {
       lines.add(lineBuffer.toString());
     }
+    footer = annotations.getFooter((address + length - 1) & 0xffff);
     if (footer != null) {
       for (String line : footer) {
         lines.add("      ;" + line);
