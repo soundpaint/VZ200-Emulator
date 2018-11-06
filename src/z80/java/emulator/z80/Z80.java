@@ -707,6 +707,31 @@ public class Z80 implements CPU {
     }
   }
 
+  private class Address implements Function {
+    private String name;
+    private int digits;
+
+    private Address() {}
+
+    Address(String name, int digits) {
+      this.name = name;
+      this.digits = digits;
+    }
+
+    public String getName() { return name; }
+
+    public String evaluate(int address) {
+      String label = annotations.getLabel(address);
+      if (label != null) {
+        return label;
+      }
+      String hex = Util.hexIntStr(address);
+      while (hex.length() < digits)
+	hex = "0" + hex; // TODO: This is very slow and inefficient!
+      return hex.substring(hex.length() - digits);
+    }
+  }
+
   private class Disp8 implements Function {
     private String name;
 
@@ -743,6 +768,10 @@ public class Z80 implements CPU {
     public String evaluate(int arg) {
       int address = concreteOperation.getNextAddress();
       address += (byte)arg; // signed byte
+      String label = annotations.getLabel(address);
+      if (label != null) {
+        return label;
+      }
       return Util.hexShortStr(address);
     }
   }
@@ -761,6 +790,7 @@ public class Z80 implements CPU {
       new Identity("VAL3", 1),
       new Identity("VAL8", 2),
       new Identity("VAL16", 4),
+      new Address("ADR16", 4),
       new Disp8("DISP8"),
       new Rel8("REL8", concreteOperation)
     };
@@ -1504,7 +1534,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("CALL \\VAL16[x]",
+	init("CALL \\ADR16[x]",
 	     "11001101xxxxxxxxxxxxxxxx",
 	     17, 0);
       }
@@ -1515,7 +1545,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("CALL \\COND[c],\\VAL16[x]",
+	init("CALL \\COND[c],\\ADR16[x]",
 	     "11ccc100xxxxxxxxxxxxxxxx",
 	     10, 17);
       }
@@ -2021,7 +2051,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("JP \\VAL16[x]",
+	init("JP \\ADR16[x]",
 	     "11000011xxxxxxxxxxxxxxxx",
 	     10, 0);
       }
@@ -2031,7 +2061,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("JP \\COND[c],\\VAL16[x]",
+	init("JP \\COND[c],\\ADR16[x]",
 	     "11ccc010xxxxxxxxxxxxxxxx",
 	     10, 10);
       }
@@ -2136,7 +2166,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("LD A,(\\VAL16[x])",
+	init("LD A,(\\ADR16[x])",
 	     "00111010xxxxxxxxxxxxxxxx",
 	     13, 0);
       }
@@ -2186,7 +2216,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("LD (\\VAL16[x]),A",
+	init("LD (\\ADR16[x]),A",
 	     "00110010xxxxxxxxxxxxxxxx",
 	     13, 0);
       }
@@ -2196,7 +2226,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("LD (\\VAL16[y]),\\REG16[x]",
+	init("LD (\\ADR16[y]),\\REG16[x]",
 	     "1110110101xx0011yyyyyyyyyyyyyyyy",
 	     20, 0);
       }
@@ -2207,7 +2237,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("LD (\\VAL16[x]),HL",
+	init("LD (\\ADR16[x]),HL",
 	     "00100010xxxxxxxxxxxxxxxx",
 	     16, 0);
       }
@@ -2217,7 +2247,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("LD (\\VAL16[x]),IX",
+	init("LD (\\ADR16[x]),IX",
 	     "1101110100100010xxxxxxxxxxxxxxxx",
 	     20, 0);
       }
@@ -2227,7 +2257,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("LD (\\VAL16[x]),IY",
+	init("LD (\\ADR16[x]),IY",
 	     "1111110100100010xxxxxxxxxxxxxxxx",
 	     20, 0);
       }
@@ -2257,7 +2287,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("LD HL,(\\VAL16[x])",
+	init("LD HL,(\\ADR16[x])",
 	     "00101010xxxxxxxxxxxxxxxx",
 	     16, 0);
       }
@@ -2287,7 +2317,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("LD IX,(\\VAL16[x])",
+	init("LD IX,(\\ADR16[x])",
 	     "1101110100101010xxxxxxxxxxxxxxxx",
 	     20, 0);
       }
@@ -2329,7 +2359,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("LD IY,(\\VAL16[x])",
+	init("LD IY,(\\ADR16[x])",
 	     "1111110100101010xxxxxxxxxxxxxxxx",
 	     20, 0);
       }
@@ -2433,7 +2463,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("LD \\REG16[x],(\\VAL16[y])",
+	init("LD \\REG16[x],(\\ADR16[y])",
 	     "1110110101xx1011yyyyyyyyyyyyyyyy",
 	     20, 0);
       }
@@ -4413,6 +4443,9 @@ public class Z80 implements CPU {
 
   private CPU.Memory memory, io;
   private List<WallClockListener> wallClockListeners;
+  private Annotations annotations;
+
+  public Annotations getAnnotations() { return annotations; }
 
   public CPU.Memory getMemory() { return memory; }
 
@@ -4443,6 +4476,7 @@ public class Z80 implements CPU {
     System.out.println("initializing Z80:");
     this.memory = memory;
     this.io = io;
+    annotations = new Annotations();
     timePerClockCycle = 1000000000 / cpuFrequency;
     concreteOperation = new ConcreteOperation();
     System.out.println("setting up registers...");

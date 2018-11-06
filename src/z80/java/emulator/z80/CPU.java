@@ -46,6 +46,7 @@ public interface CPU {
   public int doPOP();
   public void doPUSH(int op);
 
+  public Annotations getAnnotations();
   public Memory getMemory();
   public Memory getIO();
   public Register[] getAllRegisters();

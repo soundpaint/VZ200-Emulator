@@ -174,6 +174,12 @@
       result in reg. A, bit 0 (0=ready, 1=busy)
     </comment>
   </at>
+  <at address="0x674">
+    <label>init_cbs</label>
+    <comment>
+      initialize callback vectors
+    </comment>
+  </at>
   <at address="0x09d3">
     <comment>
       push subroutine parameters onto stack:<br />
@@ -1108,7 +1114,7 @@
     <comment>handler for token 0xbb ("NEW")</comment>
   </at>
   <at address="0x1c90">
-    <label>rst_18</label>
+    <label>rst18_impl</label>
     <header>---- implementation of RST 18H ----</header>
     <comment>
       Compare unsigned DE &amp; HL register pairs<br />
@@ -1120,7 +1126,7 @@
     </comment>
   </at>
   <at address="0x1c96">
-    <label>rst_08</label>
+    <label>rst08_impl</label>
     <header>---- implementation of RST 08H ----</header>
     <comment>
       parse token char<br />
@@ -1142,6 +1148,7 @@
     <comment>"=" with bit 8=1</comment>
   </at>
   <at address="0x1d78">
+    <label>rst10_impl</label>
     <header>
       ---- START implementation of RST 10H ----<br />
       Load &amp; check next character in string<br />
@@ -1327,6 +1334,7 @@
     <comment>comma separator</comment>
   </at>
   <at address="0x25d9">
+    <label>rst20_impl</label>
     <header>
       ---- START implementation of RST 20H ----<br />
       Return the number of parameters to be<br />
@@ -1430,6 +1438,7 @@
     <comment>right parenthesis</comment>
   </at>
   <at address="0x2eb8">
+    <label>rst38_impl</label>
     <header>---- START implementation of RST 38H ----</header>
     <comment>
       IRQ handler for key press / kbd matrix scan
@@ -1439,6 +1448,7 @@
     <footer>---- END implementation of RST 38H ----</footer>
   </at>
   <at address="0x2ef4">
+    <label>kbd_scan</label>
     <comment>do single kbd matrix scan</comment>
   </at>
   <at address="0x301d">
@@ -2226,6 +2236,7 @@
     <comment>unused</comment>
   </at>
   <at address="0x6800">
+    <label>io_base</label>
     <header>---- START memory mapped I/O ----</header>
     <data-bytes length="0x800" />
   </at>
@@ -2247,36 +2258,42 @@
     <footer>---- END video RAM (graphics) ----</footer>
   </at>
   <at address="0x7800">
+    <label>rst08_vctr</label>
     <comment>
       Call to RST 08H implementation,<br />
       by default, a jump to 0x1c96
     </comment>
   </at>
   <at address="0x7803">
+    <label>rst10_vctr</label>
     <comment>
       Call to RST 10H implementation,<br />
       by default, a jump to 0x1d78
     </comment>
   </at>
   <at address="0x7806">
+    <label>rst18_vctr</label>
     <comment>
       Call to RST 18H implementation,<br />
       by default, a jump to 0x1c90
     </comment>
   </at>
   <at address="0x7809">
+    <label>rst20_vctr</label>
     <comment>
       Call to RST 20H implementation,<br />
       by default, a jump to 0x25d9
     </comment>
   </at>
   <at address="0x780c">
+    <label>rst28_vctr</label>
     <comment>
       Call to RST 28H implementation,<br />
       by default, "RET"
     </comment>
   </at>
   <at address="0x780f">
+    <label>rst30_vctr</label>
     <comment>
       Call to RST 30H implementation,<br />
       by default, "RET"
@@ -2311,6 +2328,7 @@
     <data-bytes length="0x5" />
   </at>
   <at address="0x7820">
+    <label>curs_addr</label>
     <data-bytes length="0x2" />
     <comment>
       memory pointer to video RAM address<br />
@@ -2318,7 +2336,7 @@
     </comment>
   </at>
   <at address="0x7822">
-    <data-bytes length="0x14" />
+    <data-bytes length="0x11" />
   </at>
   <at address="0x7836">
     <data-bytes length="0x1" />
@@ -2328,10 +2346,11 @@
     </comment>
   </at>
   <at address="0x7838">
+    <label>prt_mode</label>
     <data-bytes length="0x1" />
     <comment>
       bit 1=0: INVERSE off<br />
-      bit 1=1: INVERSE on<br />
+      bit 1=1: INVERSE on
     </comment>
   </at>
   <at address="0x7839">
@@ -2350,6 +2369,7 @@
     <data-bytes length="0x1" />
   </at>
   <at address="0x783b">
+    <label>o_latch_bkp</label>
     <header>copy of output latch</header>
     <data-bytes length="0x1" />
     <comment>
@@ -2368,14 +2388,17 @@
     </comment>
   </at>
   <at address="0x783c">
+    <label>curs_content</label>
     <data-bytes length="0x1" />
     <comment>video RAM contents at cursor position</comment>
   </at>
   <at address="0x7841">
+    <label>curs_blk_cnt</label>
     <data-bytes length="0x1" />
     <comment>counter variable for cursor blinking</comment>
   </at>
   <at address="0x7846">
+    <label>color_mask</label>
     <data-bytes length="0x1" />
     <comment>
       color mask for foreground color in text mode:<br />
@@ -2384,6 +2407,7 @@
     </comment>
   </at>
   <at address="0x787d">
+    <label>cb_irq</label>
     <comment>
       callback envoked whenever returning from IRQ;<br />
       default is a simple "RET", i.e. do nothing
@@ -2393,6 +2417,7 @@
     <data-bytes length="0xd" />
   </at>
   <at address="0x788e">
+    <label>vect_fn_usr</label>
     <data-bytes length="0x2" />
     <comment>
       vector to USR() implementation<br />
@@ -2404,6 +2429,7 @@
     <data-bytes length="0x9" />
   </at>
   <at address="0x7899">
+    <label>kbdscan_val</label>
     <data-bytes length="0x1" />
     <comment>
       ASCII of least scanned key,<br />
@@ -2412,6 +2438,7 @@
     </comment>
   </at>
   <at address="0x789a">
+    <label>last_err</label>
     <data-bytes length="0x1" />
     <comment>
       error code of last error:<br />
@@ -2441,6 +2468,7 @@
     </comment>
   </at>
   <at address="0x789c">
+    <label>cout_target</label>
     <data-bytes length="0x1" />
     <comment>
       currently selected standard output device:<br />
@@ -2453,6 +2481,7 @@
     <data-bytes length="0x3" />
   </at>
   <at address="0x78a0">
+    <label>str_var_area</label>
     <data-bytes length="0x2" />
     <comment>
       memory pointer to end of basic stack memory /<br />
@@ -2460,6 +2489,7 @@
     </comment>
   </at>
   <at address="0x78a2">
+    <label>curr_line_no</label>
     <data-bytes length="0x2" />
     <comment>
       program line number of currently<br />
@@ -2467,10 +2497,12 @@
     </comment>
   </at>
   <at address="0x78a4">
+    <label>prgmem_start</label>
     <data-bytes length="0x2" />
     <comment>memory pointer to start of BASIC program</comment>
   </at>
   <at address="0x78a6">
+    <label>curs_x</label>
     <data-bytes length="0x1" />
     <comment>
       current x coordinate of cursor within<br />
@@ -2480,6 +2512,7 @@
     </comment>
   </at>
   <at address="0x78a7">
+    <label>parse_in_loc</label>
     <data-bytes length="0x2" />
     <comment>
       memory pointer to video RAM address<br />
@@ -2494,6 +2527,7 @@
     </comment>
   </at>
   <at address="0x78b1">
+    <label>freemem_top</label>
     <data-bytes length="0x2" />
     <comment>
       memory pointer to top of memory /<br />
@@ -2518,6 +2552,7 @@
     </comment>
   </at>
   <at address="0x78d6">
+    <label>ram_mem_top</label>
     <data-bytes length="0x2" />
     <comment>
       memory pointer to RAM upper limit
@@ -2530,6 +2565,7 @@
     <data-bytes length="0x2" />
   </at>
   <at address="0x78ec">
+    <label>edit_line_no</label>
     <data-bytes length="0x2" />
     <comment>
       number of least changed BASIC<br />
@@ -2537,6 +2573,7 @@
     </comment>
   </at>
   <at address="0x78f3">
+    <label>lin_proc_buf</label>
     <data-bytes length="0x2" />
     <comment>
       memory pointer to buffer (typically at<br />
@@ -2544,6 +2581,7 @@
     </comment>
   </at>
   <at address="0x78f9">
+    <label>vlt_start</label>
     <data-bytes length="0x2" />
     <comment>
       memory pointer to end of BASIC program /<br />
@@ -2551,12 +2589,14 @@
     </comment>
   </at>
   <at address="0x78fb">
+    <label>dim_start</label>
     <data-bytes length="0x2" />
     <comment>
       memory pointer to start of DIM'd variables list
     </comment>
   </at>
   <at address="0x78fd">
+    <label>var_end</label>
     <data-bytes length="0x2" />
     <comment>
       memory pointer to first address behind<br />
@@ -2564,6 +2604,7 @@
     </comment>
   </at>
   <at address="0x78ff">
+    <label>next_data</label>
     <data-bytes length="0x2" />
     <comment>
       memory pointer into BASIC program,<br />
@@ -2572,6 +2613,7 @@
     </comment>
   </at>
   <at address="0x7901">
+    <label>var_re-label</label>
     <data-bytes length="0x1a" />
     <comment>
       used for (re)mapping variable names "A" through "Z"<br />
@@ -2580,6 +2622,7 @@
     </comment>
   </at>
   <at address="0x791b">
+    <label>trace_status</label>
     <data-bytes length="0x1" />
     <comment>
       if trace is on, print current line number<br />
@@ -2589,6 +2632,7 @@
     </comment>
   </at>
   <at address="0x7921">
+    <label>op_buf</label>
     <data-bytes length="0x2" />
     <comment>
       (1) temporary division remainder while<br />
@@ -2598,12 +2642,14 @@
     </comment>
   </at>
   <at address="0x7931">
+    <label>tmp_ch_buf</label>
     <data-bytes length="0x20" />
     <comment>
       temporary character buffer used by PRINT command
     </comment>
   </at>
   <at address="0x795b">
+    <label>cb_dsk_err1</label>
     <comment>
       jump to handler for (hidden) token 0xb0<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -2611,6 +2657,7 @@
     </comment>
   </at>
   <at address="0x7973">
+    <label>cb_dsk_err2</label>
     <comment>
       jump to handler for (hidden) token 0x85<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -2618,6 +2665,7 @@
     </comment>
   </at>
   <at address="0x7979">
+    <label>cb_dsk_err3</label>
     <comment>
       jump to handler for (hidden) token 0xa2<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -2625,6 +2673,7 @@
     </comment>
   </at>
   <at address="0x797c">
+    <label>cb_dsk_err4</label>
     <comment>
       jump to handler for (hidden) token 0xa3<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -2632,6 +2681,7 @@
     </comment>
   </at>
   <at address="0x797f">
+    <label>cb_dsk_err5</label>
     <comment>
       jump to handler for (hidden) token 0xa4<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -2639,6 +2689,7 @@
     </comment>
   </at>
   <at address="0x7982">
+    <label>cb_dsk_err6</label>
     <comment>
       jump to handler for (hidden) token 0xa5<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -2646,6 +2697,7 @@
     </comment>
   </at>
   <at address="0x7985">
+    <label>cb_dsk_err7</label>
     <comment>
       jump to handler for (hidden) token 0xa6<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -2653,6 +2705,7 @@
     </comment>
   </at>
   <at address="0x7988">
+    <label>cb_dsk_err8</label>
     <comment>
       jump to handler for (hidden) token 0xa7<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -2660,6 +2713,7 @@
     </comment>
   </at>
   <at address="0x798b">
+    <label>cb_dsk_err9</label>
     <comment>
       jump to handler for (hidden) token 0xa8<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -2667,6 +2721,7 @@
     </comment>
   </at>
   <at address="0x798e">
+    <label>cb_dsk_err10</label>
     <comment>
       jump to handler for (hidden) token 0xa9<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -2674,6 +2729,7 @@
     </comment>
   </at>
   <at address="0x7991">
+    <label>cb_dsk_err11</label>
     <comment>
       jump to handler for (hidden) token 0xaa<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -2681,6 +2737,7 @@
     </comment>
   </at>
   <at address="0x7997">
+    <label>cb_dsk_err12</label>
     <comment>
       jump to handler for (hidden) token 0xab<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -2688,6 +2745,7 @@
     </comment>
   </at>
   <at address="0x799a">
+    <label>cb_dsk_err13</label>
     <comment>
       jump to handler for (hidden) token 0xac<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -2695,6 +2753,7 @@
     </comment>
   </at>
   <at address="0x79a0">
+    <label>cb_dsk_err14</label>
     <comment>
       jump to handler for (hidden) token 0xad<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -2702,42 +2761,49 @@
     </comment>
   </at>
   <at address="0x79a6">
+    <label>cb_error</label>
     <comment>
       callback envoked whenever an error has reported;<br />
       default is a simple "RET", i.e. do nothing
     </comment>
   </at>
   <at address="0x79ac">
+    <label>cb_ready</label>
     <comment>
       callback envoked whenever "READY" is reported;<br />
       default is a simple "RET", i.e. do nothing
     </comment>
   </at>
   <at address="0x79b2">
+    <label>cb_new_line</label>
     <comment>
       callback envoked whenever a line has been entered;<br />
       default is a simple "RET", i.e. do nothing
     </comment>
   </at>
   <at address="0x79b5">
+    <label>cb_prg_chg1</label>
     <comment>
       callback envoked whenever a program line is changed;<br />
       default is a simple "RET", i.e. do nothing
     </comment>
   </at>
   <at address="0x79b8">
+    <label>cb_prg_chg2</label>
     <comment>
       callback envoked whenever a program line is changed;<br />
       default is a simple "RET", i.e. do nothing
     </comment>
   </at>
   <at address="0x79bb">
+    <label>cb_prg_chg3</label>
     <comment>
       callback envoked whenever a program line is changed;<br />
       default is a simple "RET", i.e. do nothing
     </comment>
   </at>
   <at address="0x79be">
+    <label>cb_prg_mod</label>
     <comment>
       callback envoked whenever a program line is changed,<br />
       or RUN or PRINT or CLEAR is executed or an error<br />
@@ -2746,30 +2812,35 @@
     </comment>
   </at>
   <at address="0x79c1">
+    <label>cb_cout</label>
     <comment>
       callback envoked whenever printing out a character;<br />
       default is a simple "RET", i.e. do nothing
     </comment>
   </at>
   <at address="0x79c4">
+    <label>cb_cmd</label>
     <comment>
       callback envoked whenever any BASIC command is executed;<br />
       default is a simple "RET", i.e. do nothing
     </comment>
   </at>
   <at address="0x79ca">
+    <label>cb_prt</label>
     <comment>
       callback envoked whenever any PRINT command is executed;<br />
       default is a simple "RET", i.e. do nothing
     </comment>
   </at>
   <at address="0x79cd">
+    <label>cb_prt_expr</label>
     <comment>
       callback envoked whenever any BASIC expression is PRINTed;<br />
       default is a simple "RET", i.e. do nothing
     </comment>
   </at>
   <at address="0x79d0">
+    <label>cb_cout_spcl</label>
     <comment>
       callback envoked whenever special control<br />
       characters are printed (e.g. "PRINT CHR$(13)");<br />
@@ -2780,6 +2851,7 @@
     <data-bytes length="0x3" />
   </at>
   <at address="0x79e8">
+    <label>prg_inp_buf</label>
     <data-bytes length="0x40" />
     <header>---- START BASIC line input buffer ----</header>
     <comment>
@@ -2790,9 +2862,11 @@
     <footer>---- END BASIC line input buffer ----</footer>
   </at>
   <at address="0x79ee">
+    <label>prg_ln_buf</label>
     <header>---- working buffer for current BASIC line ----</header>
   </at>
   <at address="0x7a9d">
+    <label>fname_buf</label>
     <data-bytes length="0x11" />
     <header>
       ---- START file name buffer ----<br />
@@ -2807,6 +2881,7 @@
     <footer>---- END file name buffer ----</footer>
   </at>
   <at address="0x7aae">
+    <label>next_crs_x</label>
     <data-bytes length="0x1" />
     <comment>
       x coordinate where to place cursor<br />
@@ -2814,6 +2889,7 @@
     </comment>
   </at>
   <at address="0x7aaf">
+    <label>cout_buf_avl</label>
     <data-bytes length="0x1" />
     <comment>
       current number of bytes available in the<br />
@@ -2823,6 +2899,7 @@
     </comment>
   </at>
   <at address="0x7ab0">
+    <label>cout_scr_adr</label>
     <data-bytes length="0x2" />
     <comment>
       pointer to address within screen print<br />
@@ -2830,6 +2907,7 @@
     </comment>
   </at>
   <at address="0x7ab2">
+    <label>cout_buf</label>
     <data-bytes length="0x20" />
     <header>
       ---- START print buffer ----<br />
@@ -2842,18 +2920,21 @@
     <footer>---- END print buffer ----</footer>
   </at>
   <at address="0x7ad2">
+    <label>snd_pitch</label>
     <data-bytes length="0x1" />
     <comment>
       SOUND pitch of currently played sound
     </comment>
   </at>
   <at address="0x7ad6">
+    <label>fname_len</label>
     <data-bytes length="0x1" />
     <comment>
       file name length of currently handled file
     </comment>
   </at>
   <at address="0x7ad7">
+    <label>line_exts</label>
     <data-bytes length="0xf" />
     <header>
       ---- START line extension flags ----<br />
@@ -2866,6 +2947,7 @@
     <footer>---- END line extension flags ----</footer>
   </at>
   <at address="0x7ae9">
+    <label>prg_start</label>
     <data-bytes length="0x517" />
     <header>
       start of memory area for BASIC program text and variables

@@ -40,6 +40,7 @@ public class VZ200 implements CPU.WallClockListener {
     mainMemoryBus.addReader(video);
     mainMemoryBus.addWriter(video);
     monitor = new Monitor(z80);
+    monitor.addResourceLocation(VZ200.class);
   }
 
   public void wallClockChanged(long wallClockCycles, long wallClockTime) {
@@ -49,7 +50,8 @@ public class VZ200 implements CPU.WallClockListener {
   }
 
   private void run() {
-    monitor.run("g0");
+    monitor.run("n+=annotations.xml\n" +
+                "g0");
   }
 
   public static void main(String argv[]) throws IOException {

@@ -11,6 +11,8 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PushbackInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -128,6 +130,48 @@ public class Monitor {
     }
   }
 
+  private List<Class<?>> resourceLocations;
+
+  public void addResourceLocation(Class<?> clazz) {
+    resourceLocations.add(clazz);
+  }
+
+  private class FileName extends Text {
+    public URL getResource() {
+      File resolvedFile;
+      String text = getValue();
+      resolvedFile = new File(text);
+      if (resolvedFile.exists()) {
+        try {
+          return resolvedFile.toURI().toURL();
+        } catch (MalformedURLException e) {
+          throw new InternalError("unexpected URL conversion error");
+        }
+      }
+      for (Class<?> clazz : resourceLocations) {
+        URL url = clazz.getResource(text);
+        if (url != null)
+          return url;
+      }
+      return null;
+    }
+
+    public InputStream getInputStream() throws IOException {
+      File resolvedFile;
+      String text = getValue();
+      resolvedFile = new File(text);
+      if (resolvedFile.exists()) {
+        return new FileInputStream(resolvedFile);
+      }
+      for (Class<?> clazz : resourceLocations) {
+        InputStream stream = clazz.getResourceAsStream(text);
+        if (stream != null)
+          return stream;
+      }
+      return null;
+    }
+  }
+
   private static boolean isWhiteSpace(char ch) {
     return (ch == ' ') || (ch == '\t') || (ch == '\r') || (ch == '\n');
   }
@@ -183,6 +227,7 @@ public class Monitor {
   }
 
   private static final String SYMBOL_ASSIGN = "=";
+  private static final String SYMBOL_ADD = "+";
   private static final String SYMBOL_TO = "-";
 
   private boolean tryParseSymbol(String symbol) {
@@ -257,7 +302,7 @@ public class Monitor {
       throw new ParseError("register name expected", pos);
   }
 
-  private boolean tryParseFileName(Text fileName) {
+  private boolean tryParseFileName(FileName fileName) {
     skipWhiteSpace();
     boolean stop = false;
     int location = pos;
@@ -276,7 +321,7 @@ public class Monitor {
     return false;
   }
 
-  private void parseFileName(Text fileName) throws ParseError {
+  private void parseFileName(FileName fileName) throws ParseError {
     if (!tryParseFileName(fileName))
       throw new ParseError("file name expected", pos);
   }
@@ -322,7 +367,8 @@ public class Monitor {
   }
 
   private Number num1, num2;
-  private Text fileName, regName;
+  private FileName fileName;
+  private Text regName;
 
   private String[] script;
   private int scriptLineIndex;
@@ -359,6 +405,27 @@ public class Monitor {
     }
   }
 
+  private enum AnnotationAction {
+    REPLACE_LOAD, APPEND_LOAD, SAVE;
+  }
+
+  private AnnotationAction annotationAction;
+
+  private void parseAnnotationCommand() throws ParseError {
+    if (tryParseSymbol(SYMBOL_ADD)) {
+      parseSymbol(SYMBOL_ASSIGN);
+      parseFileName(fileName);
+      annotationAction = AnnotationAction.APPEND_LOAD;
+    } else if (tryParseSymbol(SYMBOL_ASSIGN)) {
+      parseFileName(fileName);
+      annotationAction = AnnotationAction.REPLACE_LOAD;
+    } else if (tryParseFileName(fileName)) {
+      annotationAction = AnnotationAction.SAVE;
+    } else {
+      throw new ParseError("'+', '=' or <filename> expected", pos);
+    }
+  }
+
   private void parseCommand() throws ParseError {
     pos = 0;
     if (eof())
@@ -388,7 +455,6 @@ public class Monitor {
       case 'e' :
       case 'a' :
 	if (!eof()) parseNumber(num1);
-        parseEof();
 	break;
       case 's' :
 	parseFileName(fileName);
@@ -396,13 +462,14 @@ public class Monitor {
 	parseNumber(num1);
         parseSymbol(SYMBOL_TO);
 	parseNumber(num2);
-        parseEof();
 	break;
       case 'l' :
 	parseNumber(num1);
         parseSymbol(SYMBOL_ASSIGN);
 	parseFileName(fileName);
-        parseEof();
+	break;
+      case 'n' :
+        parseAnnotationCommand();
 	break;
       case 'p' :
 	parseNumber(num1);
@@ -410,7 +477,6 @@ public class Monitor {
           parseSymbol(SYMBOL_ASSIGN);
 	  parseNumber(num2);
         }
-        parseEof();
 	break;
       case 'r' :
 	if (!eof()) {
@@ -420,7 +486,6 @@ public class Monitor {
             parseNumber(num1);
           }
 	}
-        parseEof();
 	break;
       case 'h' :
       case 'q' :
@@ -593,8 +658,7 @@ public class Monitor {
 
   private void load() {
     try {
-      InputStream is =
-	new BufferedInputStream(new FileInputStream(fileName.getValue()));
+      InputStream is = new BufferedInputStream(fileName.getInputStream());
       dataStartAddr = num1.getValue();
       int addr = dataStartAddr;
       int value;
@@ -615,13 +679,29 @@ public class Monitor {
     }
   }
 
-  private void loadAnnotationsFromFile(String filePath) {
-    File file = new File(filePath);
+  private void loadAnnotations(FileName fileName) {
+    URL resource = fileName.getResource();
     try {
-      annotations.loadFromFile(file);
+      annotations.loadFromResource(resource);
     } catch (ParseException e) {
-      stderr.println("warning: failed loading annotations from file " +
-                     filePath + ": " + e.getMessage());
+      stderr.println("warning: failed loading annotations from resource " +
+                     resource + ": " + e.getMessage());
+    }
+  }
+
+  private void annotate() {
+    switch (annotationAction) {
+    case REPLACE_LOAD:
+      annotations.clear();
+      loadAnnotations(fileName);
+      break;
+    case APPEND_LOAD:
+      loadAnnotations(fileName);
+      break;
+    case SAVE:
+      throw new InternalError("not yet implemented");
+    default:
+      throw new InternalError("unexpected case fall-through");
     }
   }
 
@@ -946,10 +1026,6 @@ public class Monitor {
     }
   }
 
-  private void annotate() {
-    // TODO
-  }
-
   private void help() {
     stdout.println("Commands");
     stdout.println("========");
@@ -978,6 +1054,10 @@ public class Monitor {
     stdout.println("  s<name>=<startaddr>-<stopaddr>   save data to disk");
     stdout.println("  l<startaddr>=<name>              load data from disk");
     stdout.println();
+    stdout.println("Annotations");
+    stdout.println("  n=<filename>                     replace load");
+    stdout.println("  n+=<filename>                    append load");
+    stdout.println();
     stdout.println("Miscelleanous");
     stdout.println("  h                                help (this page)");
     stdout.println("  q                                quit");
@@ -1004,6 +1084,9 @@ public class Monitor {
       case 'l' :
 	load();
 	break;
+      case 'n' :
+	annotate();
+	break;
       case 'u' :
 	unassemble();
 	break;
@@ -1022,9 +1105,6 @@ public class Monitor {
       case 'r' :
 	registerAccess();
 	break;
-      case 'n' :
-        annotate();
-        break;
       case 'h' :
 	help();
 	break;
@@ -1065,14 +1145,12 @@ public class Monitor {
     registers = cpu.getAllRegisters();
     regPC = cpu.getProgramCounter();
     regSP = cpu.getStackPointer();
-    annotations = new Annotations();
-    loadAnnotationsFromFile("vz200/java/emulator/vz200/annotations.xml"); // TODO add command
     codeStartAddr = 0x0000;
     dataStartAddr = 0x0000;
     welcome();
     num1 = new Number();
     num2 = new Number();
-    fileName = new Text();
+    fileName = new FileName();
     regName = new Text();
     num1.reset();
     num2.reset();
@@ -1098,11 +1176,16 @@ public class Monitor {
     System.exit(0);
   }
 
-  private Monitor() {}
+  private Monitor() {
+    throw new UnsupportedOperationException("unsupported empty constructor");
+  }
 
   public Monitor(CPU cpu) {
-    history = new History();
     this.cpu = cpu;
+    annotations = cpu.getAnnotations();
+    resourceLocations = new ArrayList<Class<?>>();
+    history = new History();
+    addResourceLocation(Monitor.class);
   }
 
   private static void usage() {
