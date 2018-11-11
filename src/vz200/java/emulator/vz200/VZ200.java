@@ -51,6 +51,8 @@ public class VZ200 implements CPU.WallClockListener {
 
   private void run() {
     monitor.run("n+=annotations.xml\n" +
+                "n+=annotations-math.xml\n" +
+                "n+=annotations-rt.xml\n" +
                 "g0");
   }
 

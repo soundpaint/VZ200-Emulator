@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE author [
+<!DOCTYPE annotations [
   <!ENTITY nbsp "&#xa0;">
 ]>
 <annotations
@@ -162,19 +162,19 @@
   <at address="0x0570">
     <data-bytes length="0x04">"RUN\0"</data-bytes>
   </at>
-  <at address="0x58d">
+  <at address="0x058d">
     <comment>
       actual cout routine for print device,<br />
       character in reg. C
     </comment>
   </at>
-  <at address="0x5c4">
+  <at address="0x05c4">
     <comment>
       query printer status,<br />
       result in reg. A, bit 0 (0=ready, 1=busy)
     </comment>
   </at>
-  <at address="0x674">
+  <at address="0x0674">
     <label>init_cbs</label>
     <comment>
       initialize callback vectors
@@ -1115,20 +1115,20 @@
   </at>
   <at address="0x1c90">
     <label>rst18_impl</label>
-    <header>---- implementation of RST 18H ----</header>
-    <comment>
+    <header>
+      ---- implementation of RST 18H ----<br />
       Compare unsigned DE &amp; HL register pairs<br />
       Result:<br />
       * HL &lt; DE => C=1<br />
       * HL >= DE => C=0<br />
       * HL != DE => Z=0<br />
       * HL == DE => Z=1
-    </comment>
+    </header>
   </at>
   <at address="0x1c96">
     <label>rst08_impl</label>
-    <header>---- implementation of RST 08H ----</header>
-    <comment>
+    <header>
+      ---- implementation of RST 08H ----<br />
       parse token char<br />
       * HL points to current char of string to check.<br />
       * The expected char to be parsed is fetched from<br />
@@ -1138,7 +1138,7 @@
       * On success, control flow will return to two bytes after<br />
       previous RST 08H command (such as to skip the char data<br />
       byte to be compared).
-    </comment>
+    </header>
   </at>
   <at address="0x1ca1">
     <comment>handler for token 0x81 ("FOR")</comment>
@@ -1171,6 +1171,9 @@
       * return C=0 if alphabetic char<br />
       * return C=1 if alphanumeric char
     </header>
+  </at>
+  <at address="0x1d7d">
+    <comment>char is ' '?</comment>
   </at>
   <at address="0x1d90">
     <footer>---- END implementation of RST 10H ----</footer>

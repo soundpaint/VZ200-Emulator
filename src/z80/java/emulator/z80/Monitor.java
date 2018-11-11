@@ -713,12 +713,12 @@ public class Monitor {
     return s.toString();
   }
 
-  private static final int MAX_LABEL_LENGTH = 12;
+  private static final int MAX_LABEL_LENGTH = 16;
   private static final String LABEL_FORMAT_STRING =
     "%" + MAX_LABEL_LENGTH + "s";
   private static final String EMPTY_LABEL = fill(' ', MAX_LABEL_LENGTH);
   private static final int MAX_DATA_BYTES = 5;
-  private static final int COMMENT_POS = 52;
+  private static final int COMMENT_POS = 56;
 
   private int printOperation(CPU.ConcreteOperation op, int fallbackAddress) {
     List<String> lines = new ArrayList<String>();
@@ -745,7 +745,13 @@ public class Monitor {
         address = op.getAddress();
       }
       strAddress = Util.hexShortStr(address) + "-";
-      label = annotations.getLabel(address);
+      String fullLabel = annotations.getLabel(address);
+      label =
+        fullLabel != null ?
+        (fullLabel.length() > MAX_LABEL_LENGTH ?
+         fullLabel.substring(0, MAX_LABEL_LENGTH) :
+         fullLabel) :
+        null;
       header = annotations.getHeader(address);
       comment = annotations.getComment(address);
       int opCodeLength = op != null ? op.getByteLength() : 1;

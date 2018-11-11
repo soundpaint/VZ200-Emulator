@@ -776,6 +776,33 @@ public class Z80 implements CPU {
     }
   }
 
+  private class Rst implements Function {
+    private String name;
+
+    private Rst() {}
+
+    Rst(String name) {
+      this.name = name;
+    }
+
+    public String getName() { return name; }
+
+    public String evaluate(int arg) {
+      if ((arg < 0) || (arg > 7)) {
+        throw new IndexOutOfBoundsException("arg=" + arg);
+      }
+      int address = 8 * arg;
+      String label = annotations.getLabel(address);
+      if (label != null) {
+        return label;
+      }
+      String hex = Util.hexIntStr(address);
+      while (hex.length() < 2)
+	hex = "0" + hex; // TODO: This is very slow and inefficient!
+      return hex.substring(hex.length() - 2);
+    }
+  }
+
   private /*final*/ Function[] FUNCTIONS;
 
   private void createFunctions() {
@@ -792,7 +819,8 @@ public class Z80 implements CPU {
       new Identity("VAL16", 4),
       new Address("ADR16", 4),
       new Disp8("DISP8"),
-      new Rel8("REL8", concreteOperation)
+      new Rel8("REL8", concreteOperation),
+      new Rst("RST")
     };
   }
 
@@ -3080,7 +3108,7 @@ public class Z80 implements CPU {
     },
     new GenericOperation() {
       public void init() {
-	init("RST \\VAL3[n]",
+	init("RST \\RST[n]",
 	     "11nnn111",
 	     11, 0);
       }
