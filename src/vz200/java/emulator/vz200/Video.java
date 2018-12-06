@@ -90,6 +90,11 @@ public class Video extends JFrame
     panel.setDisplayMode(displayMode);
   }
 
+  public void setZoomFactor(int zoomFactor) {
+    panel.setZoomFactor(zoomFactor);
+    pack();
+  }
+
   public Video() throws IOException {
     this(DEFAULT_BASE_ADDRESS);
   }
@@ -100,6 +105,7 @@ public class Video extends JFrame
     wallClockTime = 0;
     prevHsCycleLowStart = 0;
     prevFsCycleLowStart = 0;
+    setJMenuBar(new VideoMenu(this));
     panel = new VideoPanel(baseAddress);
     getContentPane().add(panel);
     videoRAM = panel.getVideoRAM();

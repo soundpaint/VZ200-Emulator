@@ -58,7 +58,7 @@ public class VideoPanel extends JPanel {
   private Color frameColor;
   private Color[] textColorTable, graphicsColorTable;
   private Dimension preferredSize;
-  private int zoom;
+  private int zoomFactor;
   private boolean displayMode;
   private boolean colorMode;
 
@@ -95,7 +95,7 @@ public class VideoPanel extends JPanel {
     //  directVideoRAM[i] = i & 0xff;
 
     invalidator = new Invalidator();
-    setZoom(1);
+    setZoomFactor(UserPreferences.getInstance().getVideoZoomFactor());
     colorMode = COLOR_MODE_RED; // force initial update
     setColorMode(COLOR_MODE_GREEN);
     setDisplayMode(DISPLAY_MODE_TEXT);
@@ -103,23 +103,30 @@ public class VideoPanel extends JPanel {
 
   public RAMMemory getVideoRAM() { return videoRAM; }
 
-  public void setZoom(int zoom) {
-    this.zoom = zoom;
+  public void setZoomFactor(int zoomFactor) {
+    if (zoomFactor < 1) {
+      throw new IllegalArgumentException("zoomFactor < 1");
+    }
+    if (zoomFactor > 3) {
+      throw new IllegalArgumentException("zoomFactor > 3");
+    }
+    this.zoomFactor = zoomFactor;
 
     // complete screen
     sxleft = 0;
-    sxright = 320 * zoom - 1;
+    sxright = 320 * zoomFactor - 1;
     sytop = 0;
-    sybottom = 256 * zoom - 1;
+    sybottom = 256 * zoomFactor - 1;
 
     // active window
-    frameWidth = 32 * zoom;
-    axleft = sxleft + 32 * zoom;
-    axright = sxright - 32 * zoom;
-    aytop = sytop + 32 * zoom;
-    aybottom = sybottom - 32 * zoom;
+    frameWidth = 32 * zoomFactor;
+    axleft = sxleft + 32 * zoomFactor;
+    axright = sxright - 32 * zoomFactor;
+    aytop = sytop + 32 * zoomFactor;
+    aybottom = sybottom - 32 * zoomFactor;
 
-    preferredSize = new Dimension(320 * zoom, 256 * zoom);
+    preferredSize = new Dimension(320 * zoomFactor, 256 * zoomFactor);
+    invalidateAll();
   }
 
   public static boolean COLOR_MODE_GREEN = false;
@@ -191,15 +198,15 @@ public class VideoPanel extends JPanel {
   public void paintTextMode(Graphics g,
 			    int cxleft, int cxright,
 			    int cytop, int cybottom) {
-    int x0 = (cxleft - frameWidth) / zoom / 8;
-    int x1 = (cxright - frameWidth) / zoom / 8 + 1;
-    int y0 = (cytop - frameWidth) / zoom / 12;
-    int y1 = (cybottom - frameWidth) / zoom / 12 + 1;
-    int zoom8 = 8 * zoom;
-    int zoom12 = 12 * zoom;
-    int sy0 = y0 * zoom12 + frameWidth;
+    int x0 = (cxleft - frameWidth) / zoomFactor / 8;
+    int x1 = (cxright - frameWidth) / zoomFactor / 8 + 1;
+    int y0 = (cytop - frameWidth) / zoomFactor / 12;
+    int y1 = (cybottom - frameWidth) / zoomFactor / 12 + 1;
+    int zoomFactor8 = 8 * zoomFactor;
+    int zoomFactor12 = 12 * zoomFactor;
+    int sy0 = y0 * zoomFactor12 + frameWidth;
     for (int y = y0; y < y1; y++) {
-      int sx0 = x0 * zoom8 + frameWidth;
+      int sx0 = x0 * zoomFactor8 + frameWidth;
       for (int x = x0; x < x1; x++) {
 	int charCode = directVideoRAM[(y << 5) + x];
 	Color fgColor = textColorTable[charCode >> 4];
@@ -214,32 +221,32 @@ public class VideoPanel extends JPanel {
 	      g.setColor(Color.black);
 	    else
 	      g.setColor(fgColor);
-	    g.fillRect(sx, sy, zoom, zoom);
+	    g.fillRect(sx, sy, zoomFactor, zoomFactor);
 	    mask <<= 1;
-	    sx += zoom;
+	    sx += zoomFactor;
 	  }
-	  sy += zoom;
+	  sy += zoomFactor;
 	}
-	sx0 += zoom8;
+	sx0 += zoomFactor8;
       }
-      sy0 += zoom12;
+      sy0 += zoomFactor12;
     }
   }
 
   public void paintGraphicsMode(Graphics g,
 				int cxleft, int cxright,
 				int cytop, int cybottom) {
-    int x0 = (cxleft - frameWidth) / zoom / 8;
-    int x1 = (cxright - frameWidth) / zoom / 8 + 1;
-    int y0 = (cytop - frameWidth) / zoom / 3;
-    int y1 = (cybottom - frameWidth) / zoom / 3 + 1;
+    int x0 = (cxleft - frameWidth) / zoomFactor / 8;
+    int x1 = (cxright - frameWidth) / zoomFactor / 8 + 1;
+    int y0 = (cytop - frameWidth) / zoomFactor / 3;
+    int y1 = (cybottom - frameWidth) / zoomFactor / 3 + 1;
 
-    int zoom2 = 2 * zoom;
-    int zoom3 = 3 * zoom;
-    int zoom8 = 8 * zoom;
-    int _sx = x0 * zoom8 + 6 * zoom + frameWidth;
+    int zoomFactor2 = 2 * zoomFactor;
+    int zoomFactor3 = 3 * zoomFactor;
+    int zoomFactor8 = 8 * zoomFactor;
+    int _sx = x0 * zoomFactor8 + 6 * zoomFactor + frameWidth;
 
-    int sy0 = y0 * zoom3 + frameWidth;
+    int sy0 = y0 * zoomFactor3 + frameWidth;
     for (int y = y0; y < y1; y++) {
       int sx0 = _sx;
       for (int x = x0; x < x1; x++) {
@@ -247,21 +254,21 @@ public class VideoPanel extends JPanel {
 	int sx = sx0;
 	for (int xline = 0; xline < 4; xline++) {
 	  g.setColor(graphicsColorTable[charCode & 0x3]);
-	  g.fillRect(sx, sy0, zoom2, zoom3);
+	  g.fillRect(sx, sy0, zoomFactor2, zoomFactor3);
 	  charCode >>= 2;
-	  sx -= zoom2;
+	  sx -= zoomFactor2;
 	}
-	sx0 += zoom8;
+	sx0 += zoomFactor8;
       }
-      sy0 += zoom3;
+      sy0 += zoomFactor3;
     }
   }
 
   public Dimension getPreferredSize() { return preferredSize; }
 
   public void repaintTextMode(boolean[] dirty) {
-    int dx = zoom * 8;
-    int dy = zoom * 12;
+    int dx = zoomFactor * 8;
+    int dy = zoomFactor * 12;
     int index = 0;
     int y = frameWidth;
     for (int cy = 0; cy < 16; cy++) {
@@ -276,8 +283,8 @@ public class VideoPanel extends JPanel {
   }
 
   public void repaintGraphicsMode(boolean[] dirty) {
-    int dx = zoom * 2;
-    int dy = zoom * 3;
+    int dx = zoomFactor * 2;
+    int dy = zoomFactor * 3;
     int index = 0;
     int y = frameWidth;
     for (int cy = 0; cy < 64; cy++) {
