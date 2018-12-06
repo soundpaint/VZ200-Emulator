@@ -41,14 +41,20 @@ public class Video extends JFrame
   }
 
   public void writeByte(int address, int value, long wallClockTime) {
+    int previousValue = videoRAM.readByte(address, wallClockTime);
     videoRAM.writeByte(address, value, wallClockTime);
-    panel.invalidate(address);
+    if (value != previousValue) {
+      panel.invalidate(address);
+    }
   }
 
   public void writeShort(int address, int value, long wallClockTime) {
+    int previousValue = videoRAM.readShort(address, wallClockTime);
     videoRAM.writeShort(address, value, wallClockTime);
-    panel.invalidate(address++);
-    panel.invalidate(address);
+    if (value != previousValue) {
+      panel.invalidate(address);
+      panel.invalidate(address + 1);
+    }
   }
 
   public void resync(long wallClockTime) {}

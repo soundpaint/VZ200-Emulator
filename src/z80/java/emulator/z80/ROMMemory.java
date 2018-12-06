@@ -44,8 +44,7 @@ public class ROMMemory implements MemoryBus.BusWriter
     InputStream resource = baseClass.getResourceAsStream(resourceName);
     if (resource == null)
       throw new IOException("resource '" + resourceName + "' not found");
-    DataInputStream is =
-      new DataInputStream(resource);
+    DataInputStream is = new DataInputStream(resource);
     is.readFully(romBytes);
     if (is.read() != -1)
       throw new IOException("EOF expected: " + resourceName +
