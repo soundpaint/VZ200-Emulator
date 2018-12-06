@@ -13,6 +13,9 @@ public class UserPreferences
   private static final String PREFS_NAME_VIDEO_ZOOM_FACTOR =
     "video/zoom-factor";
   private static final int PREFS_DEFAULT_VIDEO_ZOOM_FACTOR = 1;
+  private static final String PREFS_NAME_KBD_ICONIFIED =
+    "keyboard/iconified";
+  private static final boolean PREFS_DEFAULT_KBD_ICONIFIED = false;
 
   private UserPreferences()
   {
@@ -41,6 +44,17 @@ public class UserPreferences
       setVideoZoomFactor(zoomFactor);
     }
     return zoomFactor;
+  }
+
+  public void setKeyboardIconified(boolean iconified)
+  {
+    vz200Preferences.putBoolean(PREFS_NAME_KBD_ICONIFIED, iconified);
+  }
+
+  public boolean getKeyboardIconified()
+  {
+    return vz200Preferences.getBoolean(PREFS_NAME_KBD_ICONIFIED,
+                                       PREFS_DEFAULT_KBD_ICONIFIED);
   }
 }
 

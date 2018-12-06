@@ -2,13 +2,17 @@ package emulator.vz200;
 
 import java.awt.BorderLayout;
 import java.awt.event.KeyListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.IOException;
 import javax.swing.JFrame;
 
 import emulator.z80.MemoryBus;
 import emulator.z80.Util;
 
-public class Keyboard extends JFrame implements MemoryBus.BusWriter {
+public class Keyboard extends JFrame
+  implements WindowListener, MemoryBus.BusWriter
+{
   private static final long serialVersionUID = -6642328202936155082L;
 
   private static final int MEMORY_SIZE = 0x0800;
@@ -49,16 +53,55 @@ public class Keyboard extends JFrame implements MemoryBus.BusWriter {
   public Keyboard(int baseAddress) throws IOException {
     super("VZ200 Keyboard");
     this.baseAddress = baseAddress;
+    addWindowListener(this);
     matrix = new KeyboardMatrix();
     getContentPane().setLayout(new BorderLayout());
     panel = new KeyboardPanel(matrix);
     getContentPane().add(panel, BorderLayout.CENTER);
     pack();
     setVisible(true);
+    if (UserPreferences.getInstance().getKeyboardIconified()) {
+      setExtendedState(ICONIFIED);
+    }
   }
 
   public KeyListener getKeyListener() {
     return panel.getKeyListener();
+  }
+
+  @Override
+  public void windowOpened(WindowEvent event) {
+    // nothing
+  }
+
+  @Override
+  public void windowClosing(WindowEvent event) {
+    // nothing
+  }
+
+  @Override
+  public void windowClosed(WindowEvent event) {
+    // nothing
+  }
+
+  @Override
+  public void windowDeactivated(WindowEvent event) {
+    // nothing
+  }
+
+  @Override
+  public void windowActivated(WindowEvent event) {
+    // nothing
+  }
+
+  @Override
+  public void windowDeiconified(WindowEvent event) {
+    UserPreferences.getInstance().setKeyboardIconified(false);
+  }
+
+  @Override
+  public void windowIconified(WindowEvent event) {
+    UserPreferences.getInstance().setKeyboardIconified(true);
   }
 
   public String toString()
