@@ -1,38 +1,65 @@
 package emulator.vz200;
 
-public class Speaker implements SignalEventSource {
-  private static final short DEFAULT_AMPLITUDE = 5000;
+public class Speaker implements SignalEventSource, SpeakerControlListener
+{
+  private final SignalEventQueue eventQueue;
+  private final short[] elongation;
+  private boolean muted;
 
-  private final short[] ELONGATION = new short[3];
-
-  private SignalEventQueue eventQueue;
-
-  public Speaker(long currentWallClockTime) {
-    eventQueue = new SignalEventQueue("speaker", currentWallClockTime);
-    setAmplitude(DEFAULT_AMPLITUDE);
+  private Speaker()
+  {
+    throw new UnsupportedOperationException("unsupported constructor");
   }
 
-  public void resync() {
+  public Speaker(final long currentWallClockTime)
+  {
+    elongation = new short[3];
+    eventQueue = new SignalEventQueue("speaker", currentWallClockTime);
+    setVolume(SpeakerControl.VOLUME_DEFAULT);
+  }
+
+  public void resync()
+  {
     eventQueue.resync();
   }
 
-  public void setAmplitude(short amplitude) {
-    ELONGATION[0] = (short)-amplitude;
-    ELONGATION[1] = 0;
-    ELONGATION[2] = amplitude;
+  public void setVolume(final double volume)
+  {
+    final int amplitude =
+      (int)Math.min(Math.max(volume * 32767.0, 0.0), 32767.0);
+    /*
+    elongation[0] = (short)-amplitude;
+    elongation[1] = 0;
+    elongation[2] = (short)amplitude;
+    */
+    elongation[0] = 0;
+    elongation[1] = (short)amplitude;
+    elongation[2] = (short)(2 * amplitude + 1);
   }
 
-  public long getAvailableNanoSeconds() {
+  public void setMuted(final boolean muted)
+  {
+    this.muted = muted;
+  }
+
+  public long getAvailableNanoSeconds()
+  {
     return eventQueue.getAvailableNanoSeconds();
   }
 
-  public void putEvent(int plusPinValue, int minusPinValue,
-                       long wallClockTime) {
-    short elongation = ELONGATION[plusPinValue - minusPinValue + 1];
-    eventQueue.put(elongation, wallClockTime);
+  public void putEvent(final int plusPinValue, final int minusPinValue,
+                       final long wallClockTime)
+  {
+    if (!muted) {
+      final short currentElongation =
+        elongation[plusPinValue - minusPinValue + 1];
+      eventQueue.put(currentElongation, wallClockTime);
+    }
   }
 
-  public void getEvent(SignalEventQueue.Event event, long maxTimeSpan) {
+  public void getEvent(final SignalEventQueue.Event event,
+                       final long maxTimeSpan)
+  {
     if (maxTimeSpan <= 0) {
       throw new IllegalArgumentException("maxTimeSpan <= 0");
     }

@@ -16,6 +16,12 @@ public class UserPreferences
   private static final String PREFS_NAME_KBD_ICONIFIED =
     "keyboard/iconified";
   private static final boolean PREFS_DEFAULT_KBD_ICONIFIED = false;
+  private static final String PREFS_NAME_SPEAKER_VOLUME =
+    "speaker/volume";
+  private static final double PREFS_DEFAULT_SPEAKER_VOLUME = 0.8;
+  private static final String PREFS_NAME_SPEAKER_MUTED =
+    "speaker/muted";
+  private static final boolean PREFS_DEFAULT_SPEAKER_MUTED = false;
 
   private UserPreferences()
   {
@@ -27,7 +33,7 @@ public class UserPreferences
     return instance;
   }
 
-  public void setVideoZoomFactor(int zoomFactor)
+  public void setVideoZoomFactor(final int zoomFactor)
   {
     vz200Preferences.putInt(PREFS_NAME_VIDEO_ZOOM_FACTOR, zoomFactor);
   }
@@ -46,7 +52,7 @@ public class UserPreferences
     return zoomFactor;
   }
 
-  public void setKeyboardIconified(boolean iconified)
+  public void setKeyboardIconified(final boolean iconified)
   {
     vz200Preferences.putBoolean(PREFS_NAME_KBD_ICONIFIED, iconified);
   }
@@ -55,6 +61,40 @@ public class UserPreferences
   {
     return vz200Preferences.getBoolean(PREFS_NAME_KBD_ICONIFIED,
                                        PREFS_DEFAULT_KBD_ICONIFIED);
+  }
+
+  public void setSpeakerVolume(final double volume)
+  {
+    vz200Preferences.putDouble(PREFS_NAME_SPEAKER_VOLUME, volume);
+  }
+
+  public double getSpeakerVolume()
+  {
+    double speakerVolume =
+      vz200Preferences.getDouble(PREFS_NAME_SPEAKER_VOLUME,
+                                 PREFS_DEFAULT_SPEAKER_VOLUME);
+    if ((speakerVolume < 0.0) ||
+        (speakerVolume > 1.0)) {
+      System.out.println("error: unexpected speaker volume: " + speakerVolume +
+                         ", resetting to " +
+                         SpeakerControl.VOLUME_DEFAULT);
+      speakerVolume = SpeakerControl.VOLUME_DEFAULT;
+      setSpeakerVolume(speakerVolume);
+    }
+    return speakerVolume;
+  }
+
+  public void setSpeakerMuted(final boolean muted)
+  {
+    vz200Preferences.putBoolean(PREFS_NAME_SPEAKER_MUTED, muted);
+  }
+
+  public boolean getSpeakerMuted()
+  {
+    final boolean speakerMuted =
+      vz200Preferences.getBoolean(PREFS_NAME_SPEAKER_MUTED,
+                                  PREFS_DEFAULT_SPEAKER_MUTED);
+    return speakerMuted;
   }
 }
 

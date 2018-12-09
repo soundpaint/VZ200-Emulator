@@ -2,6 +2,8 @@ package emulator.vz200;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.net.URL;
+import javax.swing.ImageIcon;
 
 import emulator.z80.CPU;
 import emulator.z80.MemoryBus;
@@ -11,15 +13,26 @@ import emulator.z80.ROMMemory;
 import emulator.z80.Z80;
 
 public class VZ200 implements CPU.WallClockListener {
-  private final static int RAM_START = 0x7800;
-  private final static int RAM_LENGTH = 0x2800;
-  private final static String OS_RESOURCENAME = "os.rom";
-  private final static int OS_START = 0x0000;
-  private final static int OS_LENGTH = 0x4000;
+  private static final String IMAGES_ROOT_PATH = ".";
+  private static final int RAM_START = 0x7800;
+  private static final int RAM_LENGTH = 0x2800;
+  private static final String OS_RESOURCENAME = "os.rom";
+  private static final int OS_START = 0x0000;
+  private static final int OS_LENGTH = 0x4000;
 
   private IO io;
   private CPU z80;
   private Monitor monitor;
+
+  public static ImageIcon createIcon(final String imageFileName,
+                                     final String altText) {
+    final String imagePath = IMAGES_ROOT_PATH + "/" + imageFileName;
+    final URL imageURL = VZ200.class.getResource(imagePath);
+    if (imageURL != null) {
+      return new ImageIcon(imageURL, altText);
+    }
+    return null;
+  }
 
   public VZ200() throws IOException {
     ROMMemory rom = new ROMMemory((Class<? extends Object>)VZ200.class,

@@ -1,20 +1,22 @@
 package emulator.vz200;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JToolBar;
 
 public class CassetteTransportControl extends JToolBar {
   private static final long serialVersionUID = 5283444125008636282L;
-  private static final String IMAGES_ROOT_PATH = ".";
 
   private List<CassetteTransportListener> listeners;
   private File file;
@@ -30,22 +32,12 @@ public class CassetteTransportControl extends JToolBar {
     listeners.remove(listener);
   }
 
-  private static final ImageIcon ICON_ERROR =
-    createIcon("record32x32.png", "Error");
-
-  private static ImageIcon createIcon(final String imageFileName,
-                                      final String altText) {
-    final String imagePath = IMAGES_ROOT_PATH + "/" + imageFileName;
-    final URL imageURL = VZ200.class.getResource(imagePath);
-    if (imageURL != null) {
-      return new ImageIcon(imageURL, altText);
-    }
-    return null;
-  }
+  private static final ImageIcon ICON_TAPE =
+    VZ200.createIcon("tape32x32.png", null);
 
   private static JButton createToolButton(final String imageFileName,
                                           final String altText) {
-    final ImageIcon icon = createIcon(imageFileName, altText);
+    final ImageIcon icon = VZ200.createIcon(imageFileName, altText);
     final JButton button = new JButton();
     if (icon != null) {
       button.setIcon(icon);
@@ -62,6 +54,8 @@ public class CassetteTransportControl extends JToolBar {
   }
 
   public CassetteTransportControl(CassetteStatusLine statusLine) {
+    super("Cassette Tape");
+    setBorder(BorderFactory.createTitledBorder("Cassette I/O"));
     listeners = new ArrayList<CassetteTransportListener>();
     this.statusLine = statusLine;
     playFileChooser =
@@ -86,6 +80,16 @@ public class CassetteTransportControl extends JToolBar {
     btnStop.addActionListener((final ActionEvent event) -> { stop(true); });
     btnStop.setEnabled(false);
     add(btnStop);
+
+    add(new Separator(new Dimension(5, 32)));
+
+    add(Box.createHorizontalGlue());
+
+    JLabel lblTape = new JLabel(ICON_TAPE);
+    lblTape.setAlignmentX(1.0f);
+    add(lblTape);
+
+    add(new Separator(new Dimension(5, 32)));
   }
 
   private void play(File file, boolean notifyListeners) {

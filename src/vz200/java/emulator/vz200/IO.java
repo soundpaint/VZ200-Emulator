@@ -34,8 +34,6 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter,
     keyboard = new Keyboard(baseAddress);
     video = new Video();
     video.addKeyListener(keyboard.getKeyListener());
-    peripheralsGUI = new PeripheralsGUI();
-    peripheralsGUI.addTransportListener(this);
     try {
       audioStreamRenderer = new AudioStreamRenderer();
     } catch (Throwable t) {
@@ -49,6 +47,8 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter,
       audioStreamRenderer.setRightChannelSource(cassetteOut);
       audioStreamRenderer.start();
     }
+    peripheralsGUI = new PeripheralsGUI(speaker);
+    peripheralsGUI.addTransportListener(this);
   }
 
   public void resync(long wallClockTime) {
