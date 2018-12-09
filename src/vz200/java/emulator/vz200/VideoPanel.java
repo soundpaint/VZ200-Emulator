@@ -12,38 +12,46 @@ import emulator.z80.CPU;
 import emulator.z80.RAMMemory;
 import emulator.z80.ROMMemory;
 
-public class VideoPanel extends JPanel {
+public class VideoPanel extends JPanel
+{
   private static final long serialVersionUID = 1223323375329148324L;
 
-  private final static int MEMORY_SIZE = 0x0800;
+  private static final int MEMORY_SIZE = 0x0800;
+  private static final String CHARSET_RESOURCENAME = "charset.rom";
+  private static final int CHARSET_LENGTH = 3072;
+  public static final boolean COLOR_MODE_GREEN = false;
+  public static final boolean COLOR_MODE_RED = true;
+  public static final boolean DISPLAY_MODE_TEXT = false;
+  public static final boolean DISPLAY_MODE_GRAPHICS = true;
 
-  private final static Color GREEN_FRAME_COLOR =
+
+  private static final Color GREEN_FRAME_COLOR =
     Color.green.darker().darker().darker();
 
-  private final static Color RED_FRAME_COLOR =
+  private static final Color RED_FRAME_COLOR =
     Color.red.darker().darker();
 
-  private final static Color GREEN_FG_COLOR =
+  private static final Color GREEN_FG_COLOR =
     Color.green.darker().darker();
 
-  private final static Color RED_FG_COLOR =
+  private static final Color RED_FG_COLOR =
     Color.red.darker();
 
-  private final static Color[] GREEN_TEXT_COLOR_TABLE = {
+  private static final Color[] GREEN_TEXT_COLOR_TABLE = {
     GREEN_FG_COLOR, GREEN_FG_COLOR, GREEN_FG_COLOR, GREEN_FG_COLOR,
     GREEN_FG_COLOR, GREEN_FG_COLOR, GREEN_FG_COLOR, GREEN_FG_COLOR,
     Color.green, Color.yellow, Color.blue, Color.red,
     Color.orange.darker(), Color.cyan, Color.magenta, Color.orange
   };
 
-  private final static Color[] RED_TEXT_COLOR_TABLE = {
+  private static final Color[] RED_TEXT_COLOR_TABLE = {
     RED_FG_COLOR, RED_FG_COLOR, RED_FG_COLOR, RED_FG_COLOR,
     RED_FG_COLOR, RED_FG_COLOR, RED_FG_COLOR, RED_FG_COLOR,
     Color.green, Color.yellow, Color.blue, Color.red,
     Color.orange.darker(), Color.cyan, Color.magenta, Color.orange
   };
 
-  private final static Color[] GREEN_GRAPHICS_COLOR_TABLE = {
+  private static final Color[] GREEN_GRAPHICS_COLOR_TABLE = {
     Color.green, Color.yellow, Color.blue, Color.red
   };
 
@@ -51,14 +59,14 @@ public class VideoPanel extends JPanel {
     Color.orange.darker(), Color.cyan, Color.magenta, Color.orange
   };
 
-  private int baseAddress;
-  private RAMMemory videoRAM;
-  private int[] directVideoRAM;
-  private int[] charset; // use int rather than signed byte to save casts
+  private final int baseAddress;
+  private final RAMMemory videoRAM;
+  private final int[] directVideoRAM;
+  private final int[] charset; // use int rather than signed byte to save casts
+  private int zoomFactor;
+  private Dimension preferredSize;
   private Color frameColor;
   private Color[] textColorTable, graphicsColorTable;
-  private Dimension preferredSize;
-  private int zoomFactor;
   private boolean displayMode;
   private boolean colorMode;
 
@@ -76,12 +84,15 @@ public class VideoPanel extends JPanel {
   private int sybottom;
 
   // invalidation
-  private Invalidator invalidator;
+  private final Invalidator invalidator;
 
-  private final static String CHARSET_RESOURCENAME = "charset.rom";
-  private final static int CHARSET_LENGTH = 3072;
+  private VideoPanel()
+  {
+    throw new UnsupportedOperationException("unsupported constructor");
+  }
 
-  public VideoPanel(int baseAddress) throws IOException {
+  public VideoPanel(final int baseAddress) throws IOException
+  {
     this.baseAddress = baseAddress;
     charset =
       new ROMMemory((Class<? extends Object>)VideoPanel.class,
@@ -89,11 +100,6 @@ public class VideoPanel extends JPanel {
 		    0x0000, CHARSET_LENGTH).getByteArray();
     videoRAM = new RAMMemory(baseAddress, 0x0800);
     directVideoRAM = videoRAM.getByteArray();
-
-    // debug: init video ram with pattern
-    //for (int i = 0x0000; i < 0x0800; i++)
-    //  directVideoRAM[i] = i & 0xff;
-
     invalidator = new Invalidator();
     setZoomFactor(UserPreferences.getInstance().getVideoZoomFactor());
     colorMode = COLOR_MODE_RED; // force initial update
@@ -101,9 +107,13 @@ public class VideoPanel extends JPanel {
     setDisplayMode(DISPLAY_MODE_TEXT);
   }
 
-  public RAMMemory getVideoRAM() { return videoRAM; }
+  public RAMMemory getVideoRAM()
+  {
+    return videoRAM;
+  }
 
-  public void setZoomFactor(int zoomFactor) {
+  public void setZoomFactor(final int zoomFactor)
+  {
     if (zoomFactor < 1) {
       throw new IllegalArgumentException("zoomFactor < 1");
     }
@@ -129,10 +139,13 @@ public class VideoPanel extends JPanel {
     invalidateAll();
   }
 
-  public static boolean COLOR_MODE_GREEN = false;
-  public static boolean COLOR_MODE_RED = true;
+  public Dimension getPreferredSize()
+  {
+    return preferredSize;
+  }
 
-  public void setColorMode(boolean colorMode) {
+  public void setColorMode(final boolean colorMode)
+  {
     if (this.colorMode != colorMode) {
       this.colorMode = colorMode;
       if (colorMode == COLOR_MODE_GREEN) {
@@ -148,21 +161,21 @@ public class VideoPanel extends JPanel {
     }
   }
 
-  public static boolean DISPLAY_MODE_TEXT = false;
-  public static boolean DISPLAY_MODE_GRAPHICS = true;
-
-  public void setDisplayMode(boolean displayMode) {
+  public void setDisplayMode(final boolean displayMode)
+  {
     if (this.displayMode != displayMode) {
       this.displayMode = displayMode;
       invalidateAll();
     }
   }
 
-  public boolean getDisplayMode() {
+  public boolean getDisplayMode()
+  {
     return displayMode;
   }
 
-  public void paintComponent(Graphics g) {
+  public void paintComponent(final Graphics g)
+  {
     // current area to redraw
     int cxleft = sxleft;
     int cxright = sxright;
@@ -195,21 +208,22 @@ public class VideoPanel extends JPanel {
       paintGraphicsMode(g, cxleft, cxright, cytop, cybottom);
   }
 
-  public void paintTextMode(Graphics g,
-			    int cxleft, int cxright,
-			    int cytop, int cybottom) {
-    int x0 = (cxleft - frameWidth) / zoomFactor / 8;
-    int x1 = (cxright - frameWidth) / zoomFactor / 8 + 1;
-    int y0 = (cytop - frameWidth) / zoomFactor / 12;
-    int y1 = (cybottom - frameWidth) / zoomFactor / 12 + 1;
-    int zoomFactor8 = 8 * zoomFactor;
-    int zoomFactor12 = 12 * zoomFactor;
+  public void paintTextMode(final Graphics g,
+			    final int cxleft, final int cxright,
+			    final int cytop, final int cybottom)
+  {
+    final int x0 = (cxleft - frameWidth) / zoomFactor / 8;
+    final int x1 = (cxright - frameWidth) / zoomFactor / 8 + 1;
+    final int y0 = (cytop - frameWidth) / zoomFactor / 12;
+    final int y1 = (cybottom - frameWidth) / zoomFactor / 12 + 1;
+    final int zoomFactor8 = 8 * zoomFactor;
+    final int zoomFactor12 = 12 * zoomFactor;
     int sy0 = y0 * zoomFactor12 + frameWidth;
     for (int y = y0; y < y1; y++) {
       int sx0 = x0 * zoomFactor8 + frameWidth;
       for (int x = x0; x < x1; x++) {
-	int charCode = directVideoRAM[(y << 5) + x];
-	Color fgColor = textColorTable[charCode >> 4];
+	final int charCode = directVideoRAM[(y << 5) + x];
+	final Color fgColor = textColorTable[charCode >> 4];
 	int sy = sy0;
 	int charsetIndex = charCode * 12;
 	for (int yline = 0; yline < 12; yline++) {
@@ -233,18 +247,19 @@ public class VideoPanel extends JPanel {
     }
   }
 
-  public void paintGraphicsMode(Graphics g,
-				int cxleft, int cxright,
-				int cytop, int cybottom) {
-    int x0 = (cxleft - frameWidth) / zoomFactor / 8;
-    int x1 = (cxright - frameWidth) / zoomFactor / 8 + 1;
-    int y0 = (cytop - frameWidth) / zoomFactor / 3;
-    int y1 = (cybottom - frameWidth) / zoomFactor / 3 + 1;
+  public void paintGraphicsMode(final Graphics g,
+				final int cxleft, final int cxright,
+				final int cytop, final int cybottom)
+  {
+    final int x0 = (cxleft - frameWidth) / zoomFactor / 8;
+    final int x1 = (cxright - frameWidth) / zoomFactor / 8 + 1;
+    final int y0 = (cytop - frameWidth) / zoomFactor / 3;
+    final int y1 = (cybottom - frameWidth) / zoomFactor / 3 + 1;
 
-    int zoomFactor2 = 2 * zoomFactor;
-    int zoomFactor3 = 3 * zoomFactor;
-    int zoomFactor8 = 8 * zoomFactor;
-    int _sx = x0 * zoomFactor8 + 6 * zoomFactor + frameWidth;
+    final int zoomFactor2 = 2 * zoomFactor;
+    final int zoomFactor3 = 3 * zoomFactor;
+    final int zoomFactor8 = 8 * zoomFactor;
+    final int _sx = x0 * zoomFactor8 + 6 * zoomFactor + frameWidth;
 
     int sy0 = y0 * zoomFactor3 + frameWidth;
     for (int y = y0; y < y1; y++) {
@@ -264,11 +279,10 @@ public class VideoPanel extends JPanel {
     }
   }
 
-  public Dimension getPreferredSize() { return preferredSize; }
-
-  public void repaintTextMode(boolean[] dirty) {
-    int dx = zoomFactor * 8;
-    int dy = zoomFactor * 12;
+  public void repaintTextMode(final boolean[] dirty)
+  {
+    final int dx = zoomFactor * 8;
+    final int dy = zoomFactor * 12;
     int index = 0;
     int y = frameWidth;
     for (int cy = 0; cy < 16; cy++) {
@@ -282,9 +296,10 @@ public class VideoPanel extends JPanel {
     }
   }
 
-  public void repaintGraphicsMode(boolean[] dirty) {
-    int dx = zoomFactor * 2;
-    int dy = zoomFactor * 3;
+  public void repaintGraphicsMode(final boolean[] dirty)
+  {
+    final int dx = zoomFactor * 2;
+    final int dy = zoomFactor * 3;
     int index = 0;
     int y = frameWidth;
     for (int cy = 0; cy < 64; cy++) {
@@ -299,34 +314,40 @@ public class VideoPanel extends JPanel {
     }
   }
 
-  public void repaint(boolean[] dirty) {
+  public void repaint(final boolean[] dirty)
+  {
     if (displayMode == DISPLAY_MODE_TEXT)
       repaintTextMode(dirty);
     else
       repaintGraphicsMode(dirty);
   }
 
-  public void invalidate(int address) {
+  public void invalidate(final int address)
+  {
     invalidator.invalidate(address);
   }
 
-  public void invalidateAll() {
+  public void invalidateAll()
+  {
     invalidator.invalidateAll();
   }
 
-  private class Invalidator implements Runnable {
-    private boolean scheduled;
+  private class Invalidator implements Runnable
+  {
     private boolean[] dirtyCollect, dirtyHandle;
     private boolean allDirtyCollect, allDirtyHandle;
+    private boolean scheduled;
 
-    public Invalidator() {
-      scheduled = false;
+    public Invalidator()
+    {
       dirtyCollect = new boolean[MEMORY_SIZE];
       dirtyHandle = new boolean[MEMORY_SIZE];
+      scheduled = false;
     }
 
-    public synchronized void invalidate(int address) {
-      int addressOffset = (address - baseAddress) & 0xffff;
+    public synchronized void invalidate(final int address)
+    {
+      final int addressOffset = (address - baseAddress) & 0xffff;
       if (addressOffset < MEMORY_SIZE) {
         dirtyCollect[addressOffset] = true;
         if (!scheduled) {
@@ -339,7 +360,8 @@ public class VideoPanel extends JPanel {
     /**
      * Call this when switching graphics or color mode.
      */
-    public synchronized void invalidateAll() {
+    public synchronized void invalidateAll()
+    {
       allDirtyCollect = true;
       if (!scheduled) {
 	SwingUtilities.invokeLater(this);
@@ -347,17 +369,19 @@ public class VideoPanel extends JPanel {
       }
     }
 
-    private synchronized void updateDirtyData() {
-      boolean[] dirty = dirtyCollect;
+    private synchronized void updateDirtyData()
+    {
+      final boolean[] dirty = dirtyCollect;
       dirtyCollect = dirtyHandle;
       dirtyHandle = dirty;
-      boolean allDirty = allDirtyCollect;
+      final boolean allDirty = allDirtyCollect;
       allDirtyCollect = allDirtyHandle;
       allDirtyHandle = allDirty;
       scheduled = false;
     }
 
-    public void run() {
+    public void run()
+    {
       updateDirtyData();
       if (allDirtyHandle)
 	repaint();
