@@ -1,38 +1,64 @@
 package emulator.vz200;
 
-public class CassetteOut implements SignalEventSource {
-  private static final short DEFAULT_AMPLITUDE = 5000;
+public class CassetteOut implements SignalEventSource, LineControlListener
+{
+  private final SignalEventQueue eventQueue;
+  private final short[] elongation;
+  private boolean muted;
 
-  private final short[] VALUE = new short[4];
-
-  private SignalEventQueue eventQueue;
-
-  public CassetteOut(long currentWallClockTime) {
-    eventQueue = new SignalEventQueue("cassette out", currentWallClockTime);
-    setAmplitude(DEFAULT_AMPLITUDE);
+  private CassetteOut()
+  {
+    throw new UnsupportedOperationException("unsupported empty constructor");
   }
 
-  public void resync() {
+  public CassetteOut(final long currentWallClockTime)
+  {
+    elongation = new short[4];
+    eventQueue = new SignalEventQueue("cassette out", currentWallClockTime);
+  }
+
+  public void lineChanged(final SourceDataLineChangeEvent event)
+  {
+    eventQueue.reset(event.getCurrentWallClockTime());
+  }
+
+  public void resync()
+  {
     eventQueue.resync();
   }
 
-  public void setAmplitude(short amplitude) {
-    VALUE[0] = (short)-amplitude;
-    VALUE[1] = 0;
-    VALUE[2] = 0;
-    VALUE[3] = amplitude;
+  public void volumeChanged(final double volume)
+  {
+    final int amplitude =
+      (int)Math.min(Math.max(volume * 32767.0, 0.0), 32767.0);
+    elongation[0] = 0;
+    elongation[1] = (short)amplitude;
+    elongation[2] = (short)amplitude;
+    elongation[3] = (short)(2 * amplitude + 1);
+    System.out.println(amplitude);
   }
 
-  public long getAvailableNanoSeconds() {
+  public void mutedChanged(final boolean muted)
+  {
+    this.muted = muted;
+  }
+
+  public long getAvailableNanoSeconds()
+  {
     return eventQueue.getAvailableNanoSeconds();
   }
 
-  public void putEvent(int dataValue, long wallClockTime) {
-    short signalValue = VALUE[dataValue];
-    eventQueue.put(signalValue, wallClockTime);
+  public void putEvent(final int dataValue, final long wallClockTime)
+  {
+    if (!muted) {
+      short signalValue = elongation[dataValue];
+      eventQueue.put(signalValue, wallClockTime);
+    }
   }
 
-  public void getEvent(SignalEventQueue.Event event, long maxTimeSpan) {
+  public void getEvent(final SignalEventQueue.Event event,
+                       final long maxTimeSpan)
+  {
     if (maxTimeSpan <= 0) {
       throw new IllegalArgumentException("maxTimeSpan <= 0");
     }

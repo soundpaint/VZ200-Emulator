@@ -2,78 +2,71 @@
 // TODO: move this class into new package 'emulator.cpu'.
 package emulator.z80;
 
-public interface CPU {
-  public interface Memory {
-    public int readByte(int address, long wallClockTime);
-    public int readShort(int address, long wallClockTime);
-    public void writeByte(int address, int value, long wallClockTime);
-    public void writeShort(int address, int value, long wallClockTime);
-    public void resync(long wallClockTime);
+public interface CPU extends WallClockProvider
+{
+  public interface Memory
+  {
+    int readByte(int address, long wallClockTime);
+    int readShort(int address, long wallClockTime);
+    void writeByte(int address, int value, long wallClockTime);
+    void writeShort(int address, int value, long wallClockTime);
+    void resync(long wallClockTime);
   }
 
-  public interface NamedObject {
-    public String getName();
+  public interface NamedObject
+  {
+    String getName();
   }
 
-  public interface Register extends NamedObject {
-    public int getValue();
-    public void setValue(int value);
-    public boolean increment(); // for performance efficiency
-    public boolean decrement(); // for performance efficiency
-    public void reset();
+  public interface Register extends NamedObject
+  {
+    int getValue();
+    void setValue(int value);
+    boolean increment(); // for performance efficiency
+    boolean decrement(); // for performance efficiency
+    void reset();
   }
 
-  public interface ConcreteOpCode {
-    public void addByte(int codeByte); // TODO: remove me from interface
-    public int getLength();
-    public int getByte(int index);
+  public interface ConcreteOpCode
+  {
+    void addByte(int codeByte); // TODO: remove me from interface
+    int getLength();
+    int getByte(int index);
   }
 
-  public interface ConcreteOperation {
-    public int getByteLength();
-    public String getConcreteMnemonic();
-    public int getAddress();
-    public boolean isSynthesizedCode();
-    public void execute();
-    public int getClockPeriods();
-    public ConcreteOpCode createOpCode();
+  public interface ConcreteOperation
+  {
+    int getByteLength();
+    String getConcreteMnemonic();
+    int getAddress();
+    boolean isSynthesizedCode();
+    void execute();
+    int getClockPeriods();
+    ConcreteOpCode createOpCode();
   }
 
-  public interface WallClockListener {
-    public void wallClockChanged(long wallClockCycles, long wallClockTime);
+  public interface WallClockListener
+  {
+    void wallClockChanged(long timePerClockCycle,
+                          long wallClockCycles, long wallClockTime);
   }
 
-  public int doPOP();
-  public void doPUSH(int op);
+  int doPOP();
+  void doPUSH(int op);
 
-  public Annotations getAnnotations();
-  public Memory getMemory();
-  public Memory getIO();
-  public Register[] getAllRegisters();
-  public Register getProgramCounter();
-  public Register getStackPointer();
-  public ConcreteOperation fetchNextOperation() throws MismatchException;
-  public ConcreteOperation fetchNextOperationNoInterrupts()
-    throws MismatchException;
+  Annotations getAnnotations();
+  Memory getMemory();
+  Memory getIO();
+  Register[] getAllRegisters();
+  Register getProgramCounter();
+  Register getStackPointer();
+  ConcreteOperation fetchNextOperation() throws MismatchException;
+  ConcreteOperation fetchNextOperationNoInterrupts() throws MismatchException;
 
-  public void requestIRQ();
-  public void requestNMI();
+  void requestIRQ();
+  void requestNMI();
 
-  public void addWallClockListener(WallClockListener listener);
-
-  public long getTimePerClockCycle();
-
-  /**
-   * Returns the total number of instruction cycles of all
-   * instructions performed since CPU start.
-   */
-  public long getWallClockCycles();
-
-  /**
-   * Returns the total number of time in ns of all instructions
-   * performed since CPU start.
-   */
-  public long getWallClockTime();
+  void addWallClockListener(WallClockListener listener);
 
   /**
    * When pausing and then continuing the CPU to run, the emulated
@@ -81,13 +74,21 @@ public interface CPU {
    * time.  Call this method to (re-)announce the CPU's wall clock to
    * all peripherals.
    */
-  public void resyncPeripherals();
+  void resyncPeripherals();
 
-  public class MismatchException extends Exception {
+  public class MismatchException extends Exception
+  {
     private static final long serialVersionUID = 3640134396555784341L;
 
-    public MismatchException() { super(); }
-    public MismatchException(String message) { super(message); }
+    MismatchException()
+    {
+      super();
+    }
+
+    MismatchException(String message)
+    {
+      super(message);
+    }
   }
 }
 

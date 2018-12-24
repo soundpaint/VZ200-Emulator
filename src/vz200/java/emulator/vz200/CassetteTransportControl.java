@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -15,91 +16,93 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JToolBar;
 
-public class CassetteTransportControl extends JToolBar {
+public class CassetteTransportControl extends Box
+{
   private static final long serialVersionUID = 5283444125008636282L;
 
-  private List<CassetteTransportListener> listeners;
+  private final List<CassetteTransportListener> listeners;
+  private final CassetteFileChooser recordFileChooser, playFileChooser;
+  private final CassetteStatusLine statusLine;
+  private final JButton btnPlay, btnRecord, btnStop;
   private File file;
-  private CassetteFileChooser recordFileChooser, playFileChooser;
-  private CassetteStatusLine statusLine;
-  private JButton btnPlay, btnRecord, btnStop;
 
-  public void addListener(CassetteTransportListener listener) {
+  public void addListener(final CassetteTransportListener listener)
+  {
     listeners.add(listener);
   }
 
-  public void removeListener(CassetteTransportListener listener) {
+  public void removeListener(final CassetteTransportListener listener)
+  {
     listeners.remove(listener);
   }
 
-  private static final ImageIcon ICON_TAPE =
-    VZ200.createIcon("tape32x32.png", null);
-
   private static JButton createToolButton(final String imageFileName,
-                                          final String altText) {
+                                          final String altText)
+  {
     final ImageIcon icon = VZ200.createIcon(imageFileName, altText);
     final JButton button = new JButton();
     if (icon != null) {
       button.setIcon(icon);
     } else {
       button.setText(altText);
-      System.err.printf("Resource not found: %s%n", imageFileName);
+      System.err.printf("Warning: Resource not found: %s%n", imageFileName);
     }
     button.setToolTipText(altText);
     return button;
   }
 
-  private CassetteTransportControl() {
-    throw new UnsupportedOperationException("unsupported constructor");
-  }
-
-  public CassetteTransportControl(CassetteStatusLine statusLine) {
-    super("Cassette Tape");
-    setBorder(BorderFactory.createTitledBorder("Cassette I/O"));
+  public CassetteTransportControl()
+  {
+    super(BoxLayout.Y_AXIS);
+    setBorder(BorderFactory.createTitledBorder("Cassette Audio File Binding"));
     listeners = new ArrayList<CassetteTransportListener>();
-    this.statusLine = statusLine;
+
     playFileChooser =
-      new CassetteFileChooser("Provide Cassette Input from File",
+      new CassetteFileChooser("Receive Cassette Input from External Audio File",
                               "Start Playing");
     recordFileChooser =
-      new CassetteFileChooser("Record Cassette Output to File",
+      new CassetteFileChooser("Record Cassette Output to External Audio File",
                               "Start Recording");
+    final JToolBar tbTransportControl = new JToolBar("Cassette Tape");
+    add(tbTransportControl);
     btnPlay =
-      createToolButton("play32x32.png", "Start loading from cassette");
+      createToolButton("play32x32.png",
+                       "Start receiving cassette input from " +
+                       "external audio file.");
     btnPlay.addActionListener((final ActionEvent event) -> { play(); });
     btnPlay.setEnabled(true);
-    add(btnPlay);
+    tbTransportControl.add(btnPlay);
 
     btnRecord =
-      createToolButton("record32x32.png", "Start saving to cassette");
+      createToolButton("record32x32.png",
+                       "Start recording cassette output to " +
+                       "external audio file.");
     btnRecord.addActionListener((final ActionEvent event) -> { record(); });
     btnRecord.setEnabled(true);
-    add(btnRecord);
+    tbTransportControl.add(btnRecord);
 
-    btnStop = createToolButton("stop32x32.png", "Stop loading or saving");
+    btnStop = createToolButton("stop32x32.png",
+                               "Stop receiving from or recording to " +
+                               "external audio file.");
     btnStop.addActionListener((final ActionEvent event) -> { stop(true); });
     btnStop.setEnabled(false);
-    add(btnStop);
+    tbTransportControl.add(btnStop);
+    tbTransportControl.add(new JToolBar.Separator(new Dimension(5, 32)));
+    tbTransportControl.add(Box.createHorizontalGlue());
 
-    add(new Separator(new Dimension(5, 32)));
-
-    add(Box.createHorizontalGlue());
-
-    JLabel lblTape = new JLabel(ICON_TAPE);
-    lblTape.setAlignmentX(1.0f);
-    add(lblTape);
-
-    add(new Separator(new Dimension(5, 32)));
+    statusLine = new CassetteStatusLine();
+    add(statusLine);
   }
 
-  private void play(File file, boolean notifyListeners) {
+  private void play(final File file, final boolean notifyListeners)
+  {
     boolean havePlayer = false;
     if (notifyListeners) {
-      for (CassetteTransportListener listener : listeners) {
+      for (final CassetteTransportListener listener : listeners) {
         try {
           listener.startPlaying(file);
           havePlayer = true;
-        } catch (IOException e) {
+        } catch (final IOException e) {
           JOptionPane.showMessageDialog(this, e.getMessage(), "IO Error",
                                         JOptionPane.WARNING_MESSAGE);
         }
@@ -113,8 +116,9 @@ public class CassetteTransportControl extends JToolBar {
     }
   }
 
-  private void play() {
-    int option = playFileChooser.showDialog(this, null);
+  private void play()
+  {
+    final int option = playFileChooser.showDialog(this, null);
     switch (option) {
     case JFileChooser.APPROVE_OPTION:
       file = playFileChooser.getSelectedFile();
@@ -129,14 +133,15 @@ public class CassetteTransportControl extends JToolBar {
     }
   }
 
-  private void record(File file, boolean notifyListeners) {
+  private void record(final File file, final boolean notifyListeners)
+  {
     boolean haveRecorder = false;
     if (notifyListeners) {
       for (CassetteTransportListener listener : listeners) {
         try {
           listener.startRecording(file);
           haveRecorder = true;
-        } catch (IOException e) {
+        } catch (final IOException e) {
           JOptionPane.showMessageDialog(this, e.getMessage(), "IO Error",
                                         JOptionPane.WARNING_MESSAGE);
         }
@@ -150,13 +155,14 @@ public class CassetteTransportControl extends JToolBar {
     }
   }
 
-  private void record() {
-    int option = recordFileChooser.showDialog(this, null);
+  private void record()
+  {
+    final int option = recordFileChooser.showDialog(this, null);
     switch (option) {
     case JFileChooser.APPROVE_OPTION:
       file = recordFileChooser.getSelectedFile();
       if (file.exists()) {
-        int choice =
+        final int choice =
           JOptionPane.showConfirmDialog(this,
                                         "Overwrite " + file.getName() + "?",
                                         "Confirm Overwrite",
@@ -177,28 +183,32 @@ public class CassetteTransportControl extends JToolBar {
     }
   }
 
-  private void stop(boolean notifyListeners) {
+  private void stop(final boolean notifyListeners)
+  {
     btnPlay.setEnabled(true);
     btnRecord.setEnabled(true);
     btnStop.setEnabled(false);
     file = null;
     if (notifyListeners) {
-      for (CassetteTransportListener listener : listeners) {
+      for (final CassetteTransportListener listener : listeners) {
         listener.stop();
       }
     }
     statusLine.stop();
   }
 
-  public void startPlaying(File file) throws IOException {
+  public void startPlaying(final File file) throws IOException
+  {
     play(file, false);
   }
 
-  public void startRecording(File file) throws IOException {
+  public void startRecording(final File file) throws IOException
+  {
     record(file, false);
   }
 
-  public void stop() {
+  public void stop()
+  {
     stop(false);
   }
 }

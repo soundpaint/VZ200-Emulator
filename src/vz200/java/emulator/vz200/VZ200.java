@@ -12,7 +12,8 @@ import emulator.z80.RAMMemory;
 import emulator.z80.ROMMemory;
 import emulator.z80.Z80;
 
-public class VZ200 implements CPU.WallClockListener {
+public class VZ200 implements CPU.WallClockListener
+{
   private static final String IMAGES_ROOT_PATH = ".";
   private static final int RAM_START = 0x7800;
   private static final int RAM_LENGTH = 0x2800;
@@ -20,12 +21,13 @@ public class VZ200 implements CPU.WallClockListener {
   private static final int OS_START = 0x0000;
   private static final int OS_LENGTH = 0x4000;
 
-  private IO io;
-  private CPU z80;
-  private Monitor monitor;
+  private final IO io;
+  private final CPU z80;
+  private final Monitor monitor;
 
   public static ImageIcon createIcon(final String imageFileName,
-                                     final String altText) {
+                                     final String altText)
+  {
     final String imagePath = IMAGES_ROOT_PATH + "/" + imageFileName;
     final URL imageURL = VZ200.class.getResource(imagePath);
     if (imageURL != null) {
@@ -34,17 +36,18 @@ public class VZ200 implements CPU.WallClockListener {
     return null;
   }
 
-  public VZ200() throws IOException {
-    ROMMemory rom = new ROMMemory((Class<? extends Object>)VZ200.class,
-                                  OS_RESOURCENAME,
-                                  OS_START, OS_LENGTH);
-    MemoryBus portMemoryBus = new MemoryBus();
-    MemoryBus mainMemoryBus = new MemoryBus();
+  public VZ200() throws IOException
+  {
+    final ROMMemory rom = new ROMMemory((Class<? extends Object>)VZ200.class,
+                                        OS_RESOURCENAME,
+                                        OS_START, OS_LENGTH);
+    final MemoryBus portMemoryBus = new MemoryBus();
+    final MemoryBus mainMemoryBus = new MemoryBus();
     z80 = new Z80(mainMemoryBus, portMemoryBus);
     z80.addWallClockListener(this);
-    RAMMemory ram = new RAMMemory(RAM_START, RAM_LENGTH);
+    final RAMMemory ram = new RAMMemory(RAM_START, RAM_LENGTH);
     io = new IO(z80.getWallClockTime());
-    Video video = io.getVideo();
+    final Video video = io.getVideo();
     mainMemoryBus.addReader(ram);
     mainMemoryBus.addWriter(ram);
     mainMemoryBus.addWriter(rom);
@@ -56,20 +59,25 @@ public class VZ200 implements CPU.WallClockListener {
     monitor.addResourceLocation(VZ200.class);
   }
 
-  public void wallClockChanged(long wallClockCycles, long wallClockTime) {
-    if (io.updateWallClock(wallClockCycles, wallClockTime)) {
+  public void wallClockChanged(final long timePerClockCycle,
+                               final long wallClockCycles,
+                               final long wallClockTime)
+  {
+    if (io.updateWallClock(timePerClockCycle, wallClockCycles, wallClockTime)) {
       z80.requestIRQ();
     }
   }
 
-  private void run() {
+  private void run()
+  {
     monitor.run("n+=annotations.xml\n" +
                 "n+=annotations-math.xml\n" +
                 "n+=annotations-rt.xml\n" +
                 "g0");
   }
 
-  public static void main(String argv[]) throws IOException {
+  public static void main(final String argv[]) throws IOException
+  {
     new VZ200().run();
   }
 }

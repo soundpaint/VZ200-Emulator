@@ -5,75 +5,86 @@ import java.io.File;
 
 import emulator.z80.MemoryBus;
 import emulator.z80.Util;
+import emulator.z80.WallClockProvider;
 
-public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter,
-                           CassetteTransportListener
+public class IO implements
+                  WallClockProvider,
+                  MemoryBus.BusReader, MemoryBus.BusWriter,
+                  CassetteTransportListener
 {
   private final static int DEFAULT_BASE_ADDRESS = 0x6800;
   private final static int MEMORY_SIZE = 0x0800;
 
-  private long wallClockTime;
-  private int baseAddress;
-  private Video video;
-  private Keyboard keyboard;
-  private PeripheralsGUI peripheralsGUI;
-  private Speaker speaker;
-  private CassetteOut cassetteOut;
-  private AudioStreamRenderer audioStreamRenderer;
+  private final int baseAddress;
+  private final Video video;
+  private final Keyboard keyboard;
+  private final PeripheralsGUI peripheralsGUI;
+  private final Speaker speaker;
+  private final CassetteOut cassetteOut;
+  private final MonoAudioStreamRenderer speakerRenderer;
+  private final MonoAudioStreamRenderer cassetteOutRenderer;
   private FileStreamRenderer fileStreamRenderer;
   private FileStreamSampler fileStreamSampler;
+  private long timePerClockCycle;
+  private long wallClockCycles;
+  private long wallClockTime;
 
-  private IO() { throw new UnsupportedOperationException(); }
+  private IO()
+  {
+    throw new UnsupportedOperationException("unsupported empty constructor");
+  }
 
-  public IO(long currentWallClockTime) throws IOException {
+  public IO(final long currentWallClockTime) throws IOException
+  {
     this(currentWallClockTime, DEFAULT_BASE_ADDRESS);
   }
 
-  public IO(long currentWallClockTime, int baseAddress) throws IOException {
+  public IO(final long currentWallClockTime, final int baseAddress)
+    throws IOException
+  {
     this.baseAddress = baseAddress;
     keyboard = new Keyboard(baseAddress);
     video = new Video();
     video.addKeyListener(keyboard.getKeyListener());
-    try {
-      audioStreamRenderer = new AudioStreamRenderer();
-    } catch (Throwable t) {
-      System.err.println("WARNING: IO: failed opening audio stream.  " +
-                         "No audio output will be produced.");
-    }
-    if (audioStreamRenderer != null) {
-      speaker = new Speaker(currentWallClockTime);
-      cassetteOut = new CassetteOut(currentWallClockTime);
-      audioStreamRenderer.setLeftChannelSource(speaker);
-      audioStreamRenderer.setRightChannelSource(cassetteOut);
-      audioStreamRenderer.start();
-    }
-    peripheralsGUI = new PeripheralsGUI(speaker);
+    speakerRenderer = new MonoAudioStreamRenderer("speaker renderer");
+    speaker = new Speaker(currentWallClockTime);
+    speakerRenderer.setSignalEventSource(speaker);
+    speakerRenderer.start();
+    cassetteOutRenderer = new MonoAudioStreamRenderer("cassette out renderer");
+    cassetteOut = new CassetteOut(currentWallClockTime);
+    cassetteOutRenderer.setSignalEventSource(cassetteOut);
+    cassetteOutRenderer.start();
+    peripheralsGUI = new PeripheralsGUI(speaker, speakerRenderer,
+                                        cassetteOut, cassetteOutRenderer,
+                                        this);
     peripheralsGUI.addTransportListener(this);
   }
 
-  public void resync(long wallClockTime) {
-    if (speaker != null) {
-      speaker.resync();
-    }
-    if (cassetteOut != null) {
-      cassetteOut.resync();
-    }
+  public void resync(final long wallClockTime)
+  {
+    speaker.resync();
+    cassetteOut.resync();
   }
 
-  public Video getVideo() { return video; }
+  public Video getVideo()
+  {
+    return video;
+  }
 
-  private boolean cassetteInputActive(long wallClockTime) {
+  private boolean cassetteInputActive(final long wallClockTime)
+  {
     if (fileStreamSampler != null) {
-      short value = fileStreamSampler.getValue(wallClockTime);
-      boolean active = value > 0;
+      final short value = fileStreamSampler.getValue(wallClockTime);
+      final boolean active = value > 0;
       return active;
     } else {
       return false;
     }
   }
 
-  public int readByte(int address, long wallClockTime) {
-    int addressOffset = (address - baseAddress) & 0xffff;
+  public int readByte(final int address, final long wallClockTime)
+  {
+    final int addressOffset = (address - baseAddress) & 0xffff;
     int data;
     if (addressOffset < MEMORY_SIZE) {
       data = keyboard.readByte(address, wallClockTime);
@@ -87,14 +98,17 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter,
     return data;
   }
 
-  public int readShort(int address, long wallClockTime) {
+  public int readShort(int address, final long wallClockTime)
+  {
     return
       readByte(address++, wallClockTime) |
       (readByte(address, wallClockTime) << 8);
   }
 
-  public void writeByte(int address, int value, long wallClockTime) {
-    int addressOffset = (address - baseAddress) & 0xffff;
+  public void writeByte(final int address, final int value,
+                        final long wallClockTime)
+  {
+    final int addressOffset = (address - baseAddress) & 0xffff;
     if (addressOffset < MEMORY_SIZE) {
       if (speaker != null) {
         speaker.putEvent((value >> 5) & 0x1, value  & 0x1, wallClockTime);
@@ -107,34 +121,58 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter,
     }
   }
 
-  public void writeShort(int address, int value, long wallClockTime) {
+  public void writeShort(int address, final int value,
+                         final long wallClockTime)
+  {
     writeByte(address++, value & 0xff, wallClockTime);
     writeByte(address, (value >> 8) & 0xff, wallClockTime);
   }
 
-  public boolean updateWallClock(long wallClockCycles, long wallClockTime) {
+  public boolean updateWallClock(final long timePerClockCycle,
+                                 final long wallClockCycles,
+                                 final long wallClockTime)
+  {
+    this.timePerClockCycle = timePerClockCycle;
+    this.wallClockCycles = wallClockCycles;
     this.wallClockTime = wallClockTime;
     return video.updateWallClock(wallClockCycles, wallClockTime);
   }
 
-  public void startPlaying(File file) throws IOException {
+  public long getTimePerClockCycle()
+  {
+    return timePerClockCycle;
+  }
+
+  public long getWallClockCycles()
+  {
+    return wallClockCycles;
+  }
+
+  public long getWallClockTime()
+  {
+    return wallClockTime;
+  }
+
+  public void startPlaying(final File file) throws IOException
+  {
     try {
       fileStreamSampler = new FileStreamSampler(wallClockTime, file, 0);
 
       // FIXME: Introduce central event dispatcher rather than
       // chaining listeners.
       fileStreamSampler.addTransportListener(peripheralsGUI);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new IOException("WARNING: I/O: failed opening file stream: " +
                             t.getMessage() +
                             ".  No cassette input will be recognized.", t);
     }
   }
 
-  public void startRecording(File file) throws IOException {
+  public void startRecording(final File file) throws IOException
+  {
     try {
       fileStreamRenderer = new FileStreamRenderer(file);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new IOException("WARNING: I/O: failed opening file stream: " +
                             t.getMessage() +
                             ".  No audio output will be saved.", t);
@@ -143,7 +181,8 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter,
     fileStreamRenderer.start();
   }
 
-  public void stop() {
+  public void stop()
+  {
     if (fileStreamSampler != null) {
       System.out.printf("%s: aborted%n", fileStreamSampler.getFileName());
       fileStreamSampler = null;
@@ -157,13 +196,6 @@ public class IO implements MemoryBus.BusReader, MemoryBus.BusWriter,
   {
     return "IO Memory[baseAddress=" + Util.hexShortStr(baseAddress) +
       ", size=" + Util.hexShortStr(MEMORY_SIZE) + "]";
-  }
-
-  /**
-   * This method is for testing and debugging only.
-   */
-  public static void main(String argv[]) throws IOException {
-    new IO();
   }
 }
 

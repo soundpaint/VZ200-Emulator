@@ -1,20 +1,20 @@
 package emulator.vz200;
 
-import java.awt.BorderLayout;
 import java.io.File;
 import java.io.IOException;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JTabbedPane;
 import javax.swing.JFrame;
 
+import emulator.z80.WallClockProvider;
+
 public class PeripheralsGUI extends JFrame
-  implements CassetteTransportListener,
-             SpeakerControlListener // FIXME: do not chain listeners
+  implements CassetteTransportListener
 {
   private static final long serialVersionUID = 2686785121065338684L;
 
   private final CassetteTransportControl transportControl;
-  private final CassetteStatusLine statusLine;
-  private final SpeakerControl speakerControl;
-  private final Speaker speaker;
 
   public void addTransportListener(final CassetteTransportListener listener)
   {
@@ -31,18 +31,40 @@ public class PeripheralsGUI extends JFrame
     throw new UnsupportedOperationException("unsupported constructor");
   }
 
-  public PeripheralsGUI(final Speaker speaker)
+  public PeripheralsGUI(final LineControlListener speaker,
+                        final MonoAudioStreamRenderer speakerRenderer,
+                        final LineControlListener cassetteOut,
+                        final MonoAudioStreamRenderer cassetteOutRenderer,
+                        final WallClockProvider wallClockProvider)
   {
     super("Peripherals");
-    this.speaker = speaker;
+    if (speaker == null) {
+      throw new NullPointerException("speaker");
+    }
+    if (speakerRenderer == null) {
+      throw new NullPointerException("speakerRenderer");
+    }
+    if (cassetteOut == null) {
+      throw new NullPointerException("cassetteOut");
+    }
+    if (cassetteOutRenderer == null) {
+      throw new NullPointerException("cassetteOutRenderer");
+    }
+
     setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-    statusLine = new CassetteStatusLine();
-    transportControl = new CassetteTransportControl(statusLine);
-    add(transportControl, BorderLayout.PAGE_START);
-    add(statusLine, BorderLayout.PAGE_END);
-    speakerControl = new SpeakerControl();
-    speakerControl.addListener(this);
-    add(speakerControl, BorderLayout.PAGE_END);
+
+    final JTabbedPane tpPeripherals = new JTabbedPane();
+    add(tpPeripherals);
+    final SpeakerControl speakerControl =
+      new SpeakerControl(speaker, speakerRenderer, wallClockProvider, this);
+    tpPeripherals.addTab(null, Icons.LINE_UNMUTED,
+                         speakerControl, "Configure Speaker Ouput");
+    final CassetteControl cassetteControl =
+      new CassetteControl(cassetteOut, cassetteOutRenderer, wallClockProvider,
+                          this);
+    transportControl = cassetteControl.getTransportControl();
+    tpPeripherals.addTab(null, Icons.TAPE,
+                         cassetteControl, "Configure Cassette I/O");
     pack();
     setVisible(true);
   }
@@ -60,16 +82,6 @@ public class PeripheralsGUI extends JFrame
   public void stop()
   {
     transportControl.stop();
-  }
-
-  public void setVolume(final double volume)
-  {
-    speaker.setVolume(volume);
-  }
-
-  public void setMuted(final boolean muted)
-  {
-    speaker.setMuted(muted);
   }
 }
 

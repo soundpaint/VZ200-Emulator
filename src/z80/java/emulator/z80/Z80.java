@@ -630,7 +630,8 @@ public class Z80 implements CPU {
 
   private void notifyWallClockListeners() {
     for (WallClockListener listener : wallClockListeners) {
-      listener.wallClockChanged(wallClockCycles, wallClockTime);
+      listener.wallClockChanged(timePerClockCycle,
+                                wallClockCycles, wallClockTime);
     }
   }
 

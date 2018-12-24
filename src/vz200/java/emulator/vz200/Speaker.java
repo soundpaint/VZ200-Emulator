@@ -1,6 +1,6 @@
 package emulator.vz200;
 
-public class Speaker implements SignalEventSource, SpeakerControlListener
+public class Speaker implements SignalEventSource, LineControlListener
 {
   private final SignalEventQueue eventQueue;
   private final short[] elongation;
@@ -8,14 +8,18 @@ public class Speaker implements SignalEventSource, SpeakerControlListener
 
   private Speaker()
   {
-    throw new UnsupportedOperationException("unsupported constructor");
+    throw new UnsupportedOperationException("unsupported empty constructor");
   }
 
   public Speaker(final long currentWallClockTime)
   {
     elongation = new short[3];
     eventQueue = new SignalEventQueue("speaker", currentWallClockTime);
-    setVolume(SpeakerControl.VOLUME_DEFAULT);
+  }
+
+  public void lineChanged(final SourceDataLineChangeEvent event)
+  {
+    eventQueue.reset(event.getCurrentWallClockTime());
   }
 
   public void resync()
@@ -23,21 +27,16 @@ public class Speaker implements SignalEventSource, SpeakerControlListener
     eventQueue.resync();
   }
 
-  public void setVolume(final double volume)
+  public void volumeChanged(final double volume)
   {
     final int amplitude =
       (int)Math.min(Math.max(volume * 32767.0, 0.0), 32767.0);
-    /*
-    elongation[0] = (short)-amplitude;
-    elongation[1] = 0;
-    elongation[2] = (short)amplitude;
-    */
     elongation[0] = 0;
     elongation[1] = (short)amplitude;
     elongation[2] = (short)(2 * amplitude + 1);
   }
 
-  public void setMuted(final boolean muted)
+  public void mutedChanged(final boolean muted)
   {
     this.muted = muted;
   }

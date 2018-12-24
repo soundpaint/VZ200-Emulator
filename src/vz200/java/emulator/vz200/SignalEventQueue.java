@@ -63,8 +63,10 @@ package emulator.vz200;
  *   created on-the-fly.  That is, the queue is not changed, but only
  *   data from the head event is returned.
  */
-public class SignalEventQueue {
-  public static class Event {
+public class SignalEventQueue
+{
+  public static class Event
+  {
     /**
      * Signal value.
      */
@@ -86,11 +88,13 @@ public class SignalEventQueue {
     /**
      * Pretty print time span in milliseconds.
      */
-    public String prettyTimeSpanString() {
+    public String prettyTimeSpanString()
+    {
       return String.format("%fms", 0.000001 * timeSpan);
     }
 
-    public String toString() {
+    public String toString()
+    {
       return String.format("SignalEventQueue.Event{value=%d, timeSpan=%s}",
                            value, prettyTimeSpanString());
     }
@@ -113,41 +117,51 @@ public class SignalEventQueue {
    */
   private static final long INITIAL_AUDIO_DELAY = 75000000; // [ns]
 
-  private String label;
-  private Event[] events;
+  private final String label;
+  private final Event[] events;
   private short currentValue;
   private long currentValueSince;
   private int consumerIndex;
   private int producerIndex;
   private long availableTimeSpan;
 
-  public SignalEventQueue(String label, long currentWallClockTime) {
+  public SignalEventQueue(final String label, final long currentWallClockTime)
+  {
     this.label = label;
     events = new Event[BUFFER_SIZE];
     for (int i = 0; i < BUFFER_SIZE; i++) {
       events[i] = new Event();
     }
-    currentValue = 0;
-    currentValueSince = currentWallClockTime;
-    consumerIndex = 0;
-    producerIndex = 0;
+    reset(currentWallClockTime);
   }
 
   /**
    * Amount of signal data available.
    */
-  public long getAvailableNanoSeconds() {
+  public long getAvailableNanoSeconds()
+  {
     return availableTimeSpan;
   }
 
-  public synchronized void resync() {
+  public synchronized void reset(final long currentWallClockTime)
+  {
+    currentValue = 0;
+    currentValueSince = currentWallClockTime;
+    consumerIndex = 0;
+    producerIndex = 0;
+    availableTimeSpan = 0;
+  }
+
+  public synchronized void resync()
+  {
     events[consumerIndex].plannedGap = true;
   }
 
-  public synchronized void put(short value, long wallClockTime) {
+  public synchronized void put(final short value, final long wallClockTime)
+  {
     if (value != currentValue) {
-      Event lastEvent = events[producerIndex];
-      long timeSpan = wallClockTime - currentValueSince;
+      final Event lastEvent = events[producerIndex];
+      final long timeSpan = wallClockTime - currentValueSince;
       lastEvent.timeSpan += timeSpan;
       availableTimeSpan += timeSpan;
       producerIndex = (producerIndex + 1) % BUFFER_SIZE;
@@ -155,7 +169,7 @@ public class SignalEventQueue {
         System.err.printf("Warning: %s event queue overflow%n", label);
         consumerIndex = (consumerIndex + 1) % BUFFER_SIZE;
       }
-      Event event = events[producerIndex];
+      final Event event = events[producerIndex];
       event.value = value;
       event.timeSpan = 0;
       event.plannedGap = false;
@@ -164,9 +178,10 @@ public class SignalEventQueue {
     }
   }
 
-  public synchronized void get(Event result, long maxTimeSpan) {
+  public synchronized void get(final Event result, final long maxTimeSpan)
+  {
     do {
-      Event event = events[consumerIndex];
+      final Event event = events[consumerIndex];
       if (consumerIndex == producerIndex) {
         result.value = currentValue;
         result.timeSpan = maxTimeSpan;
