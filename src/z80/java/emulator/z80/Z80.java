@@ -618,11 +618,10 @@ public class Z80 implements CPU {
 
   // *** CPU TIMING ***********************************************************
 
-  private final static int DEFAULT_CPU_FREQUENCY = 3579545; // [Hz]
-
   private long wallClockCycles = 0; // number of CPU cycles since startup
   private long wallClockTime = 0; // [ns since startup]
   private long timePerClockCycle; // [ns]
+  private boolean statisticsEnabled;
 
   public void addWallClockListener(WallClockListener listener) {
     wallClockListeners.add(listener);
@@ -657,7 +656,7 @@ public class Z80 implements CPU {
 
   private void updateWallClock(int cycles) {
     wallClockCycles += cycles;
-    wallClockTime = wallClockCycles * timePerClockCycle;
+    wallClockTime += cycles * timePerClockCycle;
     notifyWallClockListeners();
   }
 
@@ -885,6 +884,7 @@ public class Z80 implements CPU {
     private CodeFetcher codeFetcher;
     private int address;
     private boolean isSynthesizedCode;
+    private long systemNanoTime;
 
     public ConcreteOperation() {
       args = new Arguments();
@@ -925,6 +925,10 @@ public class Z80 implements CPU {
     public void execute() {
       genericOperation.execute(args);
       updateWallClock(getClockPeriods());
+      if (statisticsEnabled) {
+        updateInstructionLevelStatistics(getClockPeriods(),
+                                         getSystemNanoTime());
+      }
     }
 
     public int getClockPeriods() {
@@ -953,6 +957,16 @@ public class Z80 implements CPU {
       precompiledGenericOperation.fillArgs(codeFetcher, args);
       genericOperation = precompiledGenericOperation.getGenericOperation();
       return genericOperation.byteLength;
+    }
+
+    public void setSystemNanoTime(final long systemNanoTime)
+    {
+      this.systemNanoTime = systemNanoTime;
+    }
+
+    public long getSystemNanoTime()
+    {
+      return systemNanoTime;
     }
   }
 
@@ -4413,6 +4427,7 @@ public class Z80 implements CPU {
   public ConcreteOperation fetchNextOperation() throws CPU.MismatchException {
     // TODO: Emulate Z80's IFF1 and IFF2 flip-flops in order to
     // correctly handle NMIs.
+    final long systemNanoTime = System.nanoTime();
     boolean workPending = false;
     do {
       if (nmi_requested) {
@@ -4459,6 +4474,7 @@ public class Z80 implements CPU {
         workPending = false;
       }
     } while (workPending);
+    concreteOperation.setSystemNanoTime(systemNanoTime);
     return concreteOperation;
   }
 
@@ -4487,8 +4503,12 @@ public class Z80 implements CPU {
     memory.resync(wallClockTime);
   }
 
+  private static int getDefaultCpuFrequency() {
+    return UserPreferences.getInstance().getFrequency();
+  }
+
   public Z80() {
-    this(DEFAULT_CPU_FREQUENCY);
+    this(getDefaultCpuFrequency());
   }
 
   public Z80(int cpuFrequency) {
@@ -4498,7 +4518,7 @@ public class Z80 implements CPU {
   }
 
   public Z80(CPU.Memory memory, CPU.Memory io) {
-    this(memory, io, DEFAULT_CPU_FREQUENCY);
+    this(memory, io, getDefaultCpuFrequency());
   }
 
   public Z80(CPU.Memory memory, CPU.Memory io, int cpuFrequency) {
@@ -4506,7 +4526,7 @@ public class Z80 implements CPU {
     this.memory = memory;
     this.io = io;
     annotations = new Annotations();
-    timePerClockCycle = 1000000000 / cpuFrequency;
+    speedChanged(cpuFrequency);
     concreteOperation = new ConcreteOperation();
     System.out.println("setting up registers...");
     createRegisters();
@@ -4527,6 +4547,71 @@ public class Z80 implements CPU {
     System.out.println("resetting processor status...");
     reset();
     System.out.println("Z80 initialized.");
+  }
+
+  private long prevSystemNanoTime;
+  private long prevWallClockTime;
+  private double avgJitterNanoTime;
+  private double avgSpeed;
+  private double avgThreadLoad;
+
+  private void updateInstructionLevelStatistics(final int clockPeriods,
+                                                final long fetchSystemNanoTime)
+  {
+    final long systemNanoTime = System.nanoTime();
+    final long wallClockTime = getWallClockTime();
+    final long systemInstructionCycleTime =
+      systemNanoTime - prevSystemNanoTime;
+    final long wallClockInstructionCycleTime =
+      wallClockTime - prevWallClockTime;
+    final long systemInstructionPerformanceTime =
+      systemNanoTime - fetchSystemNanoTime;
+
+    final long currentJitterNanoTime =
+      wallClockInstructionCycleTime - systemInstructionCycleTime;
+    avgJitterNanoTime =
+      0.9 * avgJitterNanoTime +
+      0.1 * currentJitterNanoTime;
+
+    final double currentSpeed =
+      1000000000.0 * clockPeriods / wallClockInstructionCycleTime;
+    avgSpeed =
+      0.9 * avgSpeed +
+      0.1 * currentSpeed;
+
+    final double currentThreadLoad =
+      ((double)systemInstructionPerformanceTime) / systemInstructionCycleTime;
+    avgThreadLoad =
+      0.9 * avgThreadLoad +
+      0.1 * currentThreadLoad;
+
+    prevSystemNanoTime = systemNanoTime;
+    prevWallClockTime = wallClockTime;
+  }
+
+  public double getAvgSpeed()
+  {
+    return avgSpeed;
+  }
+
+  public double getAvgThreadLoad()
+  {
+    return avgThreadLoad;
+  }
+
+  public double getAvgJitter()
+  {
+    return avgJitterNanoTime;
+  }
+
+  public void speedChanged(final int frequency)
+  {
+    timePerClockCycle = 1000000000 / frequency;
+  }
+
+  public void statisticsEnabled(final boolean enabled)
+  {
+    statisticsEnabled = enabled;
   }
 
   public static void main(String argv[]) {

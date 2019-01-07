@@ -7,6 +7,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JTabbedPane;
 import javax.swing.JFrame;
 
+import emulator.z80.CPU;
 import emulator.z80.WallClockProvider;
 
 public class PeripheralsGUI extends JFrame
@@ -31,7 +32,8 @@ public class PeripheralsGUI extends JFrame
     throw new UnsupportedOperationException("unsupported constructor");
   }
 
-  public PeripheralsGUI(final LineControlListener speaker,
+  public PeripheralsGUI(final CPU cpu,
+                        final LineControlListener speaker,
                         final MonoAudioStreamRenderer speakerRenderer,
                         final LineControlListener cassetteOut,
                         final MonoAudioStreamRenderer cassetteOutRenderer,
@@ -65,6 +67,9 @@ public class PeripheralsGUI extends JFrame
     transportControl = cassetteControl.getTransportControl();
     tpPeripherals.addTab(null, Icons.TAPE,
                          cassetteControl, "Configure Cassette I/O");
+    final CPUControl cpuControl = new CPUControl(cpu, this);
+    tpPeripherals.addTab(null, Icons.CPU,
+                         cpuControl, "Configure CPU Settings");
     pack();
     setVisible(true);
   }

@@ -46,7 +46,7 @@ public class VZ200 implements CPU.WallClockListener
     z80 = new Z80(mainMemoryBus, portMemoryBus);
     z80.addWallClockListener(this);
     final RAMMemory ram = new RAMMemory(RAM_START, RAM_LENGTH);
-    io = new IO(z80.getWallClockTime());
+    io = new IO(z80, z80.getWallClockTime());
     final Video video = io.getVideo();
     mainMemoryBus.addReader(ram);
     mainMemoryBus.addWriter(ram);

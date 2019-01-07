@@ -4,6 +4,8 @@ import javax.swing.ImageIcon;
 
 public class Icons
 {
+  public static final ImageIcon CPU =
+    VZ200.createIcon("cpu32x32.png", null);
   public static final ImageIcon LINE_UNMUTED =
     VZ200.createIcon("speaker32x32.png", null);
   public static final ImageIcon LINE_MUTED =

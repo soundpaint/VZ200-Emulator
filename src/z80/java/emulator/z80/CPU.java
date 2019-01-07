@@ -2,7 +2,7 @@
 // TODO: move this class into new package 'emulator.cpu'.
 package emulator.z80;
 
-public interface CPU extends WallClockProvider
+public interface CPU extends WallClockProvider, PreferencesChangeListener
 {
   public interface Memory
   {
@@ -75,6 +75,23 @@ public interface CPU extends WallClockProvider
    * all peripherals.
    */
   void resyncPeripherals();
+
+  // Statistics
+
+  /**
+   * Returns averaged CPU speed in Hz.
+   */
+  double getAvgSpeed();
+
+  /**
+   * Returns averaged thread load, 0.0 &leq; value &leq; 1.0
+   */
+  double getAvgThreadLoad();
+
+  /**
+   * Returns average jitter in nano seconds.
+   */
+  double getAvgJitter();
 
   public class MismatchException extends Exception
   {
