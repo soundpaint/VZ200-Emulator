@@ -10,7 +10,7 @@ import javax.swing.JFrame;
 import emulator.z80.CPU;
 import emulator.z80.WallClockProvider;
 
-public class PeripheralsGUI extends JFrame
+public class SettingsGUI extends JFrame
   implements CassetteTransportListener
 {
   private static final long serialVersionUID = 2686785121065338684L;
@@ -27,19 +27,19 @@ public class PeripheralsGUI extends JFrame
     transportControl.removeListener(listener);
   }
 
-  public PeripheralsGUI()
+  public SettingsGUI()
   {
     throw new UnsupportedOperationException("unsupported constructor");
   }
 
-  public PeripheralsGUI(final CPU cpu,
-                        final LineControlListener speaker,
-                        final MonoAudioStreamRenderer speakerRenderer,
-                        final LineControlListener cassetteOut,
-                        final MonoAudioStreamRenderer cassetteOutRenderer,
-                        final WallClockProvider wallClockProvider)
+  public SettingsGUI(final CPU cpu,
+                     final LineControlListener speaker,
+                     final MonoAudioStreamRenderer speakerRenderer,
+                     final LineControlListener cassetteOut,
+                     final MonoAudioStreamRenderer cassetteOutRenderer,
+                     final WallClockProvider wallClockProvider)
   {
-    super("Peripherals");
+    super("Settings");
     if (speaker == null) {
       throw new NullPointerException("speaker");
     }
@@ -54,36 +54,40 @@ public class PeripheralsGUI extends JFrame
     }
 
     setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+    addWindowListener(ApplicationExitListener.defaultInstance);
 
-    final JTabbedPane tpPeripherals = new JTabbedPane();
-    add(tpPeripherals);
+    final JTabbedPane tpSettings = new JTabbedPane();
+    add(tpSettings);
     final SpeakerControl speakerControl =
       new SpeakerControl(speaker, speakerRenderer, wallClockProvider, this);
-    tpPeripherals.addTab(null, Icons.LINE_UNMUTED,
-                         speakerControl, "Configure Speaker Ouput");
+    tpSettings.addTab(null, Icons.LINE_UNMUTED,
+                      speakerControl, "Configure Speaker Ouput");
     final CassetteControl cassetteControl =
       new CassetteControl(cassetteOut, cassetteOutRenderer, wallClockProvider,
                           this);
     transportControl = cassetteControl.getTransportControl();
-    tpPeripherals.addTab(null, Icons.TAPE,
-                         cassetteControl, "Configure Cassette I/O");
+    tpSettings.addTab(null, Icons.TAPE,
+                      cassetteControl, "Configure Cassette I/O");
     final CPUControl cpuControl = new CPUControl(cpu, this);
-    tpPeripherals.addTab(null, Icons.CPU,
-                         cpuControl, "Configure CPU Settings");
+    tpSettings.addTab(null, Icons.CPU,
+                      cpuControl, "Configure CPU Settings");
     pack();
     setVisible(true);
   }
 
+  @Override
   public void startPlaying(final File file) throws IOException
   {
     transportControl.startPlaying(file);
   }
 
+  @Override
   public void startRecording(final File file) throws IOException
   {
     transportControl.startRecording(file);
   }
 
+  @Override
   public void stop()
   {
     transportControl.stop();

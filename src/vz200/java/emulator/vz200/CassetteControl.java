@@ -1,5 +1,7 @@
 package emulator.vz200;
 
+import javax.sound.sampled.Mixer;
+import javax.sound.sampled.Line;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
@@ -17,8 +19,14 @@ public class CassetteControl extends JPanel
     public void lineChanged(final SourceDataLineChangeEvent event)
     {
       final UserPreferences userPreferences = UserPreferences.getInstance();
-      userPreferences.setCassetteOutMixer(event.getMixerInfo().toString());
-      userPreferences.setCassetteOutLine(event.getLineInfo().toString());
+      final Mixer.Info mixerInfo = event.getMixerInfo();
+      if (mixerInfo != null) {
+        userPreferences.setCassetteOutMixer(mixerInfo.toString());
+      }
+      final Line.Info lineInfo = event.getLineInfo();
+      if (lineInfo != null) {
+        userPreferences.setCassetteOutLine(lineInfo.toString());
+      }
     }
 
     public void volumeChanged(final double volume)

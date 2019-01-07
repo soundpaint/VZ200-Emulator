@@ -424,8 +424,8 @@ public class Z80 implements CPU {
     }
 
     public void setValue(int value) {
-      if ((value < 0) || (value > 2)) {
-        throw new IndexOutOfBoundsException("only values 0, 1, 2 are valid");
+      if ((value < 0) || (value > 0x2)) {
+        throw new IllegalArgumentException(String.format("value=%02Xh", value));
       }
       super.setValue(value);
     }

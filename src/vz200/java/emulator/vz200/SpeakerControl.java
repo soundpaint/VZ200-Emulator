@@ -1,5 +1,7 @@
 package emulator.vz200;
 
+import javax.sound.sampled.Mixer;
+import javax.sound.sampled.Line;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
@@ -17,8 +19,14 @@ public class SpeakerControl extends JPanel
     public void lineChanged(final SourceDataLineChangeEvent event)
     {
       final UserPreferences userPreferences = UserPreferences.getInstance();
-      userPreferences.setSpeakerMixer(event.getMixerInfo().toString());
-      userPreferences.setSpeakerLine(event.getLineInfo().toString());
+      final Mixer.Info mixerInfo = event.getMixerInfo();
+      if (mixerInfo != null) {
+        userPreferences.setSpeakerMixer(mixerInfo.toString());
+      }
+      final Line.Info lineInfo = event.getLineInfo();
+      if (lineInfo != null) {
+        userPreferences.setSpeakerLine(lineInfo.toString());
+      }
     }
 
     public void volumeChanged(final double volume)

@@ -22,11 +22,11 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JTextPane;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 
@@ -165,8 +165,7 @@ public class SourceDataLineSelectionDialog extends JDialog
     cbLineSelector = createLineSelector(selectorRenderer);
     opSelection = createContentPane(paneOptions, spLineDescription);
     setContentPane(opSelection);
-    rebuildMixerSelector(); // ensure sensible initial size for pack()
-    pack();
+    rebuildMixerSelector(); // pop-up warning if no mixer available
   }
 
   private JButton createPaneOption(final String label,
@@ -302,7 +301,11 @@ public class SourceDataLineSelectionDialog extends JDialog
   {
     final Mixer.Info[] mixerInfo = AudioSystem.getMixerInfo();
     if (mixerInfo.length == 0) {
-      throw new RuntimeException("no mixer found");
+      final String message =
+        "There will be no audible output line for " + id + ".";
+      final String title = "No Mixer Found for " + id;
+      JOptionPane.showMessageDialog(this, message, title,
+                                    JOptionPane.WARNING_MESSAGE);
     }
     for (int i = 0; i < mixerInfo.length; i++) {
       printMessage(String.format("found mixer: %s", mixerInfo[i]));
@@ -319,9 +322,12 @@ public class SourceDataLineSelectionDialog extends JDialog
     return sourceLineInfo;
   }
 
-  private void rebuildMixerSelector()
+  private boolean rebuildMixerSelector()
   {
     final Mixer.Info[] mixerInfo = getMixerInfo();
+    if (mixerInfo.length == 0) {
+      return false;
+    }
     cbMixerSelector.removeAllItems(); // clear only after successful
                                       // mixer info retrieval
     for (Mixer.Info info : mixerInfo) {
@@ -331,6 +337,7 @@ public class SourceDataLineSelectionDialog extends JDialog
         cbMixerSelector.setSelectedItem(wrappedInfo);
       }
     }
+    return true;
   }
 
   private void mixerSelectionChanged()
@@ -397,7 +404,10 @@ public class SourceDataLineSelectionDialog extends JDialog
    */
   public boolean execute()
   {
-    rebuildMixerSelector();
+    if (!rebuildMixerSelector()) {
+      return false;
+    }
+    pack();
     opSelection.setValue(null);
     setVisible(true);
     final Object value = opSelection.getValue();

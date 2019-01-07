@@ -19,7 +19,7 @@ public class IO implements
   private final int baseAddress;
   private final Video video;
   private final Keyboard keyboard;
-  private final PeripheralsGUI peripheralsGUI;
+  private final SettingsGUI settingsGUI;
   private final Speaker speaker;
   private final CassetteOut cassetteOut;
   private final MonoAudioStreamRenderer speakerRenderer;
@@ -50,10 +50,10 @@ public class IO implements
     cassetteOut = new CassetteOut(currentWallClockTime);
     cassetteOutRenderer.setSignalEventSource(cassetteOut);
     cassetteOutRenderer.start();
-    peripheralsGUI = new PeripheralsGUI(cpu, speaker, speakerRenderer,
-                                        cassetteOut, cassetteOutRenderer,
-                                        this);
-    peripheralsGUI.addTransportListener(this);
+    settingsGUI = new SettingsGUI(cpu, speaker, speakerRenderer,
+                                  cassetteOut, cassetteOutRenderer,
+                                  this);
+    settingsGUI.addTransportListener(this);
   }
 
   public void resync(final long wallClockTime)
@@ -156,7 +156,7 @@ public class IO implements
 
       // FIXME: Introduce central event dispatcher rather than
       // chaining listeners.
-      fileStreamSampler.addTransportListener(peripheralsGUI);
+      fileStreamSampler.addTransportListener(settingsGUI);
     } catch (final Throwable t) {
       throw new IOException("WARNING: I/O: failed opening file stream: " +
                             t.getMessage() +

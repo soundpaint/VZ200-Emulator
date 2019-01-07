@@ -17,13 +17,15 @@ public class Keyboard extends JFrame
 
   private static final int MEMORY_SIZE = 0x0800;
 
-  private int baseAddress;
-  private KeyboardPanel panel;
-  private KeyboardMatrix matrix;
+  private final int baseAddress;
+  private final KeyboardPanel panel;
+  private final KeyboardMatrix matrix;
 
-  public int readByte(int address, long wallClockTime) {
-    int result;
-    int addressOffset = (address - baseAddress) & 0xffff;
+  @Override
+  public int readByte(final int address, final long wallClockTime)
+  {
+    final int result;
+    final int addressOffset = (address - baseAddress) & 0xffff;
     if (addressOffset < MEMORY_SIZE)
       result = matrix.read(addressOffset);
     else
@@ -31,8 +33,10 @@ public class Keyboard extends JFrame
     return result;
   }
 
-  public int readShort(int address, long wallClockTime) {
-    int resultLSB, resultMSB;
+  @Override
+  public int readShort(final int address, final long wallClockTime)
+  {
+    final int resultLSB, resultMSB;
     int addressOffset = (address - baseAddress) & 0xffff;
     if (addressOffset < MEMORY_SIZE)
       resultLSB = matrix.read(addressOffset);
@@ -46,13 +50,19 @@ public class Keyboard extends JFrame
     return (resultMSB << 8) | resultLSB;
   }
 
-  public void resync(long wallClockTime) {}
+  @Override
+  public void resync(final long wallClockTime) {}
 
-  private Keyboard() {}
+  private Keyboard() {
+    throw new UnsupportedOperationException("unsupported empty constructor");
+  }
 
-  public Keyboard(int baseAddress) throws IOException {
+  public Keyboard(final int baseAddress) throws IOException
+  {
     super("VZ200 Keyboard");
     this.baseAddress = baseAddress;
+    setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+    addWindowListener(ApplicationExitListener.defaultInstance);
     addWindowListener(this);
     matrix = new KeyboardMatrix();
     getContentPane().setLayout(new BorderLayout());
@@ -65,42 +75,50 @@ public class Keyboard extends JFrame
     }
   }
 
-  public KeyListener getKeyListener() {
+  public KeyListener getKeyListener()
+  {
     return panel.getKeyListener();
   }
 
   @Override
-  public void windowOpened(WindowEvent event) {
+  public void windowOpened(final WindowEvent event)
+  {
     // nothing
   }
 
   @Override
-  public void windowClosing(WindowEvent event) {
+  public void windowClosing(final WindowEvent event)
+  {
     // nothing
   }
 
   @Override
-  public void windowClosed(WindowEvent event) {
+  public void windowClosed(final WindowEvent event)
+  {
     // nothing
   }
 
   @Override
-  public void windowDeactivated(WindowEvent event) {
+  public void windowDeactivated(final WindowEvent event)
+  {
     // nothing
   }
 
   @Override
-  public void windowActivated(WindowEvent event) {
+  public void windowActivated(final WindowEvent event)
+  {
     // nothing
   }
 
   @Override
-  public void windowDeiconified(WindowEvent event) {
+  public void windowDeiconified(final WindowEvent event)
+  {
     UserPreferences.getInstance().setKeyboardIconified(false);
   }
 
   @Override
-  public void windowIconified(WindowEvent event) {
+  public void windowIconified(final WindowEvent event)
+  {
     UserPreferences.getInstance().setKeyboardIconified(true);
   }
 
@@ -108,13 +126,6 @@ public class Keyboard extends JFrame
   {
     return String.format("Keyboard[baseAddress=0x%04x, size=0x%04x]",
                          baseAddress, MEMORY_SIZE);
-  }
-
-  /**
-   * This method is for testing and debugging only.
-   */
-  public static void main(String argv[]) throws IOException {
-    new Keyboard();
   }
 }
 

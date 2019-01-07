@@ -20,12 +20,6 @@ public class SourceDataLineChangeEvent extends AWTEvent
                                    final long currentWallClockTime)
   {
     super(source, ID);
-    if (mixerInfo == null) {
-      throw new NullPointerException("mixerInfo");
-    }
-    if (lineInfo == null) {
-      throw new NullPointerException("lineInfo");
-    }
     this.mixerInfo = mixerInfo;
     this.lineInfo = lineInfo;
     this.currentWallClockTime = currentWallClockTime;

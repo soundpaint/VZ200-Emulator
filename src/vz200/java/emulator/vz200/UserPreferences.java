@@ -31,7 +31,7 @@ public class UserPreferences
   private static final String PREFS_DEFAULT_CASSETTE_OUT_LINE = null;
   private static final String PREFS_NAME_CASSETTE_OUT_VOLUME =
     "cassette-out/volume";
-  private static final double PREFS_DEFAULT_CASSETTE_OUT_VOLUME = 0.8;
+  private static final double PREFS_DEFAULT_CASSETTE_OUT_VOLUME = 1.0;
   private static final String PREFS_NAME_CASSETTE_OUT_MUTED =
     "cassette-out/muted";
   private static final boolean PREFS_DEFAULT_CASSETTE_OUT_MUTED = false;
@@ -43,7 +43,7 @@ public class UserPreferences
   private static final String PREFS_DEFAULT_SPEAKER_LINE = null;
   private static final String PREFS_NAME_SPEAKER_VOLUME =
     "speaker/volume";
-  private static final double PREFS_DEFAULT_SPEAKER_VOLUME = 0.8;
+  private static final double PREFS_DEFAULT_SPEAKER_VOLUME = 1.0;
   private static final String PREFS_NAME_SPEAKER_MUTED =
     "speaker/muted";
   private static final boolean PREFS_DEFAULT_SPEAKER_MUTED = false;
@@ -102,8 +102,9 @@ public class UserPreferences
                               PREFS_DEFAULT_VIDEO_ZOOM_FACTOR);
     if ((zoomFactor < 1) || (zoomFactor > 3)) {
       System.out.println("error: unexpected zoom factor: " + zoomFactor +
-                         ", resetting to 1");
-      zoomFactor = 1;
+                         ", resetting to default (" +
+                         PREFS_DEFAULT_VIDEO_ZOOM_FACTOR + ")");
+      zoomFactor = PREFS_DEFAULT_VIDEO_ZOOM_FACTOR;
       setVideoZoomFactor(zoomFactor);
     }
     return zoomFactor;

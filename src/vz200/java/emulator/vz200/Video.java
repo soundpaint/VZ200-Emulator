@@ -13,7 +13,6 @@ public class Video extends JFrame
   implements MemoryBus.BusReader, MemoryBus.BusWriter
 {
   private static final long serialVersionUID = 8771293905230414438L;
-
   private static final int DEFAULT_BASE_ADDRESS = 0x7000;
 
   // horizontal sync
@@ -25,31 +24,41 @@ public class Video extends JFrame
   private static final long FS_CYCLE = 40960000; // [ns]
   private static final long FS_CYCLE_LOW = 2480000; // [ns]
 
-  private VideoPanel panel;
-  private RAMMemory videoRAM;
-  private int baseAddress;
+  private final VideoPanel panel;
+  private final RAMMemory videoRAM;
+  private final int baseAddress;
   private long wallClockTime;
   private long prevHsCycleLowStart;
   private long prevFsCycleLowStart;
 
-  public int readByte(int address, long wallClockTime) {
+  @Override
+  public int readByte(final int address, final long wallClockTime)
+  {
     return videoRAM.readByte(address, wallClockTime);
   }
 
-  public int readShort(int address, long wallClockTime) {
+  @Override
+  public int readShort(final int address, final long wallClockTime)
+  {
     return videoRAM.readShort(address, wallClockTime);
   }
 
-  public void writeByte(int address, int value, long wallClockTime) {
-    int previousValue = videoRAM.readByte(address, wallClockTime);
+  @Override
+  public void writeByte(final int address, final int value,
+                        final long wallClockTime)
+  {
+    final int previousValue = videoRAM.readByte(address, wallClockTime);
     videoRAM.writeByte(address, value, wallClockTime);
     if (value != previousValue) {
       panel.invalidate(address);
     }
   }
 
-  public void writeShort(int address, int value, long wallClockTime) {
-    int previousValue = videoRAM.readShort(address, wallClockTime);
+  @Override
+  public void writeShort(final int address, final int value,
+                         final long wallClockTime)
+  {
+    final int previousValue = videoRAM.readShort(address, wallClockTime);
     videoRAM.writeShort(address, value, wallClockTime);
     if (value != previousValue) {
       panel.invalidate(address);
@@ -57,22 +66,27 @@ public class Video extends JFrame
     }
   }
 
-  public void resync(long wallClockTime) {}
+  @Override
+  public void resync(final long wallClockTime) {}
 
-  public boolean hs() {
+  public boolean hs()
+  {
     return wallClockTime - prevHsCycleLowStart >= HS_CYCLE_LOW;
   }
 
-  public boolean fs() {
+  public boolean fs()
+  {
     return wallClockTime - prevFsCycleLowStart >= FS_CYCLE_LOW;
   }
 
-  public boolean updateWallClock(long wallClockCycles, long wallClockTime) {
+  public boolean updateWallClock(final long wallClockCycles,
+                                 final long wallClockTime)
+  {
     this.wallClockTime = wallClockTime;
     if (wallClockTime - prevHsCycleLowStart >= HS_CYCLE) {
       prevHsCycleLowStart += HS_CYCLE;
     }
-    boolean doIrq;
+    final boolean doIrq;
     if (wallClockTime - prevFsCycleLowStart >= FS_CYCLE) {
       prevFsCycleLowStart += FS_CYCLE;
       doIrq = true;
@@ -82,29 +96,36 @@ public class Video extends JFrame
     return doIrq;
   }
 
-  public void setColorMode(boolean colorMode) {
+  public void setColorMode(final boolean colorMode)
+  {
     panel.setColorMode(colorMode);
   }
 
-  public void setDisplayMode(boolean displayMode) {
+  public void setDisplayMode(final boolean displayMode)
+  {
     panel.setDisplayMode(displayMode);
   }
 
-  public void setZoomFactor(int zoomFactor) {
+  public void setZoomFactor(final int zoomFactor)
+  {
     panel.setZoomFactor(zoomFactor);
     pack();
   }
 
-  public Video() throws IOException {
+  public Video() throws IOException
+  {
     this(DEFAULT_BASE_ADDRESS);
   }
 
-  public Video(int baseAddress) throws IOException {
+  public Video(final int baseAddress) throws IOException
+  {
     super("VZ200 Video Screen");
     this.baseAddress = baseAddress;
     wallClockTime = 0;
     prevHsCycleLowStart = 0;
     prevFsCycleLowStart = 0;
+    setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+    addWindowListener(ApplicationExitListener.defaultInstance);
     setJMenuBar(new VideoMenu(this));
     panel = new VideoPanel(baseAddress);
     getContentPane().add(panel);
@@ -117,13 +138,6 @@ public class Video extends JFrame
   {
     return String.format("Video[baseAddress=%04xh, videoRAM=%s]",
                          Util.hexShortStr(baseAddress), videoRAM);
-  }
-
-  /**
-   * This method is for testing and debugging only.
-   */
-  public static void main(String argv[]) throws IOException {
-    new Video();
   }
 }
 

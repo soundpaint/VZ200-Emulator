@@ -23,7 +23,7 @@ public class SourceDataLineControl extends Box
   private final List<LineControlListener> lineControlListeners;
   private final JLabel lbMixerId;
   private final JLabel lbLineId;
-  private final JButton btChangeLine;
+  private final JButton btChange;
   private final SourceDataLineSelectionDialog dlLineSelection;
 
   public SourceDataLineControl(final String id,
@@ -44,7 +44,7 @@ public class SourceDataLineControl extends Box
     lineControlListeners = new ArrayList<LineControlListener>();
     lbMixerId = new JLabel();
     lbLineId = new JLabel();
-    btChangeLine = new JButton("Change");
+    btChange = new JButton("Change");
     dlLineSelection =
       new SourceDataLineSelectionDialog(id,
                                         preferredMixerId, preferredLineId,
@@ -63,16 +63,15 @@ public class SourceDataLineControl extends Box
     bxSelectionValues.add(lbLineId);
     bxSelectionValues.add(Box.createHorizontalStrut(5));
     add(Box.createHorizontalStrut(5));
-
     add(Box.createHorizontalGlue());
 
-    final Box bxSelectionButtons = new Box(BoxLayout.Y_AXIS);
-    add(bxSelectionButtons);
-    btChangeLine.setMnemonic(KeyEvent.VK_C);
-    btChangeLine.addActionListener((final ActionEvent event) ->
-                                   { lineChanged(true); });
-    bxSelectionButtons.add(btChangeLine);
-    bxSelectionButtons.add(Box.createHorizontalStrut(5));
+    final Box bxSelectionButton = new Box(BoxLayout.Y_AXIS);
+    add(bxSelectionButton);
+    btChange.setMnemonic(KeyEvent.VK_C);
+    btChange.addActionListener((final ActionEvent event) ->
+                               { changeLine(); });
+    bxSelectionButton.add(btChange);
+    bxSelectionButton.add(Box.createHorizontalStrut(5));
     add(Box.createHorizontalStrut(5));
   }
 
@@ -153,10 +152,9 @@ public class SourceDataLineControl extends Box
     return event;
   }
 
-  private void lineChanged(final boolean execDialog)
+  private void changeLine()
   {
-    printMessage("execDialog: " + execDialog);
-    if (!execDialog || dlLineSelection.execute()) {
+    if (dlLineSelection.execute()) {
       final SourceDataLineChangeEvent event =
         updateLabelsAndCreateLineChangeEvent();
       for (final LineControlListener listener : lineControlListeners) {
