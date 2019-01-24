@@ -7,6 +7,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import emulator.z80.CPU;
 import emulator.z80.WallClockProvider;
 
 public class CassetteControl extends JPanel
@@ -44,6 +45,7 @@ public class CassetteControl extends JPanel
 
   public CassetteControl(final LineControlListener cassetteOut,
                          final MonoAudioStreamRenderer cassetteOutRenderer,
+                         final CPU.Memory memory,
                          final WallClockProvider wallClockProvider,
                          final JFrame owner)
   {
@@ -68,6 +70,9 @@ public class CassetteControl extends JPanel
 
     transportControl = new CassetteTransportControl();
     add(transportControl);
+    final VZFileControl vzFileControl =
+      new VZFileControl(memory, wallClockProvider);
+    add(vzFileControl);
   }
 
   public CassetteTransportControl getTransportControl()

@@ -63,8 +63,8 @@ public class SettingsGUI extends JFrame
     tpSettings.addTab(null, Icons.LINE_UNMUTED,
                       speakerControl, "Configure Speaker Ouput");
     final CassetteControl cassetteControl =
-      new CassetteControl(cassetteOut, cassetteOutRenderer, wallClockProvider,
-                          this);
+      new CassetteControl(cassetteOut, cassetteOutRenderer,
+                          cpu.getMemory(), wallClockProvider, this);
     transportControl = cassetteControl.getTransportControl();
     tpSettings.addTab(null, Icons.TAPE,
                       cassetteControl, "Configure Cassette I/O");
