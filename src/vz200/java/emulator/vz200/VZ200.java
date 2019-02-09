@@ -21,8 +21,10 @@ public class VZ200 implements CPU.WallClockListener
   private static final int OS_START = 0x0000;
   private static final int OS_LENGTH = 0x4000;
 
-  private final IO io;
+  private final MemoryBus portMemoryBus;
+  private final MemoryBus mainMemoryBus;
   private final CPU z80;
+  private final IO io;
   private final Monitor monitor;
 
   public static ImageIcon createIcon(final String imageFileName,
@@ -41,8 +43,8 @@ public class VZ200 implements CPU.WallClockListener
     final ROMMemory rom = new ROMMemory((Class<? extends Object>)VZ200.class,
                                         OS_RESOURCENAME,
                                         OS_START, OS_LENGTH);
-    final MemoryBus portMemoryBus = new MemoryBus();
-    final MemoryBus mainMemoryBus = new MemoryBus();
+    portMemoryBus = new MemoryBus();
+    mainMemoryBus = new MemoryBus();
     z80 = new Z80(mainMemoryBus, portMemoryBus);
     z80.addWallClockListener(this);
     final RAMMemory ram = new RAMMemory(RAM_START, RAM_LENGTH);

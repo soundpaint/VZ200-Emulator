@@ -1,14 +1,9 @@
 package emulator.vz200;
 
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.beans.PropertyChangeEvent;
-import java.util.ArrayList;
-import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -17,13 +12,13 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JTextPane;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.KeyStroke;
-import javax.swing.SwingConstants;
+
+import emulator.z80.PreferencesChangeListener;
 
 public class CPUSpeedSelectionDialog extends JDialog
 {
@@ -36,11 +31,9 @@ public class CPUSpeedSelectionDialog extends JDialog
   private final JButton btPaneOptionCancel;
   private int frequency;
 
-  public CPUSpeedSelectionDialog(final int initialFrequency,
-                                 final Frame owner)
+  public CPUSpeedSelectionDialog(final Frame owner)
   {
     super(owner, "Select CPU Speed ", true);
-    this.frequency = initialFrequency;
     final JButton[] paneOptions = {
       btPaneOptionSelect =
       createPaneOption("Select", KeyEvent.VK_S,
@@ -49,9 +42,8 @@ public class CPUSpeedSelectionDialog extends JDialog
       createPaneOption("Cancel", KeyEvent.VK_C,
                        "Close dialog without applying selected speed.")
     };
-    speedModel = new SpinnerNumberModel(frequency, 1, 1000000000, 1);
+    speedModel = new SpinnerNumberModel(1, 1, 1000000000, 1);
     snSpeed = new JSpinner(speedModel);
-    //final Box bxSpeedSelector = createSpeedSelector();
     final JComponent bxSpeedSelector = new JLabel();
     opSelection = createContentPane(paneOptions, bxSpeedSelector);
     setContentPane(opSelection);
@@ -158,10 +150,10 @@ public class CPUSpeedSelectionDialog extends JDialog
    * <code>#getSelectedLine()</code> and apply the selected mixer and
    * line.
    */
-  public boolean execute()
+  public boolean execute(final int preselectedFrequency)
   {
     opSelection.setValue(null);
-    speedModel.setValue(frequency);
+    speedModel.setValue(preselectedFrequency);
     setVisible(true);
     final Object value = opSelection.getValue();
     final boolean result;

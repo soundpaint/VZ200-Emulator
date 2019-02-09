@@ -4503,30 +4503,16 @@ public class Z80 implements CPU {
     memory.resync(wallClockTime);
   }
 
-  private static int getDefaultCpuFrequency() {
-    return UserPreferences.getInstance().getFrequency();
-  }
-
   public Z80() {
-    this(getDefaultCpuFrequency());
-  }
-
-  public Z80(int cpuFrequency) {
     this(MemoryBus.createRAMMemoryBus(0, 65536),
-         MemoryBus.createRAMMemoryBus(0, 256),
-         cpuFrequency);
+         MemoryBus.createRAMMemoryBus(0, 256));
   }
 
   public Z80(CPU.Memory memory, CPU.Memory io) {
-    this(memory, io, getDefaultCpuFrequency());
-  }
-
-  public Z80(CPU.Memory memory, CPU.Memory io, int cpuFrequency) {
     System.out.println("initializing Z80:");
     this.memory = memory;
     this.io = io;
     annotations = new Annotations();
-    speedChanged(cpuFrequency);
     concreteOperation = new ConcreteOperation();
     System.out.println("setting up registers...");
     createRegisters();
@@ -4546,6 +4532,7 @@ public class Z80 implements CPU {
     wallClockListeners = new ArrayList<WallClockListener>();
     System.out.println("resetting processor status...");
     reset();
+    UserPreferences.getInstance().addListener(this);
     System.out.println("Z80 initialized.");
   }
 
@@ -4609,9 +4596,15 @@ public class Z80 implements CPU {
     timePerClockCycle = 1000000000 / frequency;
   }
 
-  public void statisticsEnabled(final boolean enabled)
+  public void statisticsEnabledChanged(final boolean enabled)
   {
     statisticsEnabled = enabled;
+  }
+
+  public void busyWaitChanged(final boolean busyWait)
+  {
+    // This callback is handled by Monitor class.
+    // Hence, do nothing here.
   }
 
   public static void main(String argv[]) {

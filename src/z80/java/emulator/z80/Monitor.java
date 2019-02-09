@@ -16,7 +16,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Monitor {
+public class Monitor implements PreferencesChangeListener {
   private CPU cpu;
   private CPU.Memory memory;
   private CPU.Memory io;
@@ -48,6 +48,13 @@ public class Monitor {
       return s.toString();
     }
   }
+
+  /**
+   * Turn off, if you want to get less CPU load.  Turn on, if you
+   * require high precision in the point of time of CPU instruction
+   * execution.
+   */
+  private boolean busyWait;
 
   // monitor status
   private int codeStartAddr;
@@ -502,23 +509,6 @@ public class Monitor {
   // emulation CPU instructions.
   private static final int KBD_CHECK_COUNT_LIMIT = 1024;
 
-  /**
-   * Turn off, if you want to get less CPU load.  Turn on, if you
-   * require high precision in the point of time of CPU instruction
-   * execution.
-   */
-  private static final boolean BUSY_WAIT = false;
-
-  /**
-   * If BUSY_WAIT is turned on, use BUSY_WAIT_TIME to fine-control
-   * timing precision.  The lower the value, the higher the CPU load,
-   * but the better timing precision.  If BUSY_WAIT is turned off,
-   * this variable is unused.  Note that the precision of the idle
-   * statistics, that is printed after executing code, also increases
-   * with increasing the busy wait time value.
-   */
-  private static final long BUSY_WAIT_TIME = 1000;
-
   private void go(boolean trace, boolean singleStep, boolean stepOver) {
     if (!singleStep) {
       stdout.println("press <enter> to pause");
@@ -589,9 +579,8 @@ public class Monitor {
             }
             busyTime += System.nanoTime() - systemTime;
           } else {
-            // busy wait
-            if (BUSY_WAIT) {
-              while (System.nanoTime() - systemTime < BUSY_WAIT_TIME);
+            if (busyWait) {
+              while (System.nanoTime() - systemTime < 0);
             } else {
               try {
                 Thread.sleep(1);
@@ -620,15 +609,12 @@ public class Monitor {
     if (!singleStep && !trace) {
       long stopCycle = cpu.getWallClockCycles();
       stdout.printf("[paused]%n");
-      stdout.printf("[avg_speed = %.3fMHz]%n",
+      stdout.printf("[avg speed = %.3fMHz]%n",
                     1000.0 * (stopCycle - startCycle) /
                     (systemStopTime - systemStartTime));
-      stdout.printf("[busy_wait = %b]%n", BUSY_WAIT);
-      if (BUSY_WAIT) {
-        stdout.printf("[busy_wait_time = %.2fµs]%n", 0.001 * BUSY_WAIT_TIME);
-      }
-      stdout.printf("[latest_jitter = %.2fµs]%n", 0.001 * jitter);
-      stdout.printf("[avg_thread_load = %3.2f%%]%n",
+      stdout.printf("[busy wait = %b]%n", busyWait);
+      stdout.printf("[latest jitter = %.2fµs]%n", 0.001 * jitter);
+      stdout.printf("[avg thread load = %3.2f%%]%n",
                     100 * (busyTime / ((float)idleTime + busyTime)));
       stdout.println();
       printRegisters();
@@ -1182,6 +1168,23 @@ public class Monitor {
     System.exit(0);
   }
 
+  public void speedChanged(final int frequency)
+  {
+    // This callback is handled by CPU class (or its implementor).
+    // Hence, do nothing here.
+  }
+
+  public void statisticsEnabledChanged(final boolean enabled)
+  {
+    // This callback is handled by CPU class (or its implementor).
+    // Hence, do nothing here.
+  }
+
+  public void busyWaitChanged(final boolean busyWait)
+  {
+    this.busyWait = busyWait;
+  }
+
   private Monitor() {
     throw new UnsupportedOperationException("unsupported empty constructor");
   }
@@ -1192,6 +1195,7 @@ public class Monitor {
     resourceLocations = new ArrayList<Class<?>>();
     history = new History();
     addResourceLocation(Monitor.class);
+    UserPreferences.getInstance().addListener(this);
   }
 
   private static void usage() {

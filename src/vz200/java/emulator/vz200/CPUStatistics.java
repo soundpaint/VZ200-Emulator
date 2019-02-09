@@ -1,8 +1,6 @@
 package emulator.vz200;
 
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -13,12 +11,12 @@ import javax.swing.event.ChangeEvent;
 
 import emulator.z80.CPU;
 import emulator.z80.PreferencesChangeListener;
+import emulator.z80.UserPreferences;
 
-public class CPUStatistics extends Box
+public class CPUStatistics extends Box implements PreferencesChangeListener
 {
   private static final long serialVersionUID = -8929542516657150731L;
 
-  private final List<PreferencesChangeListener> listeners;
   private final CPU cpu;
   private final JCheckBox cbEnable;
   private final JPanel pnStatistics;
@@ -28,18 +26,15 @@ public class CPUStatistics extends Box
   private final JLabel lbAvgSpeedValue;
   private final JLabel lbAvgThreadLoadValue;
   private final JLabel lbAvgJitterValue;
-  private boolean enabled;
+  private boolean statisticsEnabled;
 
-  public CPUStatistics(final CPU cpu,
-                       final boolean initiallyEnabled)
+  public CPUStatistics(final CPU cpu)
   {
     super(BoxLayout.Y_AXIS);
     if (cpu == null) {
       throw new NullPointerException("cpu");
     }
     this.cpu = cpu;
-    this.enabled = initiallyEnabled;
-    listeners = new ArrayList<PreferencesChangeListener>();
     setBorder(BorderFactory.createTitledBorder("CPU Statistics"));
 
     lbAvgSpeedLabel = new JLabel("Actual avg. speed [Hz]:");
@@ -58,8 +53,6 @@ public class CPUStatistics extends Box
     cbEnable.addChangeListener((final ChangeEvent event) -> {
         enableChanged();
       });
-    cbEnable.setSelected(enabled);
-    enableChanged();
     bxEnable.add(Box.createHorizontalGlue());
     add(Box.createVerticalStrut(5));
 
@@ -92,21 +85,12 @@ public class CPUStatistics extends Box
             } catch (final InterruptedException e) {
               // ignore
             }
-            if (enabled) updateValues();
+            if (statisticsEnabled) updateValues();
           }
         }
       }).start();
-  }
-
-  public void addListener(final PreferencesChangeListener listener)
-  {
-    listeners.add(listener);
-    listener.statisticsEnabled(enabled);
-  }
-
-  public void removeListener(final PreferencesChangeListener listener)
-  {
-    listeners.remove(listener);
+    final UserPreferences userPreferences = UserPreferences.getInstance();
+    userPreferences.addListener(this);
   }
 
   private void updateValues()
@@ -119,17 +103,37 @@ public class CPUStatistics extends Box
 
   private void enableChanged()
   {
-    enabled = cbEnable.isSelected();
-    pnStatistics.setEnabled(enabled);
-    lbAvgSpeedLabel.setEnabled(enabled);
-    lbAvgSpeedValue.setEnabled(enabled);
-    lbAvgThreadLoadLabel.setEnabled(enabled);
-    lbAvgThreadLoadValue.setEnabled(enabled);
-    lbAvgJitterLabel.setEnabled(enabled);
-    lbAvgJitterValue.setEnabled(enabled);
-    for (final PreferencesChangeListener listener : listeners) {
-      listener.statisticsEnabled(enabled);
-    }
+    final boolean statisticsEnabled = cbEnable.isSelected();
+    final UserPreferences userPreferences = UserPreferences.getInstance();
+    userPreferences.setStatisticsEnabled(statisticsEnabled);
+  }
+
+  @Override
+  public void speedChanged(final int frequency)
+  {
+    // This callback is handled elsewhere.
+    // Hence, do nothing here.
+  }
+
+  @Override
+  public void statisticsEnabledChanged(final boolean statisticsEnabled)
+  {
+    this.statisticsEnabled = statisticsEnabled;
+    cbEnable.setSelected(statisticsEnabled);
+    pnStatistics.setEnabled(statisticsEnabled);
+    lbAvgSpeedLabel.setEnabled(statisticsEnabled);
+    lbAvgSpeedValue.setEnabled(statisticsEnabled);
+    lbAvgThreadLoadLabel.setEnabled(statisticsEnabled);
+    lbAvgThreadLoadValue.setEnabled(statisticsEnabled);
+    lbAvgJitterLabel.setEnabled(statisticsEnabled);
+    lbAvgJitterValue.setEnabled(statisticsEnabled);
+  }
+
+  @Override
+  public void busyWaitChanged(final boolean busyWait)
+  {
+    // This callback is handled elsewhere.
+    // Hence, do nothing here.
   }
 }
 

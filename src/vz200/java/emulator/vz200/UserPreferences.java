@@ -10,10 +10,6 @@ public class UserPreferences
   private final Preferences vz200Preferences;
 
   private static final String PREFS_PATH_VZ200 = "/vz200";
-  private static final String PREFS_NAME_CPU_SPEED =
-    "cpu/speed";
-  private static final int PREFS_DEFAULT_CPU_SPEED =
-    CPUSpeedControl.DEFAULT_SPEED;
   private static final String PREFS_NAME_CPU_STATISTICS_ENABLED =
     "cpu/statistics-enabled";
   private static final boolean PREFS_DEFAULT_CPU_STATISTICS_ENABLED = false;
@@ -56,25 +52,6 @@ public class UserPreferences
   public static UserPreferences getInstance()
   {
     return instance;
-  }
-
-  public void setCPUSpeed(final int frequency)
-  {
-    vz200Preferences.putInt(PREFS_NAME_CPU_SPEED, frequency);
-  }
-
-  public int getCPUSpeed()
-  {
-    int frequency =
-      vz200Preferences.getInt(PREFS_NAME_CPU_SPEED, PREFS_DEFAULT_CPU_SPEED);
-    if ((frequency < 1) || (frequency > 1000000000)) {
-      System.out.println("error: CPU frequency [Hz]: " + frequency +
-                         ", resetting to default (" +
-                         PREFS_DEFAULT_CPU_SPEED + ")");
-      frequency = PREFS_DEFAULT_CPU_SPEED;
-      setCPUSpeed(frequency);
-    }
-    return frequency;
   }
 
   public void setCPUStatisticsEnabled(final boolean enabled)

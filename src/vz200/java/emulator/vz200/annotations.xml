@@ -2951,7 +2951,6 @@
   </at>
   <at address="0x7ae9">
     <label>prg_start</label>
-    <data-bytes length="0x517" />
     <header>
       start of memory area for BASIC program text and variables
     </header>

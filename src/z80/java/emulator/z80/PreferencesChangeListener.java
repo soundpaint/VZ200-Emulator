@@ -15,7 +15,18 @@ public interface PreferencesChangeListener
    * @param enabled If true, statistics code is turned on, otherwise
    * off.
    */
-  void statisticsEnabled(final boolean enabled);
+  void statisticsEnabledChanged(final boolean statisticsEnabled);
+
+  /**
+   * Turn on / off busy waiting when synchronizing wall clock with
+   * system time.  Busy waiting yields higher timing precision on
+   * instruction level granularity, but raises system CPU load to
+   * 100%.  Long-term timing precision should be unaffected by this
+   * switch.
+   * @param busyWait If true, busy wait is turned on, otherwise
+   * off.
+   */
+  void busyWaitChanged(final boolean busyWait);
 }
 
 /*
