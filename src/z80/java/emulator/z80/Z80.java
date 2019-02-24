@@ -4606,11 +4606,6 @@ public class Z80 implements CPU {
     // This callback is handled by Monitor class.
     // Hence, do nothing here.
   }
-
-  public static void main(String argv[]) {
-    CPU z80 = new Z80();
-    new Monitor(z80).run(null);
-  }
 }
 
 /*

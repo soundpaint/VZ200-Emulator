@@ -31,6 +31,7 @@ public class MonoAudioStreamRenderer extends Thread
 
   public MonoAudioStreamRenderer(final String id)
   {
+    super(String.format("MonoAudioStreamRenderer '%s'", id));
     if (id == null) throw new NullPointerException("id");
     this.id = id;
     buffer = new byte[FRAME_SIZE * BUFFER_FRAMES];

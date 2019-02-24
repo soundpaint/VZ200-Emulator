@@ -137,6 +137,7 @@ public class LineControl extends Box
 
   public void addListener(final LineControlListener listener)
   {
+    printMessage("adding listener " + listener);
     sourceDataLineControl.addListener(listener);
     lineControlListeners.add(listener);
     listener.volumeChanged(volume);
@@ -147,6 +148,11 @@ public class LineControl extends Box
   {
     sourceDataLineControl.removeListener(listener);
     lineControlListeners.remove(listener);
+  }
+
+  private void printMessage(final String message)
+  {
+    System.out.printf("LineControl '%s': %s%n", id, message);
   }
 
   private void volumeChanged()

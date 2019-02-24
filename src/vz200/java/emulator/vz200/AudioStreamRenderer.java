@@ -28,6 +28,7 @@ public class AudioStreamRenderer extends Thread
 
   public AudioStreamRenderer() throws IOException
   {
+    super("AudioStreamRenderer");
     buffer = new byte[FRAME_SIZE * BUFFER_FRAMES];
     try {
       mixerInfo = AudioSystem.getMixerInfo();

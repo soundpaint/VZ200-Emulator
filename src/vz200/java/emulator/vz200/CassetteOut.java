@@ -17,6 +17,11 @@ public class CassetteOut implements SignalEventSource, LineControlListener
     eventQueue = new SignalEventQueue("cassette out", currentWallClockTime);
   }
 
+  private void printMessage(final String message)
+  {
+    System.out.printf("CassetteOut: %s%n", message);
+  }
+
   public void lineChanged(final SourceDataLineChangeEvent event)
   {
     eventQueue.reset(event.getCurrentWallClockTime());
@@ -35,7 +40,7 @@ public class CassetteOut implements SignalEventSource, LineControlListener
     elongation[1] = (short)amplitude;
     elongation[2] = (short)amplitude;
     elongation[3] = (short)(2 * amplitude + 1);
-    System.out.println(amplitude);
+    printMessage("amplitude changed: " + amplitude);
   }
 
   public void mutedChanged(final boolean muted)

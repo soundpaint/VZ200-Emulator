@@ -21,6 +21,7 @@ public class FileStreamRenderer extends Thread {
   private SignalEventSource eventSource;
 
   public FileStreamRenderer(File file) throws IOException {
+    super("FileStreamRenderer for file " + file);
     this.file = file;
     buffer = new byte[BYTES_PER_FRAME * BUFFER_FRAMES];
     try {
@@ -35,7 +36,7 @@ public class FileStreamRenderer extends Thread {
   }
 
   private void printMessage(String message) {
-    System.out.printf("FileStreamRenderer: %s%n", message);
+    System.out.printf("FileStreamRenderer (%s): %s%n", file, message);
   }
 
   private int renderEvent(short sample, int bufferIndex,
@@ -88,7 +89,7 @@ public class FileStreamRenderer extends Thread {
       try {
         out.write(buffer, 0, buffer.length);
       } catch (IOException e) {
-        System.err.printf("file stream buffer overflow: %s%n", e);
+        printMessage(String.format("file stream buffer overflow: %s%n", e));
       }
     }
   }

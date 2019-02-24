@@ -6,6 +6,7 @@ import java.net.URL;
 import javax.swing.ImageIcon;
 
 import emulator.z80.CPU;
+import emulator.z80.CPUControl;
 import emulator.z80.MemoryBus;
 import emulator.z80.Monitor;
 import emulator.z80.RAMMemory;
@@ -21,9 +22,9 @@ public class VZ200 implements CPU.WallClockListener
   private static final int OS_START = 0x0000;
   private static final int OS_LENGTH = 0x4000;
 
+  private final CPUControl cpuControl;
   private final MemoryBus portMemoryBus;
   private final MemoryBus mainMemoryBus;
-  private final CPU z80;
   private final IO io;
   private final Monitor monitor;
 
@@ -45,8 +46,10 @@ public class VZ200 implements CPU.WallClockListener
                                         OS_START, OS_LENGTH);
     portMemoryBus = new MemoryBus();
     mainMemoryBus = new MemoryBus();
-    z80 = new Z80(mainMemoryBus, portMemoryBus);
+    final Z80 z80 = new Z80(mainMemoryBus, portMemoryBus);
     z80.addWallClockListener(this);
+    cpuControl = new CPUControl(z80);
+    cpuControl.addResourceLocation(VZ200.class);
     final RAMMemory ram = new RAMMemory(RAM_START, RAM_LENGTH);
     io = new IO(z80, z80.getWallClockTime());
     final Video video = io.getVideo();
@@ -57,8 +60,7 @@ public class VZ200 implements CPU.WallClockListener
     mainMemoryBus.addWriter(io);
     mainMemoryBus.addReader(video);
     mainMemoryBus.addWriter(video);
-    monitor = new Monitor(z80);
-    monitor.addResourceLocation(VZ200.class);
+    monitor = new Monitor(cpuControl);
   }
 
   public void wallClockChanged(final long timePerClockCycle,
@@ -66,7 +68,7 @@ public class VZ200 implements CPU.WallClockListener
                                final long wallClockTime)
   {
     if (io.updateWallClock(timePerClockCycle, wallClockCycles, wallClockTime)) {
-      z80.requestIRQ();
+      cpuControl.requestIRQ();
     }
   }
 

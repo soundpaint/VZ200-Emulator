@@ -16,12 +16,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Monitor implements PreferencesChangeListener {
-  private CPU cpu;
-  private CPU.Memory memory;
-  private CPU.Memory io;
+public class Monitor implements CPUControlAPI.LogListener
+{
+  private CPUControl cpuControl;
   private CPU.Register[] registers;
-  private CPU.Register regPC, regSP;
   private Annotations annotations;
   private int address;
   private PushbackInputStream stdin;
@@ -48,13 +46,6 @@ public class Monitor implements PreferencesChangeListener {
       return s.toString();
     }
   }
-
-  /**
-   * Turn off, if you want to get less CPU load.  Turn on, if you
-   * require high precision in the point of time of CPU instruction
-   * execution.
-   */
-  private boolean busyWait;
 
   // monitor status
   private int codeStartAddr;
@@ -137,12 +128,6 @@ public class Monitor implements PreferencesChangeListener {
     }
   }
 
-  private List<Class<?>> resourceLocations;
-
-  public void addResourceLocation(Class<?> clazz) {
-    resourceLocations.add(clazz);
-  }
-
   private class FileName extends Text {
     public URL getResource() {
       File resolvedFile;
@@ -155,12 +140,7 @@ public class Monitor implements PreferencesChangeListener {
           throw new InternalError("unexpected URL conversion error");
         }
       }
-      for (Class<?> clazz : resourceLocations) {
-        URL url = clazz.getResource(text);
-        if (url != null)
-          return url;
-      }
-      return null;
+      return cpuControl.resolveLocation(text);
     }
 
     public InputStream getInputStream() throws IOException {
@@ -170,12 +150,7 @@ public class Monitor implements PreferencesChangeListener {
       if (resolvedFile.exists()) {
         return new FileInputStream(resolvedFile);
       }
-      for (Class<?> clazz : resourceLocations) {
-        InputStream stream = clazz.getResourceAsStream(text);
-        if (stream != null)
-          return stream;
-      }
-      return null;
+      return cpuControl.resolveStream(text);
     }
   }
 
@@ -380,11 +355,59 @@ public class Monitor implements PreferencesChangeListener {
   private String[] script;
   private int scriptLineIndex;
 
+  private static final boolean DEBUG = false;
+
+  public void logDebug(final String message)
+  {
+    if (DEBUG) {
+      stdout.println(message);
+    }
+  }
+
+  public void logInfo(final String message)
+  {
+    stdout.println(message);
+  }
+
+  public void logWarn(final String message)
+  {
+    stderr.println(message);
+  }
+
+  public void logError(final String message)
+  {
+    stderr.println(message);
+  }
+
+  public void logOperation(final CPU.ConcreteOperation op)
+  {
+    printOperation(op, 0);
+    printRegisters();
+  }
+
+  public void logStatistics(final double avgSpeed,
+                            final boolean busyWait,
+                            final double jitter,
+                            final double avgLoad)
+  {
+    logInfo(String.format("[avg speed = %.3fMHz]", avgSpeed));
+    logInfo(String.format("[busy wait = %b]", busyWait));
+    logInfo(String.format("[latest jitter = %.2fµs]", 0.001 * jitter));
+    logInfo(String.format("[avg thread load = %3.2f%%]", 100 * avgLoad));
+    logInfo("");
+    printRegisters();
+  }
+
+  public void cpuStopped()
+  {
+    codeStartAddr = cpuControl.getPCValue();
+  }
+
   private String readLine() throws IOException {
     String cmdLine;
     if ((script != null) && (scriptLineIndex < script.length)) {
       cmdLine = script[scriptLineIndex++];
-      stdout.println("[" + cmdLine + "]");
+      logInfo("[" + cmdLine + "]");
     } else {
       cmdLine = readLine(stdin);
     }
@@ -393,11 +416,11 @@ public class Monitor implements PreferencesChangeListener {
 
   private void abortScript() {
     if (scriptLineIndex < script.length) {
-      stdout.println("[abort script:");
+      logInfo("[abort script:");
       while (scriptLineIndex < script.length) {
-        stdout.println("  script: " + script[scriptLineIndex++]);
+        logInfo("  script: " + script[scriptLineIndex++]);
       }
-      stdout.println("]");
+      logInfo("]");
     }
   }
 
@@ -504,141 +527,23 @@ public class Monitor implements PreferencesChangeListener {
     parseEof();
   }
 
-  // TODO: Specify monitor keyboard check interval by emulation CPU
-  // wall clock time (or host CPU time?) rather than as number of
-  // emulation CPU instructions.
-  private static final int KBD_CHECK_COUNT_LIMIT = 1024;
-
-  private void go(boolean trace, boolean singleStep, boolean stepOver) {
-    if (!singleStep) {
-      stdout.println("press <enter> to pause");
-    }
-
-    if (num1.parsed()) {
-      codeStartAddr = num1.getValue();
-      regPC.setValue(codeStartAddr);
-    } else {
-      // continue whereever regPC currently points to
-    }
-
-    boolean haveBreakPoint;
-    int breakPoint;
-    if (num2.parsed()) {
-      haveBreakPoint = true;
-      breakPoint = num2.getValue();
-    } else if (singleStep) {
-      haveBreakPoint = true;
-      breakPoint = 0; // will be set later
-    } else {
-      haveBreakPoint = false;
-      breakPoint = 0; // unused
-    }
-
-    boolean done = false;
-    int kbdCheckCount = 0;
-    long systemStartTime = 0;
-    long systemStopTime = 0;
-    long startCycle = cpu.getWallClockCycles();
-    long idleTime = 0;
-    long busyTime = 0;
-    long jitter = 0;
-    try {
-      try {
-	CPU.ConcreteOperation op = null;
-        systemStartTime = System.nanoTime();
-        long cpuStartTime = cpu.getWallClockTime();
-        long deltaStartTime = cpuStartTime - systemStartTime;
-        cpu.resyncPeripherals();
-        while (!done) {
-          long systemTime = System.nanoTime();
-          long cpuTime = cpu.getWallClockTime();
-          jitter = systemTime - cpuTime + deltaStartTime;
-	  if (jitter > 0) {
-            op = cpu.fetchNextOperation();
-            if (singleStep) {
-              if (stepOver) {
-                breakPoint = regPC.getValue();
-                op.execute();
-              } else {
-                op.execute();
-                breakPoint = regPC.getValue();
-              }
-            } else {
-              op.execute();
-            }
-            if (trace) {
-              printOperation(op, 0);
-              printRegisters();
-            }
-            if (haveBreakPoint && (regPC.getValue() == breakPoint)) {
-              done = true;
-            }
-            if (kbdCheckCount++ >= KBD_CHECK_COUNT_LIMIT) {
-              done |= stdin.available() > 0;
-              kbdCheckCount = 0;
-            }
-            busyTime += System.nanoTime() - systemTime;
-          } else {
-            if (busyWait) {
-              while (System.nanoTime() - systemTime < 0);
-            } else {
-              try {
-                Thread.sleep(1);
-              } catch (InterruptedException e) {
-                // ignore
-              }
-            }
-            idleTime += System.nanoTime() - systemTime;
-	  }
-        }
-        systemStopTime = System.nanoTime();
-        if (haveBreakPoint && !trace) {
-          printOperation(op, 0);
-          printRegisters();
-        }
-      } catch (CPU.MismatchException | RuntimeException e) {
-        e.printStackTrace(stderr);
-      }
-      if (stdin.available() > 0) {
-        abortScript();
-        readLine();
-      }
-    } catch (IOException e) {
-      throw new InternalError(e.getMessage());
-    }
-    if (!singleStep && !trace) {
-      long stopCycle = cpu.getWallClockCycles();
-      stdout.printf("[paused]%n");
-      stdout.printf("[avg speed = %.3fMHz]%n",
-                    1000.0 * (stopCycle - startCycle) /
-                    (systemStopTime - systemStartTime));
-      stdout.printf("[busy wait = %b]%n", busyWait);
-      stdout.printf("[latest jitter = %.2fµs]%n", 0.001 * jitter);
-      stdout.printf("[avg thread load = %3.2f%%]%n",
-                    100 * (busyTime / ((float)idleTime + busyTime)));
-      stdout.println();
-      printRegisters();
-    }
-    codeStartAddr = regPC.getValue();
-  }
-
   private void save() {
     try {
       OutputStream os =
 	new BufferedOutputStream(new FileOutputStream(fileName.getValue()));
       int addr = num1.getValue();
       do {
-	int value = memory.readByte(addr, cpu.getWallClockCycles());
+	int value = cpuControl.readByteFromMemory(addr);
 	os.write(value);
 	addr++;
       } while (addr != num2.getValue());
       os.close();
-      stdout.printf("wrote %s bytes to file %s%n",
-                    Util.hexShortStr((num2.getValue() - num1.getValue()) &
-                                     0xffff),
-                    fileName.getValue());
+      logInfo(String.format("wrote %s bytes to file %s",
+                            Util.hexShortStr((num2.getValue() - num1.getValue()) &
+                                             0xffff),
+                            fileName.getValue()));
     } catch (IOException e) {
-      stderr.println(e.getMessage());
+      logError(e.getMessage());
     }
   }
 
@@ -651,17 +556,17 @@ public class Monitor implements PreferencesChangeListener {
       do {
 	value = is.read();
 	if (value >= 0) {
-	  memory.writeByte(addr, value, cpu.getWallClockCycles());
+	  cpuControl.writeByteToMemory(addr, value);
 	  addr++;
 	}
       }
       while (value >= 0);
       is.close();
-      stdout.printf("loaded %s bytes from file %s%n",
-                    Util.hexShortStr((addr - num1.getValue()) & 0xffff),
-                    fileName.getValue());
+      logInfo(String.format("loaded %s bytes from file %s",
+                            Util.hexShortStr((addr - num1.getValue()) & 0xffff),
+                            fileName.getValue()));
     } catch (IOException e) {
-      stderr.println(e.getMessage());
+      logError(e.getMessage());
     }
   }
 
@@ -670,8 +575,8 @@ public class Monitor implements PreferencesChangeListener {
     try {
       annotations.loadFromResource(resource);
     } catch (ParseException e) {
-      stderr.println("warning: failed loading annotations from resource " +
-                     resource + ": " + e.getMessage());
+      logWarn("warning: failed loading annotations from resource " +
+              resource + ": " + e.getMessage());
     }
   }
 
@@ -786,8 +691,7 @@ public class Monitor implements PreferencesChangeListener {
       StringBuffer strDataBytes = new StringBuffer();
       for (int i = 0; i < MAX_DATA_BYTES; i++) {
         if (i < dataBytesLength) {
-          int dataByte = memory.readByte(fallbackAddress + i,
-                                         cpu.getWallClockCycles());
+          int dataByte = cpuControl.readByteFromMemory(fallbackAddress + i);
           String strDataByte = Util.hexByteStr(dataByte);
           lineBuffer.append(strDataByte);
           strDataBytes.append(strDataByte);
@@ -848,7 +752,7 @@ public class Monitor implements PreferencesChangeListener {
       lines.add("");
     }
     for (String line : lines) {
-      stdout.println(line);
+      logInfo(line);
     }
     return length;
   }
@@ -861,14 +765,14 @@ public class Monitor implements PreferencesChangeListener {
     int endAddr = 0;
     if (num2.parsed())
       endAddr = num2.getValue();
-    int regPCValue = regPC.getValue();
+    int regPCValue = cpuControl.getPCValue();
     int currentAddr = codeStartAddr;
     CPU.ConcreteOperation op;
     int lineCount = 0;
     do {
-      regPC.setValue(currentAddr);
+      cpuControl.setPCValue(currentAddr);
       try {
-	op = cpu.fetchNextOperationNoInterrupts();
+	op = cpuControl.fetchNextOperationNoInterrupts();
       } catch (CPU.MismatchException e) {
         op = null;
       }
@@ -877,11 +781,11 @@ public class Monitor implements PreferencesChangeListener {
     } while ((num2.parsed() && (currentAddr <= endAddr)) ||
              (++lineCount < DEFAULT_UNASSEMBLE_LINES));
     codeStartAddr = currentAddr;
-    regPC.setValue(regPCValue);
+    cpuControl.setPCValue(regPCValue);
   }
 
   private void assemble() {
-    stderr.println("'a[<addr>]': not yet implemented");
+    logError("'a[<addr>]': not yet implemented");
   }
 
   private final static String SPACE =
@@ -918,7 +822,7 @@ public class Monitor implements PreferencesChangeListener {
     StringBuffer sbText =
       new StringBuffer(SPACE.substring(0, currentAddr & 0xf));
     do {
-      int dataByte = memory.readByte(currentAddr++, cpu.getWallClockCycles());
+      int dataByte = cpuControl.readByteFromMemory(currentAddr++);
       currentAddr &= 0xffff;
       sbNumeric.append(" " + Util.hexByteStr(dataByte));
       sbText.append(renderDataByteAsChar(dataByte));
@@ -942,7 +846,7 @@ public class Monitor implements PreferencesChangeListener {
     if (num1.parsed())
       dataStartAddr = num1.getValue();
     do {
-      int dataByte = memory.readByte(dataStartAddr, cpu.getWallClockCycles());
+      int dataByte = cpuControl.readByteFromMemory(dataStartAddr);
       stdout.print(Util.hexShortStr(dataStartAddr) + "-   (" +
 		   Util.hexByteStr(dataByte) + ") ");
       try {
@@ -958,8 +862,7 @@ public class Monitor implements PreferencesChangeListener {
       else {
 	while (!eof()) {
 	  parseNumber(num1);
-	  memory.writeByte(dataStartAddr, num1.getValue(),
-                           cpu.getWallClockCycles());
+	  cpuControl.writeByteToMemory(dataStartAddr, num1.getValue());
 	  dataStartAddr++;
 	}
       }
@@ -970,24 +873,26 @@ public class Monitor implements PreferencesChangeListener {
     int port = num1.getValue();
     if (num2.parsed()) {
       int dataByte = num2.getValue();
-      io.writeByte(port, dataByte, cpu.getWallClockCycles());
+      cpuControl.writeByteToPort(port, dataByte);
     } else {
-      int dataByte = io.readByte(port, cpu.getWallClockCycles());
-      stdout.println(Util.hexByteStr(dataByte));
+      int dataByte = cpuControl.readByteFromPort(port);
+      logInfo(Util.hexByteStr(dataByte));
     }
   }
 
   private void printRegisters() {
-    stdout.print("    ");
+    final StringBuffer s = new StringBuffer();
+    s.append("    ");
     for (int i = 0; i < registers.length; i++) {
       if (i == 7) {
-	stdout.println();
-	stdout.print("    ");
+        logInfo(s.toString());
+        s.setLength(0);
+	s.append("    ");
       }
       CPU.Register register = registers[i];
-      stdout.print(" " + register);
+      s.append(" " + register);
     }
-    stdout.println();
+    logInfo(s.toString());
   }
 
   private void registerAccess() throws ParseError {
@@ -1012,63 +917,148 @@ public class Monitor implements PreferencesChangeListener {
                                regName.getLocation());
         }
       }
-      stdout.printf("     %s%n", matchedRegister);
+      logInfo(String.format("     %s", matchedRegister));
     } else {
       printRegisters();
     }
   }
 
   private void help() {
-    stdout.println("Commands");
-    stdout.println("========");
-    stdout.println();
-    stdout.println("Code Execution");
-    stdout.println("  g[<startaddr>][-<stopaddr>]      go [until]");
-    stdout.println("  t[<startaddr>][-<stopaddr>]      trace [until]");
-    stdout.println("  i[<addr>]                        single step into");
-    stdout.println("  o[<addr>]                        step over");
-    stdout.println();
-    stdout.println("Code / Data Listing");
-    stdout.println("  u[<startaddr>][-<stopaddr>]      unassemble");
-    stdout.println("  d[<startaddr>][-<stopaddr>]      dump data");
-    stdout.println();
-    stdout.println("Code / Data Entry");
-    stdout.println("  a[<addr>]                        assemble <not yet implemented>");
-    stdout.println("  e[<addr>]                        enter data");
-    stdout.println();
-    stdout.println("I/O");
-    stdout.println("  p<addr>[=<data>]                 port access");
-    stdout.println();
-    stdout.println("CPU Status");
-    stdout.println("  r[<regname>[=<data>]]            register access");
-    stdout.println();
-    stdout.println("Load / Save");
-    stdout.println("  s<name>=<startaddr>-<stopaddr>   save data to disk");
-    stdout.println("  l<startaddr>=<name>              load data from disk");
-    stdout.println();
-    stdout.println("Annotations");
-    stdout.println("  n=<filename>                     replace load");
-    stdout.println("  n+=<filename>                    append load");
-    stdout.println();
-    stdout.println("Miscelleanous");
-    stdout.println("  h                                help (this page)");
-    stdout.println("  q                                quit");
+    logInfo("Commands");
+    logInfo("========");
+    logInfo("");
+    logInfo("Code Execution");
+    logInfo("  g[<startaddr>][-<stopaddr>]      go [until]");
+    logInfo("  t[<startaddr>][-<stopaddr>]      trace [until]");
+    logInfo("  i[<addr>]                        single step into");
+    logInfo("  o[<addr>]                        step over <not yet implemented>");
+    logInfo("");
+    logInfo("Code / Data Listing");
+    logInfo("  u[<startaddr>][-<stopaddr>]      unassemble");
+    logInfo("  d[<startaddr>][-<stopaddr>]      dump data");
+    logInfo("");
+    logInfo("Code / Data Entry");
+    logInfo("  a[<addr>]                        assemble <not yet implemented>");
+    logInfo("  e[<addr>]                        enter data");
+    logInfo("");
+    logInfo("I/O");
+    logInfo("  p<addr>[=<data>]                 port access");
+    logInfo("");
+    logInfo("CPU Status");
+    logInfo("  r[<regname>[=<data>]]            register access");
+    logInfo("");
+    logInfo("Load / Save");
+    logInfo("  s<name>=<startaddr>-<stopaddr>   save data to disk");
+    logInfo("  l<startaddr>=<name>              load data from disk");
+    logInfo("");
+    logInfo("Annotations");
+    logInfo("  n=<filename>                     replace load");
+    logInfo("  n+=<filename>                    append load");
+    logInfo("");
+    logInfo("Miscelleanous");
+    logInfo("  h                                help (this page)");
+    logInfo("  q                                quit");
+  }
+
+  private class KeyWatch extends Thread
+    implements CPUControlAPI.StateChangeListener
+  {
+    private boolean stopping;
+    private boolean inputSeen;
+
+    public boolean inputSeen() throws IOException
+    {
+      inputSeen |= stdin.available() > 0;
+      return inputSeen;
+    }
+
+    public void run()
+    {
+      boolean haveException = false;
+      inputSeen = false;
+      try {
+        while (!stopping && !inputSeen()) {
+          try {
+            Thread.sleep(100);
+          } catch (final InterruptedException e) {
+            // ignore
+          }
+        }
+      } catch (final IOException e) {
+        haveException = true;
+        /**
+         * if checking for kbd input throws an exception, there is a
+         * fundamental problem.  In this case, we log this error and
+         * prematurely stop watching for keys.
+         */
+        logError("failed watching for keyboard actions, " +
+                 "stopping key watch thread: " + e.getMessage());
+      }
+      // if CPU not already stopped by itself, try stopping it
+      cpuControl.stop();
+    }
+
+    public void requestStop()
+    {
+      logDebug("KeyWatch: requestStop()");
+      final Exception e = new Exception();
+      stopping = true;
+    }
+
+    public void stateChanged(final CPUControlAutomaton.State state)
+    {
+      logDebug("KeyWatch: state=" + state);
+      if (state == CPUControlAutomaton.State.STOPPING) {
+        stopping = true;
+      }
+    }
+  }
+
+  private void runCPU()
+  {
+    final KeyWatch keyWatch = new KeyWatch();
+    try {
+      synchronized(cpuControl) {//.criticalSection(() -> {
+          if ((command == 'g') || (command == 't')) {
+            logInfo("press <enter> to pause");
+          }
+          cpuControl.setSingleStep(command == 'i');
+          cpuControl.setTrace(command == 't');
+          if (num1.parsed()) {
+            codeStartAddr = num1.getValue();
+            cpuControl.setPCValue(codeStartAddr);
+          } else {
+            // continue whereever regPC currently points to
+          }
+          cpuControl.addStateChangeListener(keyWatch);
+          keyWatch.start();
+          final Integer breakPoint = num2.parsed() ? num2.getValue() : null;
+          cpuControl.setBreakPoint(breakPoint);
+          cpuControl.execute();
+          cpuControl.awaitStop();
+          try {
+            if (keyWatch.inputSeen()) {
+              abortScript();
+              readLine();
+            }
+          } catch (final IOException e) {
+            throw new InternalError(e.getMessage());
+          }
+      } //);
+    } finally {
+      cpuControl.removeStateChangeListener(keyWatch);
+    }
   }
 
   private void executeCommand() throws ParseError {
     switch (command) {
       case 'g' :
-	go(false, false, false);
-	break;
       case 't' :
-	go(true, false, false);
-	break;
       case 'i' :
-	go(false, true, false);
+        runCPU();
 	break;
       case 'o' :
-	// go(false, true, true); // does not yet work correctly
-        stderr.println("'o[<addr>]': not yet implemented");
+        logError("'o[<addr>]': not yet implemented");
 	break;
       case 's' :
 	save();
@@ -1108,17 +1098,23 @@ public class Monitor implements PreferencesChangeListener {
   }
 
   private void welcome() {
-    stdout.println();
-    stdout.println("****************************************");
-    stdout.println("* Monitor V/0.1                        *");
-    stdout.println("* (C) 2001, 2010 Jürgen Reuter,        *");
-    stdout.println("* Karlsruhe                            *");
-    stdout.println("****************************************");
-    stdout.println();
-    stdout.println("Enter 'h' for help.");
-    stdout.println();
+    logInfo("");
+    logInfo("****************************************");
+    logInfo("* Monitor V/0.1                        *");
+    logInfo("* (C) 2001, 2010 Jürgen Reuter,        *");
+    logInfo("* Karlsruhe                            *");
+    logInfo("****************************************");
+    logInfo("");
+    logInfo("Enter 'h' for help.");
+    logInfo("");
   }
 
+  /**
+   * Executes a sequence of monitor commands.  Adjacent commands are
+   * separated by line breaks (either CR+LF characters, or LF
+   * character only).
+   * @param script The script to execute.
+   */
   public void run(String script) {
     if ((script != null) && (!script.isEmpty())) {
       this.script = script.split("\r?\n");
@@ -1128,15 +1124,11 @@ public class Monitor implements PreferencesChangeListener {
   }
 
   private void run() {
-    System.out.println("starting monitor...");
-    stdin = new PushbackInputStream(System.in);
     stdout = System.out;
+    logInfo("starting monitor...");
     stderr = System.err;
-    memory = cpu.getMemory();
-    io = cpu.getIO();
-    registers = cpu.getAllRegisters();
-    regPC = cpu.getProgramCounter();
-    regSP = cpu.getStackPointer();
+    stdin = new PushbackInputStream(System.in);
+    registers = cpuControl.getAllRegisters();
     codeStartAddr = 0x0000;
     dataStartAddr = 0x0000;
     welcome();
@@ -1162,40 +1154,21 @@ public class Monitor implements PreferencesChangeListener {
           quit = true;
         }
       } catch (ParseError e) {
-        stdout.print(e.prettyPrint());
+        logError(e.prettyPrint());
       }
     }
     System.exit(0);
-  }
-
-  public void speedChanged(final int frequency)
-  {
-    // This callback is handled by CPU class (or its implementor).
-    // Hence, do nothing here.
-  }
-
-  public void statisticsEnabledChanged(final boolean enabled)
-  {
-    // This callback is handled by CPU class (or its implementor).
-    // Hence, do nothing here.
-  }
-
-  public void busyWaitChanged(final boolean busyWait)
-  {
-    this.busyWait = busyWait;
   }
 
   private Monitor() {
     throw new UnsupportedOperationException("unsupported empty constructor");
   }
 
-  public Monitor(CPU cpu) {
-    this.cpu = cpu;
-    annotations = cpu.getAnnotations();
-    resourceLocations = new ArrayList<Class<?>>();
+  public Monitor(CPUControl cpuControl) {
+    this.cpuControl = cpuControl;
+    cpuControl.addLogListener(this);
+    annotations = cpuControl.getAnnotations();
     history = new History();
-    addResourceLocation(Monitor.class);
-    UserPreferences.getInstance().addListener(this);
   }
 
   private static void usage() {
@@ -1214,11 +1187,12 @@ public class Monitor implements PreferencesChangeListener {
 	Class<?> cpuClass = Class.forName(cpuClassName);
 	cpu = (CPU)cpuClass.newInstance();
       } catch (Exception e) {
-	System.out.println("Could not instantiate CPU class '" +
-			   cpuClassName + "': " + e);
+	System.err.println("Could not instantiate CPU class '" +
+                           cpuClassName + "': " + e);
 	System.exit(-1);
       }
-      new Monitor(cpu).run();
+      final CPUControl cpuControl = new CPUControl(cpu);
+      new Monitor(cpuControl).run();
     }
   }
 }

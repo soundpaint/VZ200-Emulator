@@ -294,46 +294,48 @@ public class SourceDataLineSelectionDialog extends JDialog
 
   private void printMessage(final String message)
   {
-    System.out.printf("%s: %s%n", id, message);
+    System.out.printf("SourceDataLineSelectionDialog '%s': %s%n", id, message);
   }
 
-  private Mixer.Info[] getMixerInfo()
+  private Mixer.Info[] getMixerInfos()
   {
-    final Mixer.Info[] mixerInfo = AudioSystem.getMixerInfo();
-    if (mixerInfo.length == 0) {
+    final Mixer.Info[] mixerInfos = AudioSystem.getMixerInfo();
+    if (mixerInfos.length == 0) {
       final String message =
         "There will be no audible output line for " + id + ".";
       final String title = "No Mixer Found for " + id;
       JOptionPane.showMessageDialog(this, message, title,
                                     JOptionPane.WARNING_MESSAGE);
     }
-    for (int i = 0; i < mixerInfo.length; i++) {
-      printMessage(String.format("found mixer: %s", mixerInfo[i]));
+    for (Mixer.Info mixerInfo : mixerInfos) {
+      printMessage(String.format("found mixer: %s", mixerInfo));
     }
-    return mixerInfo;
+    return mixerInfos;
   }
 
-  private Line.Info[] getSourceLineInfo(final Mixer mixer)
+  private Line.Info[] getSourceLineInfos(final Mixer mixer)
   {
-    final Line.Info[] sourceLineInfo = mixer.getSourceLineInfo();
-    for (int i = 0; i < sourceLineInfo.length; i++) {
-      printMessage("found source line info: " + sourceLineInfo[i]);
+    final Mixer.Info mixerInfos = mixer.getMixerInfo();
+    final Line.Info[] sourceLineInfos = mixer.getSourceLineInfo();
+    for (final Line.Info sourceLineInfo : sourceLineInfos) {
+      printMessage(String.format("mixer %s: found source line info: %s",
+                                 mixerInfos, sourceLineInfos));
     }
-    return sourceLineInfo;
+    return sourceLineInfos;
   }
 
   private boolean rebuildMixerSelector()
   {
-    final Mixer.Info[] mixerInfo = getMixerInfo();
-    if (mixerInfo.length == 0) {
+    final Mixer.Info[] mixerInfos = getMixerInfos();
+    if (mixerInfos.length == 0) {
       return false;
     }
     cbMixerSelector.removeAllItems(); // clear only after successful
                                       // mixer info retrieval
-    for (Mixer.Info info : mixerInfo) {
-      final MixerInfo wrappedInfo = new MixerInfo(info);
+    for (final Mixer.Info mixerInfo : mixerInfos) {
+      final MixerInfo wrappedInfo = new MixerInfo(mixerInfo);
       cbMixerSelector.addItem(wrappedInfo);
-      if (info.toString().equals(preferredMixerId)) {
+      if (mixerInfo.toString().equals(preferredMixerId)) {
         cbMixerSelector.setSelectedItem(wrappedInfo);
       }
     }
@@ -345,22 +347,24 @@ public class SourceDataLineSelectionDialog extends JDialog
     final MixerInfo mixerInfo = (MixerInfo)cbMixerSelector.getSelectedItem();
     if (mixerInfo != null) {
       final Mixer mixer = AudioSystem.getMixer(mixerInfo.getInfo());
-      final Line.Info[] lineInfo = getSourceLineInfo(mixer);
       if (mixer != null) {
+        printMessage(String.format("searching lines for mixer %s...",
+                                   mixerInfo));
         // clear only after successful line info retrieval
         cbLineSelector.removeAllItems();
-        for (Line.Info info : lineInfo) {
+        final Line.Info[] lineInfos = getSourceLineInfos(mixer);
+        for (final Line.Info lineInfo : lineInfos) {
           /*final*/ Line line;
           try {
-            line = mixer.getLine(info);
+            line = mixer.getLine(lineInfo);
           } catch (final LineUnavailableException e) {
             // ignore this source data line
             line = null;
           }
           if (line instanceof SourceDataLine) {
-            final LineInfo wrappedInfo = new LineInfo(info);
+            final LineInfo wrappedInfo = new LineInfo(lineInfo);
             cbLineSelector.addItem(wrappedInfo);
-            if (info.toString().equals(preferredLineId)) {
+            if (lineInfo.toString().equals(preferredLineId)) {
               cbLineSelector.setSelectedItem(wrappedInfo);
             }
           } else {

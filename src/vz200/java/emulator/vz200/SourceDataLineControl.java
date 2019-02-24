@@ -77,8 +77,9 @@ public class SourceDataLineControl extends Box
 
   public void addListener(final LineControlListener listener)
   {
+    printMessage("adding listener " + listener);
     lineControlListeners.add(listener);
-    listener.lineChanged(updateLabelsAndCreateLineChangeEvent());
+    listener.lineChanged(createLineChangeEvent(false));
   }
 
   public void removeListener(final LineControlListener listener)
@@ -88,7 +89,7 @@ public class SourceDataLineControl extends Box
 
   private void printMessage(final String message)
   {
-    System.out.printf("%s: %s%n", id, message);
+    System.out.printf("SourceDataLineControl '%s': %s%n", id, message);
   }
 
   private void updateMixerLabel(final Mixer.Info mixerInfo)
@@ -123,21 +124,18 @@ public class SourceDataLineControl extends Box
   }
 
   private SourceDataLineChangeEvent
-    createLineChangeEvent(final Mixer.Info mixerInfo,
-                          final Line.Info lineInfo,
-                          final long currentWallClockTime)
+    createLineChangeEvent(final Mixer.Info mixerInfo, final Line.Info lineInfo)
   {
-    printMessage("using mixer: " + mixerInfo);
-    printMessage("using line: " + lineInfo);
+    final long currentWallClockTime = wallClockProvider.getWallClockTime();
     final SourceDataLineChangeEvent event =
       new SourceDataLineChangeEvent(this, mixerInfo, lineInfo,
                                     currentWallClockTime);
     return event;
   }
 
-  private SourceDataLineChangeEvent updateLabelsAndCreateLineChangeEvent()
+  private SourceDataLineChangeEvent
+    createLineChangeEvent(final boolean updateLabels)
   {
-    final long currentWallClockTime = wallClockProvider.getWallClockTime();
     Mixer.Info mixerInfo = dlLineSelection.getSelectedMixer();
     Line.Info lineInfo = dlLineSelection.getSelectedLine();
     if (mixerInfo == null) {
@@ -145,18 +143,19 @@ public class SourceDataLineControl extends Box
     } else if (lineInfo == null) {
       mixerInfo = null;
     }
-    updateMixerLabel(mixerInfo);
-    updateLineLabel(lineInfo);
-    final SourceDataLineChangeEvent event =
-      createLineChangeEvent(mixerInfo, lineInfo, currentWallClockTime);
-    return event;
+    if (updateLabels) {
+      updateMixerLabel(mixerInfo);
+      updateLineLabel(lineInfo);
+      printMessage("using mixer: " + mixerInfo);
+      printMessage("using line: " + lineInfo);
+    }
+    return createLineChangeEvent(mixerInfo, lineInfo);
   }
 
   private void changeLine()
   {
     if (dlLineSelection.execute()) {
-      final SourceDataLineChangeEvent event =
-        updateLabelsAndCreateLineChangeEvent();
+      final SourceDataLineChangeEvent event = createLineChangeEvent(true);
       for (final LineControlListener listener : lineControlListeners) {
         listener.lineChanged(event);
       }
