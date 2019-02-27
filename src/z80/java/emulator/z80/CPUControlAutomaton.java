@@ -55,11 +55,11 @@ public class CPUControlAutomaton
     }
   }
 
-  public void removeListener(final Listener listener)
+  public boolean removeListener(final Listener listener)
   {
     synchronized(listenerLock) {
       synchronized(setStateLock) {
-        listeners.remove(listener);
+        return listeners.remove(listener);
       }
     }
   }

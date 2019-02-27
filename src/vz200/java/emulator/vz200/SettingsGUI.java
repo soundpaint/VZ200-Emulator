@@ -8,6 +8,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JFrame;
 
 import emulator.z80.CPU;
+import emulator.z80.CPUControlAPI;
 import emulator.z80.WallClockProvider;
 
 public class SettingsGUI extends JFrame
@@ -32,7 +33,8 @@ public class SettingsGUI extends JFrame
     throw new UnsupportedOperationException("unsupported constructor");
   }
 
-  public SettingsGUI(final CPU cpu,
+  public SettingsGUI(final CPUControlAPI cpuControl,
+                     final CPU cpu,
                      final LineControlListener speaker,
                      final MonoAudioStreamRenderer speakerRenderer,
                      final LineControlListener cassetteOut,
@@ -68,9 +70,9 @@ public class SettingsGUI extends JFrame
     transportControl = cassetteControl.getTransportControl();
     tpSettings.addTab(null, Icons.TAPE,
                       cassetteControl, "Configure Cassette I/O");
-    final CPUControl cpuControl = new CPUControl(cpu, this);
+    final CPUControl cpuControlGUI = new CPUControl(cpuControl, cpu, this);
     tpSettings.addTab(null, Icons.CPU,
-                      cpuControl, "Configure CPU Settings");
+                      cpuControlGUI, "Configure CPU Settings");
     pack();
     setVisible(true);
   }

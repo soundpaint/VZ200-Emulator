@@ -13,7 +13,7 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
   private final CPU.Memory memory;
   private final CPU.Memory io;
   private final List<LogListener> logListeners;
-  private final List<StateChangeListener> stateChangeListeners;
+  private final List<CPUControlAutomaton.Listener> stateChangeListeners;
   private final List<Class<?>> resourceLocations;
   private CPUControlAutomaton automaton;
   private boolean singleStep;
@@ -158,19 +158,16 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
     logListeners.add(listener);
   }
 
-  public void addStateChangeListener(final StateChangeListener listener)
+  public void
+    addStateChangeListener(final CPUControlAutomaton.Listener listener)
   {
-    synchronized(stateChangeListeners) {
-      stateChangeListeners.add(listener);
-      listener.stateChanged(automaton.getState());
-    }
+    automaton.addListener(listener);
   }
 
-  public boolean removeStateChangeListener(final StateChangeListener listener)
+  public boolean
+    removeStateChangeListener(final CPUControlAutomaton.Listener listener)
   {
-    synchronized(stateChangeListeners) {
-      return stateChangeListeners.remove(listener);
-    }
+    return automaton.removeListener(listener);
   }
 
   public void addResourceLocation(final Class<?> clazz)
@@ -275,25 +272,7 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
     cpuStopped();
   }
 
-  public void criticalSection(final Runnable runnable)
-  {
-    synchronized(this) {
-      runnable.run();
-    }
-  }
-
-  public synchronized Object aquireLock()
-  {
-    // not yet implemented
-    return null;
-  }
-
-  public synchronized void releaseLock(final Object lock)
-  {
-    // not yet implemented
-  }
-
-  public /*synchronized*/ void setSingleStep(final boolean singleStep)
+  public void setSingleStep(final boolean singleStep)
   {
     this.singleStep = singleStep;
   }
@@ -343,7 +322,7 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
     printMessage("awaitStart() done");
   }
 
-  public /*synchronized*/ void execute()
+  public void execute()
   {
     printMessage("execute()...");
     synchronized(automaton) {
@@ -376,7 +355,7 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
     printMessage("awaitStop() done");
   }
 
-  public /*synchronized*/ boolean stop()
+  public boolean stop()
   {
     printMessage("stop()...");
     synchronized(automaton) {
@@ -440,7 +419,7 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
     setTrace(false);
     setBreakPoint(null);
     logListeners = new ArrayList<LogListener>();
-    stateChangeListeners = new ArrayList<StateChangeListener>();
+    stateChangeListeners = new ArrayList<CPUControlAutomaton.Listener>();
     resourceLocations = new ArrayList<Class<?>>();
     addResourceLocation(CPUControl.class);
     UserPreferences.getInstance().addListener(this);

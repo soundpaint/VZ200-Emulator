@@ -20,11 +20,6 @@ public interface CPUControlAPI extends WallClockProvider
     void cpuStopped();
   }
 
-  static interface StateChangeListener
-  {
-    void stateChanged(final CPUControlAutomaton.State state);
-  }
-
   /**
    * Return an array with all registers of the CPU.
    */
@@ -91,7 +86,7 @@ public interface CPUControlAPI extends WallClockProvider
    * CPUControl's running state.
    * @param listener The listener to add.
    */
-  void addStateChangeListener(final StateChangeListener listener);
+  void addStateChangeListener(final CPUControlAutomaton.Listener listener);
 
   /**
    * Try removing state change listener that has been previously
@@ -100,7 +95,8 @@ public interface CPUControlAPI extends WallClockProvider
    * @return <code>true</code> If the list of listeners contained the
    * specified listener.
    */
-  boolean removeStateChangeListener(final StateChangeListener listener);
+  boolean
+    removeStateChangeListener(final CPUControlAutomaton.Listener listener);
 
   /**
    * Add the given resource's location path to the list of resource
@@ -133,35 +129,6 @@ public interface CPUControlAPI extends WallClockProvider
    * <code>null</code> if the resource could not be resolved.
    */
   InputStream resolveStream(final String path) throws IOException;
-
-  /**
-   * Execute the specified code with a synchronization lock on the
-   * CPUControl object instance.
-   * @param runnable Implements the critical section.
-   */
-  void criticalSection(final Runnable runnable);
-
-  /**
-   * Get a new lock for starting a critical sequence of control
-   * commands.  This method will block until there is no other thread
-   * that holds any lock.  Once the new lock is returned, no other
-   * thread will be able to perform any further control command until
-   * the lock is released.
-   * @TODO: Clarify: Can the same thread aquire two locks at the same
-   * time?
-   */
-  Object aquireLock();
-
-  /**
-   * Release a lock that has been previously created by envoking the
-   * #aquireLock() method.
-   * @param lock The lock returned from a previous call to method
-   * #aquireLock().
-   * @exception IllegalArgumentException If \code{lock} is no lock
-   * that has been previously created by envoking the #aquireLock()
-   * method, or if this lock already has been released.
-   */
-  void releaseLock(final Object lock);
 
   /**
    * If single step is activated, starting the CPU will cause it to

@@ -960,8 +960,7 @@ public class Monitor implements CPUControlAPI.LogListener
     logInfo("  q                                quit");
   }
 
-  private class KeyWatch extends Thread
-    implements CPUControlAPI.StateChangeListener
+  private class KeyWatch extends Thread implements CPUControlAutomaton.Listener
   {
     private boolean stopping;
     private boolean inputSeen;
@@ -1018,33 +1017,33 @@ public class Monitor implements CPUControlAPI.LogListener
   {
     final KeyWatch keyWatch = new KeyWatch();
     try {
-      synchronized(cpuControl) {//.criticalSection(() -> {
-          if ((command == 'g') || (command == 't')) {
-            logInfo("press <enter> to pause");
+      synchronized(cpuControl) {
+        if ((command == 'g') || (command == 't')) {
+          logInfo("press <enter> to pause");
+        }
+        cpuControl.setSingleStep(command == 'i');
+        cpuControl.setTrace(command == 't');
+        if (num1.parsed()) {
+          codeStartAddr = num1.getValue();
+          cpuControl.setPCValue(codeStartAddr);
+        } else {
+          // continue whereever regPC currently points to
+        }
+        cpuControl.addStateChangeListener(keyWatch);
+        keyWatch.start();
+        final Integer breakPoint = num2.parsed() ? num2.getValue() : null;
+        cpuControl.setBreakPoint(breakPoint);
+        cpuControl.execute();
+        cpuControl.awaitStop();
+        try {
+          if (keyWatch.inputSeen()) {
+            abortScript();
+            readLine();
           }
-          cpuControl.setSingleStep(command == 'i');
-          cpuControl.setTrace(command == 't');
-          if (num1.parsed()) {
-            codeStartAddr = num1.getValue();
-            cpuControl.setPCValue(codeStartAddr);
-          } else {
-            // continue whereever regPC currently points to
-          }
-          cpuControl.addStateChangeListener(keyWatch);
-          keyWatch.start();
-          final Integer breakPoint = num2.parsed() ? num2.getValue() : null;
-          cpuControl.setBreakPoint(breakPoint);
-          cpuControl.execute();
-          cpuControl.awaitStop();
-          try {
-            if (keyWatch.inputSeen()) {
-              abortScript();
-              readLine();
-            }
-          } catch (final IOException e) {
-            throw new InternalError(e.getMessage());
-          }
-      } //);
+        } catch (final IOException e) {
+          throw new InternalError(e.getMessage());
+        }
+      }
     } finally {
       cpuControl.removeStateChangeListener(keyWatch);
     }
