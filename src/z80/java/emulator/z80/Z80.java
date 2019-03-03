@@ -4503,38 +4503,7 @@ public class Z80 implements CPU {
     memory.resync(wallClockTime);
   }
 
-  public Z80() {
-    this(MemoryBus.createRAMMemoryBus(0, 65536),
-         MemoryBus.createRAMMemoryBus(0, 256));
-  }
-
-  public Z80(CPU.Memory memory, CPU.Memory io) {
-    System.out.println("initializing Z80:");
-    this.memory = memory;
-    this.io = io;
-    annotations = new Annotations();
-    concreteOperation = new ConcreteOperation();
-    System.out.println("setting up registers...");
-    createRegisters();
-    System.out.println("setting up branch conditions...");
-    createConditions();
-    System.out.println("setting up mnemonic functions...");
-    createFunctions();
-    System.out.println("setting up instruction set...");
-    for (int i = 0; i < OPERATION_SET.length; i++) {
-      OPERATION_SET[i].init();
-    }
-    System.out.println("setting up decode table...");
-    decodeTable = new DecodeTable(OPERATION_SET, new int[0]);
-    System.out.println("setting up processor interface...");
-    memoryCodeFetcher = new MemoryCodeFetcher(memory, regPC);
-    intrBusDataFetcher = new IntrBusDataFetcher();
-    wallClockListeners = new ArrayList<WallClockListener>();
-    System.out.println("resetting processor status...");
-    reset();
-    UserPreferences.getInstance().addListener(this);
-    System.out.println("Z80 initialized.");
-  }
+  // *** STATISTICS LOGGING ***************************************************
 
   private long prevSystemNanoTime;
   private long prevWallClockTime;
@@ -4591,20 +4560,55 @@ public class Z80 implements CPU {
     return avgJitterNanoTime;
   }
 
-  public void speedChanged(final int frequency)
-  {
-    timePerClockCycle = 1000000000 / frequency;
-  }
-
   public void statisticsEnabledChanged(final boolean enabled)
   {
     statisticsEnabled = enabled;
+  }
+
+  // *** CPU CONTROL **********************************************************
+
+  public void speedChanged(final int frequency)
+  {
+    timePerClockCycle = 1000000000 / frequency;
   }
 
   public void busyWaitChanged(final boolean busyWait)
   {
     // This callback is handled by Monitor class.
     // Hence, do nothing here.
+  }
+
+  public Z80() {
+    this(MemoryBus.createRAMMemoryBus(0, 65536),
+         MemoryBus.createRAMMemoryBus(0, 256));
+  }
+
+  public Z80(CPU.Memory memory, CPU.Memory io) {
+    System.out.println("initializing Z80:");
+    this.memory = memory;
+    this.io = io;
+    annotations = new Annotations();
+    concreteOperation = new ConcreteOperation();
+    System.out.println("setting up registers...");
+    createRegisters();
+    System.out.println("setting up branch conditions...");
+    createConditions();
+    System.out.println("setting up mnemonic functions...");
+    createFunctions();
+    System.out.println("setting up instruction set...");
+    for (int i = 0; i < OPERATION_SET.length; i++) {
+      OPERATION_SET[i].init();
+    }
+    System.out.println("setting up decode table...");
+    decodeTable = new DecodeTable(OPERATION_SET, new int[0]);
+    System.out.println("setting up processor interface...");
+    memoryCodeFetcher = new MemoryCodeFetcher(memory, regPC);
+    intrBusDataFetcher = new IntrBusDataFetcher();
+    wallClockListeners = new ArrayList<WallClockListener>();
+    System.out.println("resetting processor status...");
+    reset();
+    UserPreferences.getInstance().addListener(this);
+    System.out.println("Z80 initialized.");
   }
 }
 

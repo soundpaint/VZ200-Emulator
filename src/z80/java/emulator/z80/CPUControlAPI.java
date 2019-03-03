@@ -9,9 +9,9 @@ public interface CPUControlAPI extends WallClockProvider
 {
   static interface LogListener
   {
-    void logInfo(final String message);
-    void logWarn(final String message);
-    void logError(final String message);
+    void announceCPUStarted();
+    void announceCPUStopped();
+    void reportInvalidOp(final String message);
     void logOperation(final CPU.ConcreteOperation op);
     void logStatistics(final double avgSpeed,
                        final boolean busyWait,
@@ -86,7 +86,7 @@ public interface CPUControlAPI extends WallClockProvider
    * CPUControl's running state.
    * @param listener The listener to add.
    */
-  void addStateChangeListener(final CPUControlAutomaton.Listener listener);
+  void addStateChangeListener(final CPUControlAutomatonListener listener);
 
   /**
    * Try removing state change listener that has been previously
@@ -96,7 +96,7 @@ public interface CPUControlAPI extends WallClockProvider
    * specified listener.
    */
   boolean
-    removeStateChangeListener(final CPUControlAutomaton.Listener listener);
+    removeStateChangeListener(final CPUControlAutomatonListener listener);
 
   /**
    * Add the given resource's location path to the list of resource
@@ -137,7 +137,7 @@ public interface CPUControlAPI extends WallClockProvider
    * @param singleStep True, if single step is to be activated.
    * False, if single step is to be deactivated.
    */
-  void setSingleStep(final boolean singleStep);
+  //void setSingleStep(final boolean singleStep);
 
   /**
    * If trace is activated, starting the CPU will cause it to
@@ -153,7 +153,7 @@ public interface CPUControlAPI extends WallClockProvider
    * @param trace True, if trace is to be activated.
    * False, if trace is to be deactivated.
    */
-  void setTrace(final boolean trace);
+  //void setTrace(final boolean trace);
 
   /**
    * Set a break point, causing the CPU to stop running if the
@@ -166,11 +166,22 @@ public interface CPUControlAPI extends WallClockProvider
   void setBreakPoint(final Integer breakPoint);
 
   /**
-   * Blocking, synchronous request for executing code on the CPU.
-   * Returns only after the CPU has been stopped.  Execution of this
-   * method is guarded by the locking mechanism.
+   * Non-blocking, asynchronous request for starting execution of code
+   * on the CPU.  Returns immediately after the start request has been
+   * submitted.  Execution of this method is guarded by the locking
+   * mechanism.
+   *
+   * @param singleStep True, if single step is to be activated.
+   * False, if single step is to be deactivated.  If single step is
+   * activated, starting the CPU will cause it to run only a single
+   * instruction and after that immediately being stopped.
+   *
+   * @param trace True, if trace is to be activated.  False, if trace
+   * is to be deactivated.  If trace is activated, starting the CPU
+   * will cause it to run further actions like logging the current
+   * processor registers after each instruction.
    */
-  void execute();
+  void start(final boolean singleStep, final boolean trace);
 
   /**
    * Waits until the CPU has been stopped.
@@ -185,6 +196,14 @@ public interface CPUControlAPI extends WallClockProvider
    * @return <code>true</code>, if the CPU is already stopped.
    */
   boolean stop();
+
+  /**
+   * Run the given Runnable as critical section, guarded
+   * by the CPUControlAutomaton's internal lock.
+   * @param criticalSection The code to run as critical section
+   * guarded by the CPUControlAutomaton's internal lock.
+   */
+  void runSynchronized(final Runnable criticalSection);
 }
 
 /*

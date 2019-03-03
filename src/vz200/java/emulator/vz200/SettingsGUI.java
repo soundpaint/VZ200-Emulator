@@ -7,7 +7,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JTabbedPane;
 import javax.swing.JFrame;
 
-import emulator.z80.CPU;
 import emulator.z80.CPUControlAPI;
 import emulator.z80.WallClockProvider;
 
@@ -34,7 +33,6 @@ public class SettingsGUI extends JFrame
   }
 
   public SettingsGUI(final CPUControlAPI cpuControl,
-                     final CPU cpu,
                      final LineControlListener speaker,
                      final MonoAudioStreamRenderer speakerRenderer,
                      final LineControlListener cassetteOut,
@@ -70,7 +68,7 @@ public class SettingsGUI extends JFrame
     transportControl = cassetteControl.getTransportControl();
     tpSettings.addTab(null, Icons.TAPE,
                       cassetteControl, "Configure Cassette I/O");
-    final CPUControl cpuControlGUI = new CPUControl(cpuControl, cpu, this);
+    final CPUControl cpuControlGUI = new CPUControl(cpuControl, this);
     tpSettings.addTab(null, Icons.CPU,
                       cpuControlGUI, "Configure CPU Settings");
     pack();

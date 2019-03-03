@@ -10,14 +10,16 @@ import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 
 import emulator.z80.CPU;
+import emulator.z80.CPUControlAPI;
 import emulator.z80.PreferencesChangeListener;
 import emulator.z80.UserPreferences;
 
-public class CPUStatistics extends Box implements PreferencesChangeListener
+public class CPUStatistics extends Box
+  implements PreferencesChangeListener, CPUControlAPI.LogListener
 {
   private static final long serialVersionUID = -8929542516657150731L;
 
-  private final CPU cpu;
+  private final CPUControlAPI cpuControl;
   private final JCheckBox cbEnable;
   private final JPanel pnStatistics;
   private final JLabel lbAvgSpeedLabel;
@@ -28,13 +30,13 @@ public class CPUStatistics extends Box implements PreferencesChangeListener
   private final JLabel lbAvgJitterValue;
   private boolean statisticsEnabled;
 
-  public CPUStatistics(final CPU cpu)
+  public CPUStatistics(final CPUControlAPI cpuControl)
   {
     super(BoxLayout.Y_AXIS);
-    if (cpu == null) {
-      throw new NullPointerException("cpu");
+    if (cpuControl == null) {
+      throw new NullPointerException("cpuControl");
     }
-    this.cpu = cpu;
+    this.cpuControl = cpuControl;
     setBorder(BorderFactory.createTitledBorder("CPU Statistics"));
 
     lbAvgSpeedLabel = new JLabel("Actual avg. speed [Hz]:");
@@ -77,28 +79,53 @@ public class CPUStatistics extends Box implements PreferencesChangeListener
     pnStatistics.add(Box.createHorizontalStrut(5));
     pnStatistics.add(Box.createHorizontalGlue());
     add(Box.createVerticalGlue());
-    new Thread(new Runnable() {
-        public void run() {
-          while (true) {
-            try {
-              Thread.sleep(1000);
-            } catch (final InterruptedException e) {
-              // ignore
-            }
-            if (statisticsEnabled) updateValues();
-          }
-        }
-      }).start();
+    cpuControl.addLogListener(this);
     final UserPreferences userPreferences = UserPreferences.getInstance();
     userPreferences.addListener(this);
   }
 
-  private void updateValues()
+  @Override
+  public void announceCPUStarted()
   {
-    lbAvgSpeedValue.setText("" + cpu.getAvgSpeed());
-    lbAvgThreadLoadValue.setText("" + cpu.getAvgThreadLoad());
-    final double jitterMicroSeconds = cpu.getAvgJitter() * 0.001;
-    lbAvgJitterValue.setText("" + jitterMicroSeconds);
+    // not relevant for us
+  }
+
+  @Override
+  public void announceCPUStopped()
+  {
+    // not relevant for us
+  }
+
+  @Override
+  public void reportInvalidOp(final String message)
+  {
+    // not relevant for us
+  }
+
+  @Override
+  public void logOperation(final CPU.ConcreteOperation op)
+  {
+    // not relevant for us
+  }
+
+  @Override
+  public void logStatistics(final double avgSpeed,
+                            final boolean busyWait,
+                            final double jitter,
+                            final double avgLoad)
+  {
+    if (statisticsEnabled) {
+      lbAvgSpeedValue.setText("" + avgSpeed);
+      lbAvgThreadLoadValue.setText("" + avgLoad);
+      final double jitterMicroSeconds = jitter * 0.001;
+      lbAvgJitterValue.setText("" + jitterMicroSeconds);
+    }
+  }
+
+  @Override
+  public void cpuStopped()
+  {
+    // not relevant for us
   }
 
   private void enableChanged()

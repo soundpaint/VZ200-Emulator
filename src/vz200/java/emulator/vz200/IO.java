@@ -3,7 +3,6 @@ package emulator.vz200;
 import java.io.IOException;
 import java.io.File;
 
-import emulator.z80.CPU;
 import emulator.z80.CPUControlAPI;
 import emulator.z80.MemoryBus;
 import emulator.z80.Util;
@@ -36,8 +35,7 @@ public class IO implements
     throw new UnsupportedOperationException("unsupported empty constructor");
   }
 
-  public IO(final CPUControlAPI cpuControl, final CPU cpu,
-            final long currentWallClockTime)
+  public IO(final CPUControlAPI cpuControl, final long currentWallClockTime)
     throws IOException
   {
     this.baseAddress = DEFAULT_BASE_ADDRESS;
@@ -52,7 +50,7 @@ public class IO implements
     cassetteOut = new CassetteOut(currentWallClockTime);
     cassetteOutRenderer.setSignalEventSource(cassetteOut);
     cassetteOutRenderer.start();
-    settingsGUI = new SettingsGUI(cpuControl, cpu, speaker, speakerRenderer,
+    settingsGUI = new SettingsGUI(cpuControl, speaker, speakerRenderer,
                                   cassetteOut, cassetteOutRenderer,
                                   this);
     settingsGUI.addTransportListener(this);

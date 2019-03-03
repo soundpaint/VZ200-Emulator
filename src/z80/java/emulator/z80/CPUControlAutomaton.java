@@ -36,29 +36,25 @@ public class CPUControlAutomaton
     }
   }
 
-  public interface Listener
-  {
-    void stateChanged(final State state);
-  }
-
-  private final List<Listener> listeners;
+  private final List<CPUControlAutomatonListener> listeners;
 
   private final Object listenerLock = new Object();
+  private final Object stateLock = new Object();
 
-  public void addListener(final Listener listener)
+  public void addListener(final CPUControlAutomatonListener listener)
   {
     synchronized(listenerLock) {
-      synchronized(setStateLock) {
+      synchronized(stateLock) {
         listeners.add(listener);
         listener.stateChanged(state);
       }
     }
   }
 
-  public boolean removeListener(final Listener listener)
+  public boolean removeListener(final CPUControlAutomatonListener listener)
   {
     synchronized(listenerLock) {
-      synchronized(setStateLock) {
+      synchronized(stateLock) {
         return listeners.remove(listener);
       }
     }
@@ -66,7 +62,7 @@ public class CPUControlAutomaton
 
   public CPUControlAutomaton()
   {
-    listeners = new ArrayList<Listener>();
+    listeners = new ArrayList<CPUControlAutomatonListener>();
     state = State.STOPPED;
   }
 
@@ -75,7 +71,9 @@ public class CPUControlAutomaton
   private void printMessage(final String message)
   {
     if (DEBUG) {
-      System.out.printf("CPUControlAutomaton: %s%n", message);
+      final Thread currentThread = Thread.currentThread();
+      System.out.printf("CPUControlAutomaton: %s: %s%n",
+                        currentThread, message);
     }
   }
 
@@ -84,47 +82,49 @@ public class CPUControlAutomaton
     throw new StateChangeError(state, target);
   }
 
-  private final Object setStateLock = new Object();
-
-  private void doSetState(final State state)
+  private void checkIsValidTargetState(final State targetState)
   {
-    printMessage(String.format("state transition %s -> %s",
-                               this.state, state));
-    this.state = state;
-    for (final Listener listener : listeners) {
-      listener.stateChanged(state);
+    switch (targetState) {
+    case STOPPED:
+      if (state != State.STOPPING) {
+        stateChangeError(targetState);
+      }
+      break;
+    case STARTING:
+      if (state != State.STOPPED) {
+        stateChangeError(targetState);
+      }
+      break;
+    case RUNNING:
+      if (state != State.STARTING) {
+        stateChangeError(targetState);
+      }
+      break;
+    case STOPPING:
+      if (state != State.RUNNING) {
+        stateChangeError(targetState);
+      }
+      break;
+    default:
+      throw new InternalError("unexpected state: " + targetState);
     }
   }
 
-  public void setState(final State state)
+  public void setState(final State targetState)
   {
-    synchronized(setStateLock) {
-      switch (state) {
-      case STOPPED:
-        if (this.state != State.STOPPING) {
-          stateChangeError(state);
-        }
-        break;
-      case STARTING:
-        if (this.state != State.STOPPED) {
-          stateChangeError(state);
-        }
-        break;
-      case RUNNING:
-        if (this.state != State.STARTING) {
-          stateChangeError(state);
-        }
-        break;
-      case STOPPING:
-        if (this.state != State.RUNNING) {
-          stateChangeError(state);
-        }
-        break;
-      default:
-        throw new InternalError("unexpected state: " + state);
+    printMessage("entering setState(), state=" + targetState);
+    synchronized(stateLock) {
+      checkIsValidTargetState(targetState);
+      printMessage(String.format("state transition %s -> %s",
+                                 state, targetState));
+      state = targetState;
+      for (final CPUControlAutomatonListener listener : listeners) {
+        printMessage("setState(): notifying " + listener);
+        listener.stateChanged(state);
       }
-      doSetState(state);
+      stateLock.notifyAll();
     }
+    printMessage("leaving setState(), state=" + targetState);
   }
 
   public State getState()
@@ -132,54 +132,29 @@ public class CPUControlAutomaton
     return state;
   }
 
-  private static class Awaiter implements Listener
+  public void awaitState(final State targetState)
   {
-    private final State awaitState;
-    private State listenedState;
-    private boolean dirty;
-
-    private Awaiter()
-    {
-      throw new UnsupportedOperationException("no empty constructor supported");
-    }
-
-    public Awaiter(final State awaitState)
-    {
-      this.awaitState = awaitState;
-      listenedState = null;
-      dirty = false;
-    }
-
-    public synchronized void stateChanged(final State listenedState)
-    {
-      this.listenedState = listenedState;
-      notify();
-    }
-
-    public synchronized void await() {
-      if (dirty) {
-        throw new InternalError("to ensure unique notify/listening matching, AwaitThread can not be re-used");
-      }
-      dirty = true;
+    printMessage("entering awaitState(), state=" + targetState);
+    synchronized(stateLock) {
       while (true) {
+        if (targetState == state) {
+          break;
+        }
         try {
-          wait();
+          stateLock.wait();
         } catch (final InterruptedException e) {
           // ignore
         }
-        if (listenedState == awaitState) {
-          break;
-        }
       }
     }
+    printMessage("leaving awaitState(), state=" + targetState);
   }
 
-  public void awaitState(final State state)
+  public void runSynchronized(final Runnable criticalSection)
   {
-    final Awaiter awaiter = new Awaiter(state);
-    addListener(awaiter);
-    awaiter.await();
-    removeListener(awaiter);
+    synchronized(stateLock) {
+      criticalSection.run();
+    }
   }
 }
 

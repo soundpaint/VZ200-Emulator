@@ -18,9 +18,10 @@ import javax.swing.JToolBar;
 
 import emulator.z80.CPUControlAPI;
 import emulator.z80.CPUControlAutomaton;
+import emulator.z80.CPUControlAutomatonListener;
 
 public class CPURunningStatusControl extends Box
-  implements CPUControlAutomaton.Listener
+  implements CPUControlAutomatonListener
 {
   private static final long serialVersionUID = 5526690686086587536L;
 
@@ -65,6 +66,7 @@ public class CPURunningStatusControl extends Box
     cpuControl.addStateChangeListener(this);
   }
 
+  @Override
   public void stateChanged(final CPUControlAutomaton.State state)
   {
     switch (state) {
@@ -87,11 +89,7 @@ public class CPURunningStatusControl extends Box
 
   private void start()
   {
-    synchronized(cpuControl) {
-      cpuControl.setSingleStep(false);
-      cpuControl.setTrace(false);
-      cpuControl.execute();
-    }
+    cpuControl.start(false, false);
   }
 
   private void stop()

@@ -357,47 +357,93 @@ public class Monitor implements CPUControlAPI.LogListener
 
   private static final boolean DEBUG = false;
 
-  public void logDebug(final String message)
+  private void logDebug(final String message)
   {
     if (DEBUG) {
-      stdout.println(message);
+      final Thread currentThread = Thread.currentThread();
+      System.out.printf("Monitor: %s: %s%n", currentThread, message);
     }
   }
 
-  public void logInfo(final String message)
+  private void logInfo(final String message)
   {
-    stdout.println(message);
+    final Thread currentThread = Thread.currentThread();
+    System.out.printf("Monitor: %s: %s%n", currentThread, message);
   }
 
-  public void logWarn(final String message)
+  private void logWarn(final String message)
   {
-    stderr.println(message);
+    final Thread currentThread = Thread.currentThread();
+    System.err.printf("Monitor: %s: %s%n", currentThread, message);
   }
 
-  public void logError(final String message)
+  private void logError(final String message)
   {
-    stderr.println(message);
+    final Thread currentThread = Thread.currentThread();
+    System.err.printf("Monitor: %s: %s%n", currentThread, message);
   }
 
+  private final Object statisticsLock = new Object();
+  private double avgSpeed;
+  private boolean busyWait;
+  private double jitter;
+  private double avgLoad;
+
+  private void printStatistics()
+  {
+    synchronized(statisticsLock) {
+      logInfo(String.format("[avg speed = %.3fMHz]", avgSpeed));
+      logInfo(String.format("[busy wait = %b]", busyWait));
+      logInfo(String.format("[latest jitter = %.2fµs]", 0.001 * jitter));
+      logInfo(String.format("[avg thread load = %3.2f%%]", 100 * avgLoad));
+      logInfo("");
+      printRegisters();
+    }
+  }
+
+  @Override
+  public void announceCPUStarted()
+  {
+    final Thread currentThread = Thread.currentThread();
+    System.out.printf("Monitor: %s: press <enter> to pause%n", currentThread);
+  }
+
+  @Override
+  public void announceCPUStopped()
+  {
+    final Thread currentThread = Thread.currentThread();
+    System.out.printf("Monitor: %s: [paused]%n", currentThread);
+  }
+
+  @Override
+  public void reportInvalidOp(final String message)
+  {
+    final Thread currentThread = Thread.currentThread();
+    System.err.printf("Monitor: %s: %s%n", currentThread, message);
+  }
+
+  @Override
   public void logOperation(final CPU.ConcreteOperation op)
   {
     printOperation(op, 0);
     printRegisters();
   }
 
+  @Override
   public void logStatistics(final double avgSpeed,
                             final boolean busyWait,
                             final double jitter,
                             final double avgLoad)
   {
-    logInfo(String.format("[avg speed = %.3fMHz]", avgSpeed));
-    logInfo(String.format("[busy wait = %b]", busyWait));
-    logInfo(String.format("[latest jitter = %.2fµs]", 0.001 * jitter));
-    logInfo(String.format("[avg thread load = %3.2f%%]", 100 * avgLoad));
-    logInfo("");
-    printRegisters();
+    synchronized(statisticsLock) {
+      this.avgSpeed = avgSpeed;
+      this.busyWait = busyWait;
+      this.jitter = jitter;
+      this.avgLoad = avgLoad;
+    }
   }
 
+  @Override
   public void cpuStopped()
   {
     codeStartAddr = cpuControl.getPCValue();
@@ -842,7 +888,7 @@ public class Monitor implements CPUControlAPI.LogListener
     dataStartAddr = stopAddr;
   }
 
-  private void enter() throws ParseError {
+  private void enterData() throws ParseError {
     if (num1.parsed())
       dataStartAddr = num1.getValue();
     do {
@@ -960,14 +1006,20 @@ public class Monitor implements CPUControlAPI.LogListener
     logInfo("  q                                quit");
   }
 
-  private class KeyWatch extends Thread implements CPUControlAutomaton.Listener
+  private class KeyWatch extends Thread implements CPUControlAutomatonListener
   {
     private boolean stopping;
     private boolean inputSeen;
 
+    public KeyWatch()
+    {
+      super("Monitor KeyWatch Thread");
+    }
+
     public boolean inputSeen() throws IOException
     {
       inputSeen |= stdin.available() > 0;
+      logDebug("KeyWatch: inputSeen=" + inputSeen);
       return inputSeen;
     }
 
@@ -976,11 +1028,13 @@ public class Monitor implements CPUControlAPI.LogListener
       boolean haveException = false;
       inputSeen = false;
       try {
-        while (!stopping && !inputSeen()) {
-          try {
-            Thread.sleep(100);
-          } catch (final InterruptedException e) {
-            // ignore
+        synchronized(this) {
+          while (!stopping && !inputSeen()) {
+            try {
+              wait(1000);
+            } catch (final InterruptedException e) {
+              // ignore
+            }
           }
         }
       } catch (final IOException e) {
@@ -993,36 +1047,30 @@ public class Monitor implements CPUControlAPI.LogListener
         logError("failed watching for keyboard actions, " +
                  "stopping key watch thread: " + e.getMessage());
       }
-      // if CPU not already stopped by itself, try stopping it
-      cpuControl.stop();
-    }
-
-    public void requestStop()
-    {
-      logDebug("KeyWatch: requestStop()");
-      final Exception e = new Exception();
-      stopping = true;
+      if (!stopping) {
+        cpuControl.stop();
+      }
     }
 
     public void stateChanged(final CPUControlAutomaton.State state)
     {
-      logDebug("KeyWatch: state=" + state);
-      if (state == CPUControlAutomaton.State.STOPPING) {
-        stopping = true;
+      synchronized(this) {
+        logDebug("KeyWatch: state=" + state);
+        if (state == CPUControlAutomaton.State.STOPPING) {
+          stopping = true;
+        }
+        notify();
       }
     }
   }
 
   private void runCPU()
   {
+    final boolean singleStep = command == 'i';
+    final boolean trace = command == 't';
     final KeyWatch keyWatch = new KeyWatch();
     try {
-      synchronized(cpuControl) {
-        if ((command == 'g') || (command == 't')) {
-          logInfo("press <enter> to pause");
-        }
-        cpuControl.setSingleStep(command == 'i');
-        cpuControl.setTrace(command == 't');
+      //synchronized(cpuControl) {
         if (num1.parsed()) {
           codeStartAddr = num1.getValue();
           cpuControl.setPCValue(codeStartAddr);
@@ -1030,22 +1078,37 @@ public class Monitor implements CPUControlAPI.LogListener
           // continue whereever regPC currently points to
         }
         cpuControl.addStateChangeListener(keyWatch);
+        logDebug("runCPU: start keyWatch thread");
         keyWatch.start();
         final Integer breakPoint = num2.parsed() ? num2.getValue() : null;
         cpuControl.setBreakPoint(breakPoint);
-        cpuControl.execute();
+        logDebug("runCPU: start()");
+        cpuControl.start(singleStep, trace);
+        logDebug("runCPU: start() done");
+        logDebug("runCPU: awaitStop()");
         cpuControl.awaitStop();
+        logDebug("runCPU: awaitStop() done");
         try {
+          logDebug("runCPU: have input?");
           if (keyWatch.inputSeen()) {
+            logDebug("runCPU: abort script");
             abortScript();
+            logDebug("runCPU: read line");
             readLine();
           }
+          logDebug("runCPU: read line done");
         } catch (final IOException e) {
           throw new InternalError(e.getMessage());
         }
-      }
+        //}
     } finally {
+      logDebug("runCPU: remove keyWatch");
       cpuControl.removeStateChangeListener(keyWatch);
+    }
+    logDebug("runCPU: print statistics?");
+    if (!singleStep) {
+      logDebug("runCPU: yes");
+      printStatistics();
     }
   }
 
@@ -1078,7 +1141,7 @@ public class Monitor implements CPUControlAPI.LogListener
 	dump();
 	break;
       case 'e' :
-	enter();
+	enterData();
 	break;
       case 'p' :
 	portaccess();
