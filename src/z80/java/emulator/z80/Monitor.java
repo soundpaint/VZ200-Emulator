@@ -9,7 +9,6 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.PushbackInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -22,8 +21,7 @@ public class Monitor implements CPUControlAPI.LogListener
   private CPU.Register[] registers;
   private Annotations annotations;
   private int address;
-  private PushbackInputStream stdin;
-  private PrintStream stdout, stderr;
+  private Terminal terminal;
 
   private static class ParseError extends Exception {
     private static final long serialVersionUID = 6821628755472075263L;
@@ -52,7 +50,6 @@ public class Monitor implements CPUControlAPI.LogListener
   private int dataStartAddr;
 
   // command line
-  private History history;
   private String cmdLine;
   private int pos; // parse position
   private char command;
@@ -308,79 +305,28 @@ public class Monitor implements CPUControlAPI.LogListener
       throw new ParseError("file name expected", pos);
   }
 
-  private char lineBuffer[];
-
-  private String readLine(PushbackInputStream in) throws IOException {
-    char buf[] = lineBuffer;
-    if (buf == null)
-      buf = lineBuffer = new char[128];
-    int room = buf.length;
-    int offset = 0;
-    int c;
-
-  loop:
-    while (true) {
-      switch (c = in.read()) {
-        case java.awt.Event.UP:
-	  return history.getPrecursor(1);
-	case -1:
-	case '\n':
-	  break loop;
-	case '\r':
-	  int c2 = in.read();
-	  if ((c2 != '\n') && (c2 != -1))
-	    in.unread(c2);
-	  break loop;
-
-	default:
-	  if (--room < 0) {
-	    buf = new char[offset + 128];
-	    room = buf.length - offset - 1;
-	    System.arraycopy(lineBuffer, 0, buf, 0, offset);
-	    lineBuffer = buf;
-	  }
-	  buf[offset++] = (char) c;
-	  break;
-      }
-    }
-    if ((c == -1) && (offset == 0))
-      return null;
-    return String.copyValueOf(buf, 0, offset);
-  }
-
   private Number num1, num2;
   private FileName fileName;
   private Text regName;
 
-  private String[] script;
-  private int scriptLineIndex;
-
-  private static final boolean DEBUG = false;
-
   private void logDebug(final String message)
   {
-    if (DEBUG) {
-      final Thread currentThread = Thread.currentThread();
-      System.out.printf("Monitor: %s: %s%n", currentThread, message);
-    }
+    terminal.logDebug(message);
   }
 
   private void logInfo(final String message)
   {
-    final Thread currentThread = Thread.currentThread();
-    System.out.printf("Monitor: %s: %s%n", currentThread, message);
+    terminal.logInfo(message);
   }
 
   private void logWarn(final String message)
   {
-    final Thread currentThread = Thread.currentThread();
-    System.err.printf("Monitor: %s: %s%n", currentThread, message);
+    terminal.logWarn(message);
   }
 
   private void logError(final String message)
   {
-    final Thread currentThread = Thread.currentThread();
-    System.err.printf("Monitor: %s: %s%n", currentThread, message);
+    terminal.logError(message);
   }
 
   private final Object statisticsLock = new Object();
@@ -405,21 +351,23 @@ public class Monitor implements CPUControlAPI.LogListener
   public void announceCPUStarted()
   {
     final Thread currentThread = Thread.currentThread();
-    System.out.printf("Monitor: %s: press <enter> to pause%n", currentThread);
+    logInfo(String.format("Monitor: %s: press <CTRL+Z> to suspend CPU",
+                          currentThread));
   }
 
   @Override
   public void announceCPUStopped()
   {
     final Thread currentThread = Thread.currentThread();
-    System.out.printf("Monitor: %s: [paused]%n", currentThread);
+    logInfo(String.format("Monitor: %s: enter \"g\" to resume CPU%n",
+                          currentThread));
   }
 
   @Override
   public void reportInvalidOp(final String message)
   {
     final Thread currentThread = Thread.currentThread();
-    System.err.printf("Monitor: %s: %s%n", currentThread, message);
+    logInfo(String.format("Monitor: %s: %s%n", currentThread, message));
   }
 
   @Override
@@ -449,33 +397,9 @@ public class Monitor implements CPUControlAPI.LogListener
     codeStartAddr = cpuControl.getPCValue();
   }
 
-  private String readLine() throws IOException {
-    String cmdLine;
-    if ((script != null) && (scriptLineIndex < script.length)) {
-      cmdLine = script[scriptLineIndex++];
-      logInfo("[" + cmdLine + "]");
-    } else {
-      cmdLine = readLine(stdin);
-    }
-    return cmdLine;
-  }
-
-  private void abortScript() {
-    if (scriptLineIndex < script.length) {
-      logInfo("[abort script:");
-      while (scriptLineIndex < script.length) {
-        logInfo("  script: " + script[scriptLineIndex++]);
-      }
-      logInfo("]");
-    }
-  }
-
   private String enterCommand() {
     try {
-      stdout.println();
-      stdout.print("#");
-      stdout.flush();
-      return readLine();
+      return terminal.readLine();
     } catch (IOException e) {
       throw new InternalError(e.getMessage());
     }
@@ -862,7 +786,7 @@ public class Monitor implements CPUControlAPI.LogListener
       stopAddr = (dataStartAddr + DEFAULT_DUMP_BYTES) &
         ~0xf & 0xffff; // TODO: 0xffff is z80 specific
     int currentAddr = dataStartAddr;
-    stdout.print(Util.hexShortStr(currentAddr) + "-  ");
+    terminal.print(Util.hexShortStr(currentAddr) + "-  ");
     StringBuffer sbNumeric =
       new StringBuffer(SPACE.substring(0, (currentAddr & 0xf) * 3));
     StringBuffer sbText =
@@ -873,46 +797,53 @@ public class Monitor implements CPUControlAPI.LogListener
       sbNumeric.append(" " + Util.hexByteStr(dataByte));
       sbText.append(renderDataByteAsChar(dataByte));
       if ((currentAddr & 0xf) == 0) {
-	stdout.println(sbNumeric + "   " + sbText);
+	terminal.println(sbNumeric + "   " + sbText);
 	sbNumeric.setLength(0);
 	sbText.setLength(0);
 	if (currentAddr != stopAddr)
-	  stdout.print(Util.hexShortStr(currentAddr) + "-  ");
+	  terminal.print(Util.hexShortStr(currentAddr) + "-  ");
       }
     } while (currentAddr != stopAddr);
     if ((currentAddr & 0xf) != 0) {
       sbNumeric.append(SPACE.substring(0, (0x10 - currentAddr & 0xf) * 3));
       sbText.append(SPACE.substring(0, 0x10 - currentAddr & 0xf));
-      stdout.println(sbNumeric + "   " + sbText);
+      terminal.println(sbNumeric + "   " + sbText);
     }
     dataStartAddr = stopAddr;
   }
 
   private void enterData() throws ParseError {
-    if (num1.parsed())
-      dataStartAddr = num1.getValue();
-    do {
-      int dataByte = cpuControl.readByteFromMemory(dataStartAddr);
-      stdout.print(Util.hexShortStr(dataStartAddr) + "-   (" +
-		   Util.hexByteStr(dataByte) + ") ");
-      try {
-	cmdLine = readLine();
-	pos = 0;
-      } catch (IOException e) {
-	throw new InternalError(e.getMessage());
-      }
-      if (cmdLine.toUpperCase().equals("Q"))
-	break;
-      if (eof())
-	dataStartAddr++;
-      else {
-	while (!eof()) {
-	  parseNumber(num1);
-	  cpuControl.writeByteToMemory(dataStartAddr, num1.getValue());
-	  dataStartAddr++;
-	}
-      }
-    } while (true);
+    final String savedPrompt = terminal.getPrompt();
+    try {
+      if (num1.parsed())
+        dataStartAddr = num1.getValue();
+      do {
+        int dataByte = cpuControl.readByteFromMemory(dataStartAddr);
+        final String prompt =
+          Util.hexShortStr(dataStartAddr) + "-   (" +
+          Util.hexByteStr(dataByte) + ") ";
+        terminal.setPrompt(prompt);
+        try {
+          cmdLine = terminal.readLine();
+          pos = 0;
+        } catch (IOException e) {
+          throw new InternalError(e.getMessage());
+        }
+        if (cmdLine.toUpperCase().equals("Q"))
+          break;
+        if (eof())
+          dataStartAddr++;
+        else {
+          while (!eof()) {
+            parseNumber(num1);
+            cpuControl.writeByteToMemory(dataStartAddr, num1.getValue());
+            dataStartAddr++;
+          }
+        }
+      } while (true);
+    } finally {
+      terminal.setPrompt(savedPrompt);
+    }
   }
 
   private void portaccess() {
@@ -1006,105 +937,38 @@ public class Monitor implements CPUControlAPI.LogListener
     logInfo("  q                                quit");
   }
 
-  private class KeyWatch extends Thread implements CPUControlAutomatonListener
-  {
-    private boolean stopping;
-    private boolean inputSeen;
-
-    public KeyWatch()
-    {
-      super("Monitor KeyWatch Thread");
-    }
-
-    public boolean inputSeen() throws IOException
-    {
-      inputSeen |= stdin.available() > 0;
-      logDebug("KeyWatch: inputSeen=" + inputSeen);
-      return inputSeen;
-    }
-
-    public void run()
-    {
-      boolean haveException = false;
-      inputSeen = false;
-      try {
-        synchronized(this) {
-          while (!stopping && !inputSeen()) {
-            try {
-              wait(1000);
-            } catch (final InterruptedException e) {
-              // ignore
-            }
-          }
-        }
-      } catch (final IOException e) {
-        haveException = true;
-        /**
-         * if checking for kbd input throws an exception, there is a
-         * fundamental problem.  In this case, we log this error and
-         * prematurely stop watching for keys.
-         */
-        logError("failed watching for keyboard actions, " +
-                 "stopping key watch thread: " + e.getMessage());
-      }
-      if (!stopping) {
-        cpuControl.stop();
-      }
-    }
-
-    public void stateChanged(final CPUControlAutomaton.State state)
-    {
-      synchronized(this) {
-        logDebug("KeyWatch: state=" + state);
-        if (state == CPUControlAutomaton.State.STOPPING) {
-          stopping = true;
-        }
-        notify();
-      }
-    }
-  }
-
   private void runCPU()
   {
     final boolean singleStep = command == 'i';
     final boolean trace = command == 't';
-    final KeyWatch keyWatch = new KeyWatch();
-    try {
-      //synchronized(cpuControl) {
-        if (num1.parsed()) {
-          codeStartAddr = num1.getValue();
-          cpuControl.setPCValue(codeStartAddr);
-        } else {
-          // continue whereever regPC currently points to
+    //synchronized(cpuControl) {
+      if (num1.parsed()) {
+        codeStartAddr = num1.getValue();
+        cpuControl.setPCValue(codeStartAddr);
+      } else {
+        // continue whereever regPC currently points to
+      }
+      final Integer breakPoint = num2.parsed() ? num2.getValue() : null;
+      cpuControl.setBreakPoint(breakPoint);
+      logDebug("runCPU: start()");
+      cpuControl.start(singleStep, trace);
+      logDebug("runCPU: start() done");
+      logDebug("runCPU: awaitStop()");
+      cpuControl.awaitStop();
+      logDebug("runCPU: awaitStop() done");
+      /*
+      try {
+        logDebug("runCPU: have input?");
+        if (terminal.inputSeen()) {
+          //terminal.abortScript();
+          terminal.readLine();
         }
-        cpuControl.addStateChangeListener(keyWatch);
-        logDebug("runCPU: start keyWatch thread");
-        keyWatch.start();
-        final Integer breakPoint = num2.parsed() ? num2.getValue() : null;
-        cpuControl.setBreakPoint(breakPoint);
-        logDebug("runCPU: start()");
-        cpuControl.start(singleStep, trace);
-        logDebug("runCPU: start() done");
-        logDebug("runCPU: awaitStop()");
-        cpuControl.awaitStop();
-        logDebug("runCPU: awaitStop() done");
-        try {
-          logDebug("runCPU: have input?");
-          if (keyWatch.inputSeen()) {
-            logDebug("runCPU: abort script");
-            abortScript();
-            logDebug("runCPU: read line");
-            readLine();
-          }
-          logDebug("runCPU: read line done");
-        } catch (final IOException e) {
-          throw new InternalError(e.getMessage());
-        }
-        //}
-    } finally {
-      logDebug("runCPU: remove keyWatch");
-      cpuControl.removeStateChangeListener(keyWatch);
-    }
+        logDebug("runCPU: read line done");
+      } catch (final IOException e) {
+        throw new InternalError(e.getMessage());
+      }
+      */
+    //}
     logDebug("runCPU: print statistics?");
     if (!singleStep) {
       logDebug("runCPU: yes");
@@ -1178,18 +1042,12 @@ public class Monitor implements CPUControlAPI.LogListener
    * @param script The script to execute.
    */
   public void run(String script) {
-    if ((script != null) && (!script.isEmpty())) {
-      this.script = script.split("\r?\n");
-      scriptLineIndex = 0;
-    }
+    terminal.setScript(script);
     run();
   }
 
   private void run() {
-    stdout = System.out;
     logInfo("starting monitor...");
-    stderr = System.err;
-    stdin = new PushbackInputStream(System.in);
     registers = cpuControl.getAllRegisters();
     codeStartAddr = 0x0000;
     dataStartAddr = 0x0000;
@@ -1209,7 +1067,6 @@ public class Monitor implements CPUControlAPI.LogListener
         cmdLine = enterCommand();
         if (!cmdLine.isEmpty()) {
           parseCommand();
-          history.addEntry(cmdLine);
           executeCommand();
         }
         if (command == 'q') {
@@ -1230,7 +1087,7 @@ public class Monitor implements CPUControlAPI.LogListener
     this.cpuControl = cpuControl;
     cpuControl.addLogListener(this);
     annotations = cpuControl.getAnnotations();
-    history = new History();
+    terminal = new GraphicalTerminal("CPU Monitor", 80, 24, cpuControl);
   }
 
   private static void usage() {

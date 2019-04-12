@@ -509,7 +509,7 @@ public class Annotations {
     if (schemaUrl == null) {
       throw new ParseException("failed determining URL of annotations schema file");
     }
-    System.out.println("using annotations XML schema: " + schemaUrl);
+    System.out.println("loading annotations: " + resourceUrl);
     try {
       Document document = LineNumberXmlParser.parse(resourceUrl, schemaUrl);
       parse(document);

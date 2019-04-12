@@ -7,6 +7,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JTabbedPane;
 import javax.swing.JFrame;
 
+import emulator.z80.ApplicationExitListener;
 import emulator.z80.CPUControlAPI;
 import emulator.z80.WallClockProvider;
 

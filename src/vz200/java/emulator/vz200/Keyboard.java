@@ -7,6 +7,7 @@ import java.awt.event.WindowListener;
 import java.io.IOException;
 import javax.swing.JFrame;
 
+import emulator.z80.ApplicationExitListener;
 import emulator.z80.MemoryBus;
 import emulator.z80.Util;
 

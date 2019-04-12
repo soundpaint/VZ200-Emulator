@@ -4,6 +4,7 @@ import java.io.IOException;
 import javax.swing.JPanel;
 import javax.swing.JFrame;
 
+import emulator.z80.ApplicationExitListener;
 import emulator.z80.CPU;
 import emulator.z80.MemoryBus;
 import emulator.z80.RAMMemory;

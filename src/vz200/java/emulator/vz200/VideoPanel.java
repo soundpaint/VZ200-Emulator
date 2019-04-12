@@ -221,8 +221,9 @@ public class VideoPanel extends JPanel
     int sy0 = y0 * zoomFactor12 + frameWidth;
     for (int y = y0; y < y1; y++) {
       int sx0 = x0 * zoomFactor8 + frameWidth;
+      final int y32 = y << 5;
       for (int x = x0; x < x1; x++) {
-	final int charCode = directVideoRAM[(y << 5) + x];
+	final int charCode = directVideoRAM[y32 + x];
 	final Color fgColor = textColorTable[charCode >> 4];
 	int sy = sy0;
 	int charsetIndex = charCode * 12;

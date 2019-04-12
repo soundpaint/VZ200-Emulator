@@ -1,4 +1,4 @@
-package emulator.vz200;
+package emulator.z80;
 
 import java.awt.Component;
 import java.awt.event.WindowEvent;
@@ -20,7 +20,8 @@ public class ApplicationExitListener implements WindowListener
   public void windowClosed(final WindowEvent e) {}
 
   @Override
-  public void windowClosing(final WindowEvent e) {
+  public void windowClosing(final WindowEvent e)
+  {
     final int result =
       JOptionPane.showConfirmDialog((Component)e.getSource(),
                                     MESSAGE,

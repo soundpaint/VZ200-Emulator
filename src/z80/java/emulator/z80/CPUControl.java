@@ -203,6 +203,10 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
     return automaton.removeListener(listener);
   }
 
+  // TODO: Move resource location management into separate class.  It
+  // clearly belongs into the cpu package, but is not part of
+  // controlling the CPU.
+
   public void addResourceLocation(final Class<?> clazz)
   {
     resourceLocations.add(clazz);
