@@ -43,8 +43,8 @@ java -cp ../build emulator.vz200.VZ200
 
 from within the source directory.
 
-Trouble Shooting
-----------------
+Audio Trouble Shooting
+----------------------
 
 At least on my Ubuntu 18.04 box, there is a problem with the new
 `java-11-openjdk-amd64` version: It will find no audio devices.  The
@@ -60,3 +60,26 @@ box, I am currently using
 ```
 
 to start the emulator.
+
+Limited Support for `.vz` Files
+--------------------------------
+
+There is limited, experimental support for reading `.vz` files.  `.vz`
+files are the inofficial quasi standard for storing binary and basic
+programs on standard discs.  You will find lots of software for the
+VZ200 on the internet as `.vz` files.  However, the support for `.vz`
+files is not yet thread safe.  That is why the implementation for that
+support is not yet on the Git `main` branch, but on a branch called
+`sloppy_vzfile_support`.  If you plan to use `.vz` files, you may want
+to check out branch `sloppy_vzfile_support`.  However, since the
+implementation is not yet thread safe, you should not try to load in a
+`.vz` file while the CPU emulation is running (this is possible via
+the graphical GUI).  In that case, the whole emulator might get stuck
+in a dead lock due to some previous race condition.
+
+I will first try to make the implementation on the Git `master` branch
+thread safe; only then, I will re-integrate the
+`sloppy_vzfile_support` branch into the `master` branch.
+
+If you do not need support for `.vz` files, you probably want to stick
+to the more stable `master` branch.
