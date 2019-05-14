@@ -135,6 +135,15 @@ annotation file:
   </at>
 ```
 
+The idea of such an annotation file is that you can retrofit
+annotations to assembler instructions of code separately from its
+binary and source code representation, in particular if you do not own
+or have access to the source code and thus can not put annotations
+directly alongside the source code.  This is usually the case when you
+reverse engineer binary code.  Of course, if you own the source code,
+you do not need such retrofit annotations.
+
+
 ### Configuration Dialogs
 
 The configuration dialogs currently support setting up the target of
