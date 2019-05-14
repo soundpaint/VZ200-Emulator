@@ -43,6 +43,54 @@ java -cp ../build emulator.vz200.VZ200
 
 from within the source directory.
 
+Screenshots
+-----------
+
+Here are some screenshots that illustrate the emulator GUI.
+
+### Application Frame Windows
+
+![Fig. 1: VZ200 Screen](src/doc/screenshots/screen.png)
+
+Fig. 1: VZ200 Screen
+
+
+![Fig. 2: VZ200 Keyboard](src/doc/screenshots/keyboard.png)
+
+Fig. 2: VZ200 Keyboard
+
+
+![Fig. 3: Monitor Console](src/doc/screenshots/monitor.png)
+
+Fig. 3: Monitor Console
+
+### Configuration Dialogs
+
+![Fig. 4: Speaker Settings](src/doc/screenshots/speaker-settings.png)
+
+Fig. 4: Speaker Settings
+
+
+![Fig. 5: Speaker Line Selection](src/doc/screenshots/speaker-line-selection.png)
+
+Fig. 5: Speaker Line Selection
+
+
+![Fig. 6: Cassette I/O Settings](src/doc/screenshots/cassette-io-settings.png)
+
+Fig. 6: Cassette I/O Settings
+
+
+![Fig. 7: CPU Settings](src/doc/screenshots/cpu-settings.png)
+
+Fig. 7: CPU Settings
+
+
+![Fig. 8: CPU Settings](src/doc/screenshots/cpu-speed-selection.png)
+
+Fig. 8: CPU Speed Selection
+
+
 Audio Trouble Shooting
 ----------------------
 
