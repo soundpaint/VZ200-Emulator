@@ -43,48 +43,153 @@ java -cp ../build emulator.vz200.VZ200
 
 from within the source directory.
 
-Screenshots
------------
+Features
+--------
 
-Here are some screenshots that illustrate the emulator GUI.
+Here are some screenshots that illustrate the features and GUI of the
+emulator.
 
 ### Application Frame Windows
+
+The application frame windows include the VZ200's actual ouput screen
+window, a virtual keyboard, and a monitor control and debug program.
+
+
+#### The Screen Window
+
+The screen window currently supports three different zoom factors (1,
+2 and 3).  There are future plans for a full screen display mode that
+will mimick a cathode ray tube's specific appearance.
 
 ![Fig. 1: VZ200 Screen](src/doc/screenshots/screen.png)
 
 Fig. 1: VZ200 Screen
 
 
+#### The Keyboard
+
+While most input can be easily done via the standard PC keyboard, the
+VZ200's original keyboard contained special key combinations for
+accessing block graphics characters, special editor control keys, but
+also shortcuts for command keywords.  Mapping these special key
+combinations to a standard PC keyboard may result in unexpected
+behavior, especially on non-US keyboard layouts.  Therefore, key input
+on the PC's keyboard is mapped to the VZ200's keyboard whenever
+possible in a reasonable way.  Some special characters or functions,
+however, may be accessible solely by clicking on the VZ200's virtual
+keyboard.
+
 ![Fig. 2: VZ200 Keyboard](src/doc/screenshots/keyboard.png)
 
 Fig. 2: VZ200 Keyboard
 
 
+#### The Monitor Console
+
+The monitor control program is a special program that runs in a
+console window and allows for inspection and manipulation of the CPU's
+address space as well as all of the CPU's registers.  Features include
+listing of memory contents as either Z80 unassembled menmonics or
+hexadecimal bytes or ascii characters, as well as entering hexadecimal
+data bytes.  Also, starting and stopping the CPU can be controlled via
+the monitor, including useful tools for debugging like a trace and
+single instruction step mode, or running until reaching a breakpoint.
+
 ![Fig. 3: Monitor Console](src/doc/screenshots/monitor.png)
 
 Fig. 3: Monitor Console
 
+The monitor's unassemble feature also allows for limited capabilities
+of code comments and symbolic addresses and values.  For that purpose,
+one can write a special XML annotation file that contains code
+comments, code labels and symbolic values.  Whenever unassembling
+machine instructions that match any of these meta information, that
+information will be printed out along with the unassembled
+instruction, thus resulting in an assembler listing that comes close
+to a source code listing.  Here is an example snippet of such an
+annotation file:
+
+```
+  <at address="0x7a9d">
+    <label>fname_buf</label>
+    <data-bytes length="0x11" />
+    <header>
+      ---- START file name buffer ----<br />
+      file name buffer for currently processed cassette file,<br />
+      max. 16 characters + trailing "\0"
+    </header>
+  </at>
+  <at address="0x7ae6">
+    <data-bytes length="0x1" />
+  </at>
+  <at address="0x7aad">
+    <footer>---- END file name buffer ----</footer>
+  </at>
+  <at address="0x7aae">
+    <label>next_crs_x</label>
+    <data-bytes length="0x1" />
+    <comment>
+      x coordinate where to place cursor<br />
+      after next text buffer to screen copy
+    </comment>
+  </at>
+```
+
 ### Configuration Dialogs
+
+The configuration dialogs currently support setting up the target of
+the VZ200's speaker output and cassette ouput, the source of the
+cassette input, and some properties of the CPU emulation.
+
+
+#### Speaker Settings
 
 ![Fig. 4: Speaker Settings](src/doc/screenshots/speaker-settings.png)
 
 Fig. 4: Speaker Settings
 
+The VZ200's speaker can be mapped to any audio output line that is
+available via Java's built-in AudioSystem class.  Note that the VZ200
+produced sound by plucking a speaker's 3-state membrane controlled by
+two flip-flops, while sound cards as of today expect a stream of
+sample values.  The emulator automatically converts the emulated
+plucked membrane's state into a continuous stream of samples
+appropriate for a modern sound card.
 
 ![Fig. 5: Speaker Line Selection](src/doc/screenshots/speaker-line-selection.png)
 
 Fig. 5: Speaker Line Selection
 
 
+#### Cassette I/O Settings
+
 ![Fig. 6: Cassette I/O Settings](src/doc/screenshots/cassette-io-settings.png)
 
 Fig. 6: Cassette I/O Settings
 
+Technically, the VZ200's cassette output works very much like the
+speaker output: The binary data output is converted into a stream of
+samples that the emulator can map on any audio output line that is
+available via Java's built-in AudioSystem class.  Also, thanks to a
+special function, the output can also directly be written onto disc as
+an audio file.
+
+
+#### CPU Settings
 
 ![Fig. 7: CPU Settings](src/doc/screenshots/cpu-settings.png)
 
 Fig. 7: CPU Settings
 
+Beyond the basic control features in the monitor control program, the
+CPU settings dialog enables the user to set up special CPU parameters,
+including the emulated speed, and some CPU profiling / logging
+features.  Also, one can decide between a busy waiting model that will
+produce very exact timing on the micro scale but may challenge the
+host's CPU power, and a more lazy, but much more host CPU saving mode.
+Usually, even the more lazy mode will still produce a micro-scale
+timing good enough for generating sound and graphics without flicker
+(as compared to the busy waiting model).
 
 ![Fig. 8: CPU Settings](src/doc/screenshots/cpu-speed-selection.png)
 
