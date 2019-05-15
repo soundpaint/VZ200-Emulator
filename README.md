@@ -14,7 +14,14 @@ running.  So please, be a little bit patient!  At least, I already
 recorded some YouTube video that demonstrates that the core emulation
 is already running:
 
-[Preliminary YouTobe Demo Video](https://youtu.be/S65sOWSTnGA)
+<figure>
+  <a href="https://youtu.be/S65sOWSTnGA">
+    <img src="src/doc/screenshots/video-thumbnail.png">
+  </a>
+  <figcaption>Preliminary YouTobe Demo Video</caption>
+</figure>
+
+<!--[Preliminary YouTobe Demo Video](https://youtu.be/S65sOWSTnGA)-->
 
 Installing & Running
 --------------------
