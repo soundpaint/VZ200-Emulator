@@ -17,11 +17,12 @@ import java.util.List;
 
 public class Monitor implements CPUControlAPI.LogListener
 {
-  private CPUControl cpuControl;
-  private CPU.Register[] registers;
-  private Annotations annotations;
+  private final CPU cpu;
+  private final CPUControl cpuControl;
+  private final CPU.Register[] registers;
+  private final Terminal terminal;
+  private final Annotations annotations;
   private int address;
-  private Terminal terminal;
 
   private static class ParseError extends Exception {
     private static final long serialVersionUID = 6821628755472075263L;
@@ -729,21 +730,20 @@ public class Monitor implements CPUControlAPI.LogListener
 
   private static final int DEFAULT_UNASSEMBLE_LINES = 16;
 
-  private void unassemble() {
+  private void unassemble()
+  {
     if (num1.parsed())
       codeStartAddr = num1.getValue();
     int endAddr = 0;
     if (num2.parsed())
       endAddr = num2.getValue();
-    int regPCValue = cpuControl.getPCValue();
     int currentAddr = codeStartAddr;
     CPU.ConcreteOperation op;
     int lineCount = 0;
     do {
-      cpuControl.setPCValue(currentAddr);
       try {
-	op = cpuControl.fetchNextOperationNoInterrupts();
-      } catch (CPU.MismatchException e) {
+	op = cpu.unassembleInstructionAt(currentAddr);
+      } catch (final CPU.MismatchException e) {
         op = null;
       }
       currentAddr += printOperation(op, currentAddr);
@@ -751,7 +751,6 @@ public class Monitor implements CPUControlAPI.LogListener
     } while ((num2.parsed() && (currentAddr <= endAddr)) ||
              (++lineCount < DEFAULT_UNASSEMBLE_LINES));
     codeStartAddr = currentAddr;
-    cpuControl.setPCValue(regPCValue);
   }
 
   private void assemble() {
@@ -956,18 +955,6 @@ public class Monitor implements CPUControlAPI.LogListener
       logDebug("runCPU: awaitStop()");
       cpuControl.awaitStop();
       logDebug("runCPU: awaitStop() done");
-      /*
-      try {
-        logDebug("runCPU: have input?");
-        if (terminal.inputSeen()) {
-          //terminal.abortScript();
-          terminal.readLine();
-        }
-        logDebug("runCPU: read line done");
-      } catch (final IOException e) {
-        throw new InternalError(e.getMessage());
-      }
-      */
     //}
     logDebug("runCPU: print statistics?");
     if (!singleStep) {
@@ -1048,7 +1035,6 @@ public class Monitor implements CPUControlAPI.LogListener
 
   private void run() {
     logInfo("starting monitor...");
-    registers = cpuControl.getAllRegisters();
     codeStartAddr = 0x0000;
     dataStartAddr = 0x0000;
     welcome();
@@ -1079,15 +1065,23 @@ public class Monitor implements CPUControlAPI.LogListener
     System.exit(0);
   }
 
+  public CPUControl getCPUControl()
+  {
+    return cpuControl;
+  }
+
   private Monitor() {
     throw new UnsupportedOperationException("unsupported empty constructor");
   }
 
-  public Monitor(CPUControl cpuControl) {
-    this.cpuControl = cpuControl;
+  public Monitor(final CPU cpu)
+  {
+    this.cpu = cpu;
+    cpuControl = new CPUControl(cpu);
     cpuControl.addLogListener(this);
-    annotations = cpuControl.getAnnotations();
+    registers = cpuControl.getAllRegisters();
     terminal = new GraphicalTerminal("CPU Monitor", 80, 24, cpuControl);
+    annotations = cpuControl.getAnnotations();
   }
 
   private static void usage() {
@@ -1110,8 +1104,7 @@ public class Monitor implements CPUControlAPI.LogListener
                            cpuClassName + "': " + e);
 	System.exit(-1);
       }
-      final CPUControl cpuControl = new CPUControl(cpu);
-      new Monitor(cpuControl).run();
+      new Monitor(cpu).run();
     }
   }
 }

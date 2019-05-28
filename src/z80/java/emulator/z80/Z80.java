@@ -47,75 +47,94 @@ public class Z80 implements CPU {
     }
   }
 
-  private interface CodeFetcher {
-    public int fetchNextByte();
+  private interface CodeFetcher
+  {
+    int getBaseAddress();
 
-    public int fetchByte(int index);
+    int fetchNextByte();
+
+    int fetchByte(final int index);
 
     /**
      * Clear all fetched data.
      */
-    public void reset();
+    void reset();
 
     /**
      * Restart delivering all data that has already been fetched.
      */
-    public void restart();
+    void restart();
   }
 
-  private class MemoryCodeFetcher implements CodeFetcher {
+  private class MemoryCodeFetcher implements CodeFetcher
+  {
     private final static int CACHE_SIZE = 4;
-    private CPU.Memory memory;
-    private Reg16 regPC;
-    private int pos, size;
+    private final CPU.Memory memory;
+    private final Reg16 regPC;
+    private int offset, size;
     private int[] cache;
 
-    private MemoryCodeFetcher() {}
+    private MemoryCodeFetcher()
+    {
+      throw new UnsupportedOperationException("unsupported empty constructor");
+    }
 
-    public MemoryCodeFetcher(CPU.Memory memory, Reg16 regPC) {
+    public MemoryCodeFetcher(final CPU.Memory memory, final Reg16 regPC)
+    {
       this.memory = memory;
       this.regPC = regPC;
       cache = new int[CACHE_SIZE];
       size = 0;
-      pos = 0;
+      offset = 0;
     }
 
-    public int fetchNextByte() {
-      if (pos < size)
-	return cache[pos++];
-      int result = memory.readByte((regPC.getValue() + pos) & 0xffff,
-                                   wallClockTime) & 0xff;
-      cache[pos++] = result;
-      size = pos;
+    public int getBaseAddress()
+    {
+      return regPC.getValue();
+    }
+
+    public int fetchNextByte()
+    {
+      if (offset < size)
+	return cache[offset++];
+      final int result =
+        memory.readByte((regPC.getValue() + offset) & 0xffff,
+                        wallClockTime) & 0xff;
+      cache[offset++] = result;
+      size = offset;
       return result;
     }
 
-    public int fetchByte(int index) {
-      if (index >= size) {
-        pos = size;
-        while (pos <= index) {
+    public int fetchByte(final int offset)
+    {
+      if (offset >= size) {
+        this.offset = size;
+        while (this.offset <= offset) {
           fetchNextByte();
         }
       }
-      pos = index;
-      return cache[pos++];
+      this.offset = offset;
+      return cache[this.offset++];
     }
 
-    public void restart() {
-      pos = 0;
+    public void restart()
+    {
+      offset = 0;
     }
 
-    public void reset() {
-      pos = 0;
+    public void reset()
+    {
+      offset = 0;
       size = 0;
     }
 
-    public String toString() {
-      StringBuffer sb = new StringBuffer();
+    public String toString()
+    {
+      final StringBuffer sb = new StringBuffer();
       sb.append(Util.hexShortStr(regPC.getValue()));
       sb.append("-   ");
-      for (int i = 0; i < size; i++) {
-	sb.append(" " + Util.hexByteStr(cache[i]));
+      for (int offset = 0; offset < size; offset++) {
+	sb.append(" " + Util.hexByteStr(cache[offset]));
       }
       return sb.toString();
     }
@@ -125,42 +144,55 @@ public class Z80 implements CPU {
    * Single-byte code fetcher.  Needed when serving mode 0 interrupt
    * requests.
    */
-  private class IntrBusDataFetcher implements CodeFetcher {
+  private class IntrBusDataFetcher implements CodeFetcher
+  {
     private int count;
     private int intr_bus_data;
 
-    public IntrBusDataFetcher() {
+    public IntrBusDataFetcher()
+    {
       count = 0;
     }
 
-    public void setIntrBusData(int intr_bus_data) {
+    public int getBaseAddress()
+    {
+      return regPC.getValue();
+    }
+
+    public void setIntrBusData(final int intr_bus_data)
+    {
       this.intr_bus_data = intr_bus_data;
     }
 
-    public int fetchNextByte() {
-      int result = count == 0 ? intr_bus_data : 0;
+    public int fetchNextByte()
+    {
+      final int result = count == 0 ? intr_bus_data : 0;
       count++;
       return result;
     }
 
-    public int fetchByte(int index) {
+    public int fetchByte(final int index)
+    {
       return index == 0 ? intr_bus_data : 0;
     }
 
-    public void restart() {
+    public void restart()
+    {
       count = 0;
     }
 
-    public void reset() {
+    public void reset()
+    {
       count = 0;
     }
 
-    public String toString() {
-      StringBuffer sb = new StringBuffer();
+    public String toString()
+    {
+      final StringBuffer sb = new StringBuffer();
       sb.append(Util.hexShortStr(regPC.getValue()));
       sb.append("-   ");
       sb.append(" " + Util.hexByteStr(intr_bus_data));
-      for (int i = 0; i < 3; i++) {
+      for (int offset = 0; offset < 3; offset++) {
 	sb.append(" ??");
       }
       return sb.toString();
@@ -3750,7 +3782,7 @@ public class Z80 implements CPU {
                      CodeFetcher codeFetcher, boolean isSynthesizedCode)
     throws CPU.MismatchException
   {
-    concreteOperation.address = regPC.getValue();
+    concreteOperation.address = codeFetcher.getBaseAddress();
     concreteOperation.isSynthesizedCode = isSynthesizedCode;
     codeFetcher.reset();
     PrecompiledGenericOperation precompiledGenericOperation =
@@ -4478,11 +4510,16 @@ public class Z80 implements CPU {
     return concreteOperation;
   }
 
-  public ConcreteOperation fetchNextOperationNoInterrupts()
-    throws CPU.MismatchException
+  @Override
+  public ConcreteOperation unassembleInstructionAt(final int address)
+    throws MismatchException
   {
-    int opCodeLength = decode(concreteOperation, memoryCodeFetcher, false);
-    regPC.setValue((regPC.getValue() + opCodeLength) & 0xffff);
+    final Reg16 regPC = new GenericReg16("PC");
+    regPC.setValue(address & 0xffff);
+    final MemoryCodeFetcher memoryCodeFetcher =
+      new MemoryCodeFetcher(memory, regPC);
+    final ConcreteOperation concreteOperation = new ConcreteOperation();
+    decode(concreteOperation, memoryCodeFetcher, false);
     return concreteOperation;
   }
 

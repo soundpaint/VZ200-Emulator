@@ -61,7 +61,17 @@ public interface CPU extends WallClockProvider, PreferencesChangeListener
   Register getProgramCounter();
   Register getStackPointer();
   ConcreteOperation fetchNextOperation() throws MismatchException;
-  ConcreteOperation fetchNextOperationNoInterrupts() throws MismatchException;
+
+  /**
+   * Fetch and decode the next instruction.  This method is useful for
+   * displaying the next instruction but without actually executing
+   * it.
+   * @address The location of the instruction to decode.
+   * @return The decoded operation, ready for printing out in a
+   * human-readable form.
+   */
+  ConcreteOperation unassembleInstructionAt(final int address)
+    throws MismatchException;
 
   void requestIRQ();
   void requestNMI();

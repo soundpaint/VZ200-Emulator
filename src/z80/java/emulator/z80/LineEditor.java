@@ -29,7 +29,6 @@ public class LineEditor extends KeyAdapter
   private String prompt;
   private LinkedBlockingQueue<String> lineInputBuffer;
   private LinkedBlockingQueue<Character> keyInputBuffer;
-  private boolean active;
 
   public LineEditor(final int preferredColumns, final int preferredRows,
                     final CPUControlAPI cpuControl)
@@ -39,7 +38,6 @@ public class LineEditor extends KeyAdapter
       throw new NullPointerException("cpuControl");
     }
     this.cpuControl = cpuControl;
-    active = false;
     lineInputBuffer = new LinkedBlockingQueue<String>(LINE_INPUT_CAPACITY);
     keyInputBuffer = new LinkedBlockingQueue<Character>(KEY_INPUT_CAPACITY);
     history = new History();
@@ -484,12 +482,7 @@ public class LineEditor extends KeyAdapter
   public void keyTyped(final KeyEvent e)
   {
     final char ch = e.getKeyChar();
-    if (active) {
-      handleTypedChar(ch);
-    } else {
-      // if key input buffer is full, ignore input
-      keyInputBuffer.offer(ch);
-    }
+    handleTypedChar(ch);
   }
 
   private void handleTypedChar(final char ch)
@@ -563,23 +556,18 @@ public class LineEditor extends KeyAdapter
   @Override
   public void keyPressed(final KeyEvent e)
   {
-    if (active) {
-      if (!e.isAltDown() && !e.isAltGraphDown() &&
-          !e.isControlDown() && !e.isMetaDown() && !e.isShiftDown()) {
-        unmodifiedKeyPressed(e);
-      } else if (!e.isAltDown() && !e.isAltGraphDown() &&
-                 e.isControlDown() && !e.isMetaDown() && !e.isShiftDown()) {
-        controlKeyPressed(e);
-      }
-    } else {
+    if (!e.isAltDown() && !e.isAltGraphDown() &&
+        !e.isControlDown() && !e.isMetaDown() && !e.isShiftDown()) {
+      unmodifiedKeyPressed(e);
+    } else if (!e.isAltDown() && !e.isAltGraphDown() &&
+               e.isControlDown() && !e.isMetaDown() && !e.isShiftDown()) {
+      controlKeyPressed(e);
       handleNonEditorKeys(e);
     }
   }
 
   /**
-   * When line editor is inactive, CTRL-Z will be recognized as
-   * request for interrupting the current process and gaining back
-   * process control by activating the line editor.
+   * CTRL-Z will be recognized as request for stopping the CPU.
    */
   private void handleNonEditorKeys(final KeyEvent e)
   {
@@ -591,9 +579,6 @@ public class LineEditor extends KeyAdapter
 
   private void unmodifiedKeyPressed(final KeyEvent e)
   {
-    if (!active) {
-      // ignore special keys when editor not active
-    }
     final int code = e.getKeyCode();
     switch (code) {
     case KeyEvent.VK_HOME:
@@ -679,9 +664,7 @@ public class LineEditor extends KeyAdapter
   public String readLine() throws IOException
   {
     updateInputLine();
-    active = true;
     final String line = takeLine();
-    active = false;
     clearInputLine();
     history.setEntry(line);
     history.newEntry();

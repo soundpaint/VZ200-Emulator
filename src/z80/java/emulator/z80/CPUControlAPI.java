@@ -36,20 +36,6 @@ public interface CPUControlAPI extends WallClockProvider
   void setPCValue(final int value);
 
   /**
-   * Based on the current status of the CPU registers, fetch and
-   * decode the next instruction and update the CPU's program counter
-   * accordingly.  However, ignore any interrupts.
-   *
-   * This method is useful for displaying the next instruction but
-   * without actually executing it.
-   *
-   * @return The decoded operation, ready for printing out in a
-   * human-readable form.
-   */
-  CPU.ConcreteOperation fetchNextOperationNoInterrupts()
-    throws CPU.MismatchException;
-
-  /**
    * Returns the annotations to retro-fit when displaying concrete CPU
    * instructions.
    */

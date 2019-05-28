@@ -48,7 +48,8 @@ public class VZ200 implements CPU.WallClockListener
     mainMemoryBus = new MemoryBus();
     final Z80 z80 = new Z80(mainMemoryBus, portMemoryBus);
     z80.addWallClockListener(this);
-    cpuControl = new CPUControl(z80);
+    monitor = new Monitor(z80);
+    cpuControl = monitor.getCPUControl();
     cpuControl.addResourceLocation(VZ200.class);
     final RAMMemory ram = new RAMMemory(RAM_START, RAM_LENGTH);
     io = new IO(cpuControl, z80.getWallClockTime());
@@ -60,7 +61,6 @@ public class VZ200 implements CPU.WallClockListener
     mainMemoryBus.addWriter(io);
     mainMemoryBus.addReader(video);
     mainMemoryBus.addWriter(video);
-    monitor = new Monitor(cpuControl);
   }
 
   public void wallClockChanged(final long timePerClockCycle,

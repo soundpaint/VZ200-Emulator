@@ -139,12 +139,6 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
     regPC.setValue(value);
   }
 
-  public CPU.ConcreteOperation fetchNextOperationNoInterrupts()
-    throws CPU.MismatchException
-  {
-    return cpu.fetchNextOperationNoInterrupts();
-  }
-
   public Annotations getAnnotations()
   {
     return cpu.getAnnotations();
@@ -366,7 +360,7 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
         setSingleStep(singleStep);
         setTrace(trace);
         if (automaton.getState() != CPUControlAutomaton.State.STOPPED) {
-          throw new InternalError("trying to start Monitor while it is not stopped");
+          throw new InternalError("trying to start CPU while it is not stopped");
         }
         requestStart();
         awaitStart();
@@ -403,7 +397,7 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
           return true;
         }
         if (automaton.getState() != CPUControlAutomaton.State.RUNNING) {
-          throw new InternalError("trying to stop Monitor while it is not running");
+          throw new InternalError("trying to stop CPU while it is not running");
         }
         */
         requestStop();
