@@ -76,7 +76,10 @@ public class KeyWatch extends Thread
                "stopping key watch thread: " + e.getMessage());
     }
     if (!stopping) {
-      cpuControl.stop();
+      final Error error = cpuControl.stop(true);
+      if (error != null) {
+        logError(error.getMessage());
+      }
     }
   }
 

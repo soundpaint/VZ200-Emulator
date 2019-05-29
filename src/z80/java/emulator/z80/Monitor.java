@@ -15,7 +15,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Monitor implements CPUControlAPI.LogListener
+public class Monitor implements CPUControlAPI.LogListener,
+  CPUControlAutomatonListener
 {
   private final CPU cpu;
   private final CPUControl cpuControl;
@@ -41,7 +42,7 @@ public class Monitor implements CPUControlAPI.LogListener
         s.append(" ");
       s.append("^ >>> ");
       s.append(getMessage());
-      s.append(" (enter 'h' for help)");
+      s.append(" (enter '?' for help)");
       return s.toString();
     }
   }
@@ -336,23 +337,11 @@ public class Monitor implements CPUControlAPI.LogListener
   private double jitter;
   private double avgLoad;
 
-  private void printStatistics()
-  {
-    synchronized(statisticsLock) {
-      logInfo(String.format("[avg speed = %.3fMHz]", avgSpeed));
-      logInfo(String.format("[busy wait = %b]", busyWait));
-      logInfo(String.format("[latest jitter = %.2fµs]", 0.001 * jitter));
-      logInfo(String.format("[avg thread load = %3.2f%%]", 100 * avgLoad));
-      logInfo("");
-      printRegisters();
-    }
-  }
-
   @Override
   public void announceCPUStarted()
   {
     final Thread currentThread = Thread.currentThread();
-    logInfo(String.format("Monitor: %s: press <CTRL+Z> to suspend CPU",
+    logInfo(String.format("Monitor: %s: enter \"h\" to suspend CPU",
                           currentThread));
   }
 
@@ -379,10 +368,23 @@ public class Monitor implements CPUControlAPI.LogListener
   }
 
   @Override
-  public void logStatistics(final double avgSpeed,
-                            final boolean busyWait,
-                            final double jitter,
-                            final double avgLoad)
+  public void logStatistics()
+  {
+    synchronized(statisticsLock) {
+      logInfo(String.format("[avg speed = %.3fMHz]", avgSpeed));
+      logInfo(String.format("[busy wait = %b]", busyWait));
+      logInfo(String.format("[latest jitter = %.2fµs]", 0.001 * jitter));
+      logInfo(String.format("[avg thread load = %3.2f%%]", 100 * avgLoad));
+      logInfo("");
+      printRegisters();
+    }
+  }
+
+  @Override
+  public void updateStatistics(final double avgSpeed,
+                               final boolean busyWait,
+                               final double jitter,
+                               final double avgLoad)
   {
     synchronized(statisticsLock) {
       this.avgSpeed = avgSpeed;
@@ -430,7 +432,7 @@ public class Monitor implements CPUControlAPI.LogListener
   private void parseCommand() throws ParseError {
     pos = 0;
     if (eof())
-      throw new ParseError("enter command ('h' for help)", pos);
+      throw new ParseError("enter command ('?' for help)", pos);
     command = cmdLine.charAt(pos);
     pos = 1;
     num1.reset();
@@ -488,6 +490,7 @@ public class Monitor implements CPUControlAPI.LogListener
           }
 	}
 	break;
+      case '?' :
       case 'h' :
       case 'q' :
 	break;
@@ -932,35 +935,62 @@ public class Monitor implements CPUControlAPI.LogListener
     logInfo("  n+=<filename>                    append load");
     logInfo("");
     logInfo("Miscelleanous");
-    logInfo("  h                                help (this page)");
+    logInfo("  ?                                help (this page)");
     logInfo("  q                                quit");
   }
 
-  private void runCPU()
+  @Override
+  public void stateChanged(final CPUControlAutomaton.State state)
   {
-    final boolean singleStep = command == 'i';
-    final boolean trace = command == 't';
-    //synchronized(cpuControl) {
+    switch (state) {
+    case STARTING:
+      logDebug("CPU: starting");
+      final Integer breakPoint = num2.parsed() ? num2.getValue() : null;
+      cpuControl.setBreakPoint(breakPoint);
       if (num1.parsed()) {
         codeStartAddr = num1.getValue();
-        cpuControl.setPCValue(codeStartAddr);
       } else {
         // continue whereever regPC currently points to
       }
-      final Integer breakPoint = num2.parsed() ? num2.getValue() : null;
-      cpuControl.setBreakPoint(breakPoint);
-      logDebug("runCPU: start()");
-      cpuControl.start(singleStep, trace);
-      logDebug("runCPU: start() done");
-      logDebug("runCPU: awaitStop()");
-      cpuControl.awaitStop();
-      logDebug("runCPU: awaitStop() done");
-    //}
-    logDebug("runCPU: print statistics?");
-    if (!singleStep) {
-      logDebug("runCPU: yes");
-      printStatistics();
+      cpuControl.setPCValue(codeStartAddr);
+      // TODO: copy registers from monitor to CPU
+      break;
+    case RUNNING:
+      logDebug("CPU: started");
+      break;
+    case STOPPING:
+      logDebug("CPU: stopping");
+      codeStartAddr = cpuControl.getPCValue();
+      // TODO: copy registers from CPU to monitor
+      break;
+    case STOPPED:
+      logDebug("CPU: stopped");
+      break;
+    default:
+      throw new InternalError("unexpected case fall-through: state=" + state);
     }
+  }
+
+  private void startCPU()
+  {
+    final boolean singleStep = command == 'i';
+    final boolean trace = command == 't';
+    logDebug("startCPU: start()");
+    final Error error = cpuControl.start(singleStep, trace, true);
+    if (error != null) {
+      logError(error.getMessage());
+    }
+    logDebug("startCPU: start() done");
+  }
+
+  private void haltCPU()
+  {
+    logDebug("haltCPU: stop()");
+    final Error error = cpuControl.stop(true);
+    if (error != null) {
+      logError(error.getMessage());
+    }
+    logDebug("haltCPU: stop() done");
   }
 
   private void executeCommand() throws ParseError {
@@ -968,8 +998,11 @@ public class Monitor implements CPUControlAPI.LogListener
       case 'g' :
       case 't' :
       case 'i' :
-        runCPU();
+        startCPU();
 	break;
+      case 'h' :
+        haltCPU();
+        break;
       case 'o' :
         logError("'o[<addr>]': not yet implemented");
 	break;
@@ -1000,7 +1033,7 @@ public class Monitor implements CPUControlAPI.LogListener
       case 'r' :
 	registerAccess();
 	break;
-      case 'h' :
+      case '?' :
 	help();
 	break;
       case 'q' :
@@ -1014,11 +1047,11 @@ public class Monitor implements CPUControlAPI.LogListener
     logInfo("");
     logInfo("****************************************");
     logInfo("* Monitor V/0.1                        *");
-    logInfo("* (C) 2001, 2010 Jürgen Reuter,        *");
-    logInfo("* Karlsruhe                            *");
+    logInfo("* (C) 2001, 2010, 2019                 *");
+    logInfo("* Jürgen Reuter, Karlsruhe             *");
     logInfo("****************************************");
     logInfo("");
-    logInfo("Enter 'h' for help.");
+    logInfo("Enter '?' for help.");
     logInfo("");
   }
 

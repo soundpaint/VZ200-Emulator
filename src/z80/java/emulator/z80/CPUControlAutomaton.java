@@ -77,54 +77,84 @@ public class CPUControlAutomaton
     }
   }
 
-  private void stateChangeError(final State target)
+  private StateChangeError stateChangeError(final State target,
+                                            final boolean doTry)
   {
-    throw new StateChangeError(state, target);
+    final StateChangeError error = new StateChangeError(state, target);
+    if (doTry) {
+      return error;
+    }
+    throw error;
   }
 
-  private void checkIsValidTargetState(final State targetState)
+  private StateChangeError checkIsValidTargetState(final State targetState,
+                                                   final boolean doTry)
   {
     switch (targetState) {
     case STOPPED:
       if (state != State.STOPPING) {
-        stateChangeError(targetState);
+        return stateChangeError(targetState, doTry);
       }
       break;
     case STARTING:
       if (state != State.STOPPED) {
-        stateChangeError(targetState);
+        return stateChangeError(targetState, doTry);
       }
       break;
     case RUNNING:
       if (state != State.STARTING) {
-        stateChangeError(targetState);
+        return stateChangeError(targetState, doTry);
       }
       break;
     case STOPPING:
       if (state != State.RUNNING) {
-        stateChangeError(targetState);
+        return stateChangeError(targetState, doTry);
       }
       break;
     default:
       throw new InternalError("unexpected state: " + targetState);
     }
+    return null;
   }
 
-  public void setState(final State targetState)
+  public StateChangeError setState(final State targetState,
+                                   final boolean doTry)
+  {
+    return setState(targetState, doTry, null);
+  }
+
+  /**
+   * @return If the state transition is valid, this method returns
+   * <code>null</code>.  If the new state is not a valid successor of
+   * the current state and doTry is true, then, rather than throwing
+   * an exception, the exception is returned.
+   * @exception StateChangeError, if the new state is not a valid
+   * successor of the current state and doTry is <code>false</code>.
+   */
+  public StateChangeError setState(final State targetState,
+                                   final boolean doTry,
+                                   final Runnable postWork)
   {
     printMessage("entering setState(), state=" + targetState);
+    final StateChangeError error;
     synchronized(stateLock) {
-      checkIsValidTargetState(targetState);
-      printMessage(String.format("state transition %s -> %s",
-                                 state, targetState));
-      state = targetState;
-      for (final CPUControlAutomatonListener listener : listeners) {
-        printMessage("setState(): notifying " + listener);
-        listener.stateChanged(state);
+      error = checkIsValidTargetState(targetState, doTry);
+      if (error == null) {
+        printMessage(String.format("state transition %s -> %s",
+                                   state, targetState));
+        state = targetState;
+        if (postWork != null) {
+          postWork.run();
+        }
+        for (final CPUControlAutomatonListener listener : listeners) {
+          printMessage("setState(): notifying " + listener);
+          listener.stateChanged(state);
+        }
+        stateLock.notifyAll();
       }
-      stateLock.notifyAll();
     }
     printMessage("leaving setState(), state=" + targetState);
+    return error;
   }
 
   public State getState()

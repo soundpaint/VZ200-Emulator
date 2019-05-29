@@ -573,7 +573,10 @@ public class LineEditor extends KeyAdapter
   {
     final char ch = e.getKeyChar();
     if (ch == KeyEvent.VK_Z - ASCII_CAPITAL_LETTERS_BASE) {
-      cpuControl.stop();
+      final Error error = cpuControl.stop(true);
+      if (error != null) {
+        logError(error.getMessage());
+      }
     }
   }
 
@@ -647,6 +650,11 @@ public class LineEditor extends KeyAdapter
   }
 
   private void logInfo(final String message)
+  {
+    log(message);
+  }
+
+  private void logError(final String message)
   {
     log(message);
   }

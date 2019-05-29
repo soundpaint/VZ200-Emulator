@@ -13,10 +13,11 @@ public interface CPUControlAPI extends WallClockProvider
     void announceCPUStopped();
     void reportInvalidOp(final String message);
     void logOperation(final CPU.ConcreteOperation op);
-    void logStatistics(final double avgSpeed,
-                       final boolean busyWait,
-                       final double jitter,
-                       final double avgLoad);
+    void logStatistics();
+    void updateStatistics(final double avgSpeed,
+                          final boolean busyWait,
+                          final double jitter,
+                          final double avgLoad);
     void cpuStopped();
   }
 
@@ -117,31 +118,6 @@ public interface CPUControlAPI extends WallClockProvider
   InputStream resolveStream(final String path) throws IOException;
 
   /**
-   * If single step is activated, starting the CPU will cause it to
-   * run only a single instruction and after that immediately being
-   * stopped.
-   * @param singleStep True, if single step is to be activated.
-   * False, if single step is to be deactivated.
-   */
-  //void setSingleStep(final boolean singleStep);
-
-  /**
-   * If trace is activated, starting the CPU will cause it to
-   * run further actions like logging the current processor
-   * registers after each instruction.
-   *
-   * @TODO This method should be eliminated.  Instead, the monitor
-   * should install a callback that is called by the CPU control after
-   * each instruction execution, and within this callback, the monitor
-   * itself should decide by itself if to print trace information, and
-   * do it by itself if appropriate.
-   *
-   * @param trace True, if trace is to be activated.
-   * False, if trace is to be deactivated.
-   */
-  //void setTrace(final boolean trace);
-
-  /**
    * Set a break point, causing the CPU to stop running if the
    * program counter advances to exactly the specified address.
    * Setting to null will clear the break point.
@@ -166,8 +142,10 @@ public interface CPUControlAPI extends WallClockProvider
    * is to be deactivated.  If trace is activated, starting the CPU
    * will cause it to run further actions like logging the current
    * processor registers after each instruction.
+   * @return <code>Error</code>, if the CPU is already stopped.
    */
-  void start(final boolean singleStep, final boolean trace);
+  Error start(final boolean singleStep, final boolean trace,
+              final boolean doTry);
 
   /**
    * Waits until the CPU has been stopped.
@@ -179,9 +157,9 @@ public interface CPUControlAPI extends WallClockProvider
    * Non-blocking, asynchronous request for stopping the CPU.  Returns
    * immediately, even when the CPU has not yet stopped.
    * Execution of this method is guarded by the locking mechanism.
-   * @return <code>true</code>, if the CPU is already stopped.
+   * @return <code>Error</code>, if the CPU is already stopped.
    */
-  boolean stop();
+  Error stop(final boolean doTry);
 
   /**
    * Run the given Runnable as critical section, guarded

@@ -109,10 +109,17 @@ public class CPUStatistics extends Box
   }
 
   @Override
-  public void logStatistics(final double avgSpeed,
-                            final boolean busyWait,
-                            final double jitter,
-                            final double avgLoad)
+  public void logStatistics()
+  {
+    // this view logs statistics immediately upon updating => nothing
+    // to do here
+  }
+
+  @Override
+  public void updateStatistics(final double avgSpeed,
+                               final boolean busyWait,
+                               final double jitter,
+                               final double avgLoad)
   {
     if (statisticsEnabled) {
       lbAvgSpeedValue.setText("" + avgSpeed);

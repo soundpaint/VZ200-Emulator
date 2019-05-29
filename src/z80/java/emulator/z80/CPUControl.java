@@ -68,13 +68,20 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
     }
   }
 
-  private void logStatistics(final double avgSpeed,
-                             final boolean busyWait,
-                             final double jitter,
-                             final double avgLoad)
+  private void logStatistics()
   {
     for (final LogListener listener : logListeners) {
-      listener.logStatistics(avgSpeed, busyWait, jitter, avgLoad);
+      listener.logStatistics();
+    }
+  }
+
+  private void updateStatistics(final double avgSpeed,
+                                final boolean busyWait,
+                                final double jitter,
+                                final double avgLoad)
+  {
+    for (final LogListener listener : logListeners) {
+      listener.updateStatistics(avgSpeed, busyWait, jitter, avgLoad);
     }
   }
 
@@ -93,10 +100,10 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
           // ignore
         }
         if (statisticsEnabled) {
-          logStatistics(cpu.getAvgSpeed(),
-                        busyWait,
-                        cpu.getAvgJitter(),
-                        cpu.getAvgThreadLoad());
+          updateStatistics(cpu.getAvgSpeed(),
+                           busyWait,
+                           cpu.getAvgJitter(),
+                           cpu.getAvgThreadLoad());
         }
       }
     }
@@ -259,7 +266,7 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
           }
           if (singleStep ||
               ((breakPoint != null) && (regPC.getValue() == breakPoint))) {
-            requestStop();
+            requestStop(true);
           }
           busyTime += System.nanoTime() - systemTime;
         } else {
@@ -288,7 +295,7 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
       // the automaton status may be either "running" or "stopping" =>
       // ensure to have it set to "stopping"
       if (automaton.getState() == CPUControlAutomaton.State.RUNNING) {
-        requestStop();
+        requestStop(true);
       }
       acknowledgeStopCompleted();
       throw new InternalError(t.toString());
@@ -298,7 +305,8 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
     final double avgSpeed =
       1000.0 * (stopCycle - startCycle) / (systemStopTime - systemStartTime);
     final double avgLoad = busyTime / ((float)idleTime + busyTime);
-    logStatistics(avgSpeed, busyWait, jitter, avgLoad);
+    updateStatistics(avgSpeed, busyWait, jitter, avgLoad);
+    logStatistics();
     acknowledgeStopCompleted();
     cpuStopped();
   }
@@ -322,16 +330,26 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
     }
   }
 
+  private static class ErrorContainer
+  {
+    private Error error;
+  }
+
   private void acknowledgeStartCompleted()
   {
     printMessage("acknowledgeStartCompleted()");
-    automaton.setState(CPUControlAutomaton.State.RUNNING);
+    automaton.setState(CPUControlAutomaton.State.RUNNING, false);
   }
 
-  private void requestStart()
+  private Error requestStart(final boolean singleStep, final boolean trace,
+                             final boolean doTry)
   {
     printMessage("requestStart()");
-    automaton.setState(CPUControlAutomaton.State.STARTING);
+    return automaton.setState(CPUControlAutomaton.State.STARTING, doTry,
+                              () -> {
+                                setSingleStep(singleStep);
+                                setTrace(trace);
+                              });
   }
 
   private void awaitStartRequest()
@@ -353,25 +371,25 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
     printMessage("awaitStart() done");
   }
 
-  public void start(final boolean singleStep, final boolean trace)
+  public Error start(final boolean singleStep, final boolean trace,
+                     final boolean doTry)
   {
+    final ErrorContainer errorContainer = new ErrorContainer();
     printMessage("start()...");
     automaton.runSynchronized(() -> {
-        setSingleStep(singleStep);
-        setTrace(trace);
-        if (automaton.getState() != CPUControlAutomaton.State.STOPPED) {
-          throw new InternalError("trying to start CPU while it is not stopped");
+        errorContainer.error = requestStart(singleStep, trace, doTry);
+        if (errorContainer.error == null) {
+          awaitStart();
         }
-        requestStart();
-        awaitStart();
       });
     printMessage("start() done");
+    return errorContainer.error;
   }
 
-  private void requestStop()
+  private Error requestStop(final boolean doTry)
   {
     printMessage("requestStop()");
-    automaton.setState(CPUControlAutomaton.State.STOPPING);
+    return automaton.setState(CPUControlAutomaton.State.STOPPING, doTry);
   }
 
   private void awaitStopRequest()
@@ -388,29 +406,24 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
     printMessage("awaitStop() done");
   }
 
-  public boolean stop()
+  public Error stop(final boolean doTry)
   {
+    final ErrorContainer errorContainer = new ErrorContainer();
     printMessage("stop()...");
     automaton.runSynchronized(() -> {
-        /*
-        if (automaton.getState() == CPUControlAutomaton.State.STOPPED) {
-          return true;
+        errorContainer.error = requestStop(doTry);
+        if (errorContainer.error == null) {
+          awaitStop();
         }
-        if (automaton.getState() != CPUControlAutomaton.State.RUNNING) {
-          throw new InternalError("trying to stop CPU while it is not running");
-        }
-        */
-        requestStop();
-        awaitStop();
       });
     printMessage("stop() done");
-    return false;
+    return errorContainer.error;
   }
 
   private void acknowledgeStopCompleted()
   {
     printMessage("acknowledgeStopCompleted()");
-    automaton.setState(CPUControlAutomaton.State.STOPPED);
+    automaton.setState(CPUControlAutomaton.State.STOPPED, false);
   }
 
   public void requestIRQ()

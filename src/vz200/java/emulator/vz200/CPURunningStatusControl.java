@@ -89,12 +89,18 @@ public class CPURunningStatusControl extends Box
 
   private void start()
   {
-    cpuControl.start(false, false);
+    final Error error = cpuControl.start(false, false, true);
+    if (error != null) {
+      JOptionPane.showMessageDialog(this, error.getMessage());
+    }
   }
 
   private void stop()
   {
-    cpuControl.stop();
+    final Error error = cpuControl.stop(true);
+    if (error != null) {
+      JOptionPane.showMessageDialog(this, error.getMessage());
+    }
   }
 }
 
