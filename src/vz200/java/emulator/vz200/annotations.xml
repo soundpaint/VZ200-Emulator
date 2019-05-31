@@ -1488,6 +1488,7 @@
     <comment>handler for token 0x9b (hidden)</comment>
   </at>
   <at address="0x1e4a">
+    <label>err_fct_code</label>
     <comment>generate error "FUNCTION CODE ERROR"</comment>
   </at>
   <at address="0x1e7a">
@@ -1684,6 +1685,10 @@
     <data-bytes length="0x01">","</data-bytes>
     <comment>comma separator</comment>
   </at>
+  <at address="0x2b1c">
+    <label>parse_byte</label>
+    <comment>parse a value in the range 0..255</comment>
+  </at>
   <at address="0x2b29">
     <comment>handler for token 0xb5 ("LLIST")</comment>
   </at>
@@ -1819,6 +1824,7 @@
     <comment>yes => next note</comment>
   </at>
   <at address="0x2c58">
+    <label>snd_handle_rest</label>
     <comment>execute pause ("SOUND 0,x")</comment>
   </at>
   <at address="0x2c5c">
@@ -2055,7 +2061,7 @@
     <comment>BC := HL</comment>
   </at>
   <at address="0x3472">
-    <comment>loop_phase1</comment>
+    <label>loop_phase1</label>
   </at>
   <at address="0x3473">
     <comment>BC == 0?</comment>
@@ -2076,7 +2082,7 @@
     <comment>BC := HL</comment>
   </at>
   <at address="0x347d">
-    <comment>loop_phase2</comment>
+    <label>loop_phase2</label>
   </at>
   <at address="0x347e">
     <comment>BC == 0?</comment>
