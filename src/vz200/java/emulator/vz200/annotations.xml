@@ -132,8 +132,170 @@
       inactivated BASIC command with token 0xa6
     </comment>
   </at>
+  <at address="0x02cf">
+    <label>pitch_table</label>
+    <comment>wave period (0x0272) of pitch #1 (A2)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02d1">
+    <comment>wave period (0x024f) of pitch #2 (A#2)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02d3">
+    <comment>wave period (0x022e) of pitch #3 (B2)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02d5">
+    <comment>wave period (0x020e) of pitch #4 (C3)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02d7">
+    <comment>wave period (0x01f1) of pitch #5 (C#3)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02d9">
+    <comment>wave period (0x01d5) of pitch #6 (D3)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02db">
+    <comment>wave period (0x01b7) of pitch #7 (D#3)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02dd">
+    <comment>wave period (0x019e) of pitch #8 (E3)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02df">
+    <comment>wave period (0x0186) of pitch #9 (F3)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02e1">
+    <comment>wave period (0x0170) of pitch #10 (F#3)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02e3">
+    <comment>wave period (0x015b) of pitch #11 (G3)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02e5">
+    <comment>wave period (0x0148) of pitch #12 (G#3)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02e7">
+    <comment>wave period (0x0135) of pitch #13 (A3)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02e9">
+    <comment>wave period (0x0123) of pitch #14 (A#3)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02eb">
+    <comment>wave period (0x0113) of pitch #15 (B3)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02ed">
+    <comment>wave period (0x0103) of pitch #16 (C4)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02ef">
+    <comment>wave period (0x00f4) of pitch #17 (C#4)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02f1">
+    <comment>wave period (0x00e6) of pitch #18 (D4)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02f3">
+    <comment>wave period (0x00d9) of pitch #19 (D#4)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02f5">
+    <comment>wave period (0x00cd) of pitch #20 (E4)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02f7">
+    <comment>wave period (0x00c1) of pitch #21 (F4)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02f9">
+    <comment>wave period (0x00b6) of pitch #22 (F#4)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02fb">
+    <comment>wave period (0x00ba) of pitch #23 (G4)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02fd">
+    <comment>wave period (0x00a1) of pitch #24 (G#4)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x02ff">
+    <comment>wave period (0x0098) of pitch #25 (A4)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x0301">
+    <comment>wave period (0x008f) of pitch #26 (A#4)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x0303">
+    <comment>wave period (0x0087) of pitch #27 (B4)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x0305">
+    <comment>wave period (0x007f) of pitch #28 (C5)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x0307">
+    <comment>wave period (0x0078) of pitch #29 (C#5)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x0309">
+    <comment>wave period (0x0070) of pitch #30 (D5)</comment>
+    <data-bytes length="0x02" />
+  </at>
+  <at address="0x030b">
+    <comment>wave period (0x006a) of pitch #31 (D#5)</comment>
+    <data-bytes length="0x02" />
+  </at>
   <at address="0x030d">
     <comment>screen editor: update cursor</comment>
+  </at>
+  <at address="0x0321">
+    <label>duration_table</label>
+    <comment>duration code 1: 32th note (#1 time unit)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0322">
+    <comment>duration code 2: 16th note (#2 time units)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0323">
+    <comment>duration code 3: dotted 16th note (#3 time units)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0324">
+    <comment>duration code 4: 8th note (#4 time units)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0325">
+    <comment>duration code 5: dotted 8th note (#6 time units)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0326">
+    <comment>duration code 6: quarter note (#8 time units)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0327">
+    <comment>duration code 7: dotted quarter note (#12 time units)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0328">
+    <comment>duration code 8: half note (#16 time units)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0329">
+    <comment>duration code 9: dotted half note (#24 time units)</comment>
+    <data-bytes length="0x01" />
   </at>
   <at address="0x032a">
     <comment>
@@ -146,6 +308,131 @@
       entry for cout routine for screen device,<br />
       character in reg. A
     </comment>
+  </at>
+  <at address="0x0361">
+    <label>waves_per_time_tbl</label>
+    <comment>0x0a waves per pitch #1 (A2)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0362">
+    <comment>0x0b waves per pitch #2 (A#2)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0363">
+    <comment>0x0c waves per pitch #3 (B2)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0364">
+    <comment>0x0c waves per pitch #4 (C3)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0365">
+    <comment>0x0d waves per pitch #5 (C#3)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0366">
+    <comment>0x0e waves per pitch #6 (D3)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0367">
+    <comment>0x0f waves per pitch #7 (D#3)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0368">
+    <comment>0x0f waves per pitch #8 (E3)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0369">
+    <comment>0x10 waves per pitch #9 (F3)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x036a">
+    <comment>0x11 waves per pitch #10 (F#3)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x036b">
+    <comment>0x12 waves per pitch #11 (G3)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x036c">
+    <comment>0x13 waves per pitch #12 (G#3)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x036d">
+    <comment>0x15 waves per pitch #13 (A3)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x036e">
+    <comment>0x16 waves per pitch #14 (A#3)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x036f">
+    <comment>0x17 waves per pitch #15 (B3)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0370">
+    <comment>0x19 waves per pitch #16 (C4)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0371">
+    <comment>0x1a waves per pitch #17 (C#4)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0372">
+    <comment>0x1c waves per pitch #18 (D4)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0373">
+    <comment>0x1d waves per pitch #19 (D#4)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0374">
+    <comment>0x1f waves per pitch #20 (E4)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0375">
+    <comment>0x21 waves per pitch #21 (F4)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0376">
+    <comment>0x23 waves per pitch #22 (F#4)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0377">
+    <comment>0x25 waves per pitch #23 (G4)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0378">
+    <comment>0x27 waves per pitch #24 (G#4)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x0379">
+    <comment>0x29 waves per pitch #25 (A4)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x037a">
+    <comment>0x2c waves per pitch #26 (A#4)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x037b">
+    <comment>0x2e waves per pitch #27 (B4)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x037c">
+    <comment>0x31 waves per pitch #28 (C5)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x037d">
+    <comment>0x34 waves per pitch #29 (C#5)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x037e">
+    <comment>0x35 waves per pitch #30 (D5)</comment>
+    <data-bytes length="0x01" />
+  </at>
+  <at address="0x037f">
+    <comment>0x3a waves per pitch #31 (D#5)</comment>
+    <data-bytes length="0x01" />
   </at>
   <at address="0x0380">
     <data-bytes length="0x04">"OK\r\0"</data-bytes>
@@ -320,6 +607,7 @@
     </comment>
   </at>
   <at address="0x1650">
+    <label>token_tbl</label>
     <header>
       ---- START BASIC TOKENS TABLE ----<br />
       (first character of each token marked by bit 8=1)
@@ -1151,7 +1439,7 @@
     <label>rst10_impl</label>
     <header>
       ---- START implementation of RST 10H ----<br />
-      Load &amp; check next character in string<br />
+      Look ahead next character in parse input<br />
       (BASIC parser)<br />
       * if char is higher than the digit "9",<br />
       &nbsp; then return with C=0,<br />
@@ -1406,11 +1694,162 @@
     <comment>handler for token 0xb6 (hidden)</comment>
   </at>
   <at address="0x2bf5">
-    <comment>handler for token 0x9e ("SOUND")</comment>
+    <label>sound_handler</label>
+    <comment>parse sound pitch</comment>
+  </at>
+  <at address="0x2bf8">
+    <comment>pitch &lt; 32?</comment>
+  </at>
+  <at address="0x2bfa">
+    <comment>no => exit with function code error</comment>
+  </at>
+  <at address="0x2bfd">
+    <comment>save pitch</comment>
+  </at>
+  <at address="0x2c00">
+    <comment>parser: consume ","</comment>
   </at>
   <at address="0x2c01">
     <data-bytes length="0x01">","</data-bytes>
     <comment>comma separator</comment>
+  </at>
+  <at address="0x2c02">
+    <comment>parse sound duration</comment>
+  </at>
+  <at address="0x2c05">
+    <comment>duration == 0?</comment>
+  </at>
+  <at address="0x2c06">
+    <comment>yes => exit with function code error</comment>
+  </at>
+  <at address="0x2c09">
+    <comment>duration &lt; 10?</comment>
+  </at>
+  <at address="0x2c0b">
+    <comment>no => exit with function code error</comment>
+  </at>
+  <at address="0x2c0e">
+    <comment>for continuous sound, disable IRQs</comment>
+  </at>
+  <at address="0x2c10">
+    <comment>index to duration[0..9]</comment>
+  </at>
+  <at address="0x2c11">
+    <comment>save index</comment>
+  </at>
+  <at address="0x2c12">
+    <comment>load sound pitch</comment>
+  </at>
+  <at address="0x2c15">
+    <comment>pitch == 0?</comment>
+  </at>
+  <at address="0x2c16">
+    <comment>yes => pause</comment>
+  </at>
+  <at address="0x2c18">
+    <comment>pitch to index (0..30)</comment>
+  </at>
+  <at address="0x2c19">
+    <comment>*2 for index into table of shorts</comment>
+  </at>
+  <at address="0x2c1b">
+    <comment>index into BC</comment>
+  </at>
+  <at address="0x2c1f">
+    <comment>base address of pitch table</comment>
+  </at>
+  <at address="0x2c22">
+    <comment>add index for entry in that table</comment>
+  </at>
+  <at address="0x2c23">
+    <comment>load wave period into DE</comment>
+  </at>
+  <at address="0x2c26">
+    <comment>save wave period</comment>
+  </at>
+  <at address="0x2c27">
+    <comment>base address of waves per time table</comment>
+  </at>
+  <at address="0x2c2c">
+    <comment>add index for entry in that table</comment>
+  </at>
+  <at address="0x2c2d">
+    <comment>load waves per time into DE</comment>
+  </at>
+  <at address="0x2c2a">
+    <comment>*1 for index into table of waves per time</comment>
+  </at>
+  <at address="0x2c30">
+    <comment>base address of duration table</comment>
+  </at>
+  <at address="0x2c33">
+    <comment>add index for entry in that table</comment>
+  </at>
+  <at address="0x2c35">
+    <comment>load time units into B</comment>
+  </at>
+  <at address="0x2c36">
+    <comment>HL := DE</comment>
+  </at>
+  <at address="0x2c38">
+    <comment>HL += B * DE</comment>
+  </at>
+  <at address="0x2c3b">
+    <comment>BC := HL</comment>
+  </at>
+  <at address="0x2c3e">
+    <label>next_wave_period</label>
+  </at>
+  <at address="0x2c41">
+    <comment>load current I/O mask</comment>
+  </at>
+  <at address="0x2c4d">
+    <label>finish_note</label>
+  </at>
+  <at address="0x2c4e">
+    <comment>end of current sound: enable IRQs again</comment>
+  </at>
+  <at address="0x2c4f">
+    <comment>get next input char, if any</comment>
+  </at>
+  <at address="0x2c51">
+    <comment>found ";"?</comment>
+  </at>
+  <at address="0x2c53">
+    <comment>yes => next note</comment>
+  </at>
+  <at address="0x2c58">
+    <comment>execute pause ("SOUND 0,x")</comment>
+  </at>
+  <at address="0x2c5c">
+    <comment>base address of duration table</comment>
+  </at>
+  <at address="0x2c5f">
+    <comment>add index for entry in that table</comment>
+  </at>
+  <at address="0x2c60">
+    <comment>load time units into B</comment>
+  </at>
+  <at address="0x2c61">
+    <comment>duration scale: #loops per time unit</comment>
+  </at>
+  <at address="0x2c64">
+    <comment>DE := HL</comment>
+  </at>
+  <at address="0x2c66">
+    <comment>HL += B * DE</comment>
+  </at>
+  <at address="0x2c67">
+    <comment>loop #(duration scale * time units) times</comment>
+  </at>
+  <at address="0x2c69">
+    <label>next_rest_period</label>
+  </at>
+  <at address="0x2c6d">
+    <comment>HL == 0?</comment>
+  </at>
+  <at address="0x2c71">
+    <comment>done with rest</comment>
   </at>
   <at address="0x2cb1">
     <comment>handler for token 0xb1 ("POKE")</comment>
@@ -1490,6 +1929,7 @@
     </comment>
   </at>
   <at address="0x30c0">
+    <label>cout_buf_write</label>
     <header>
       ---- START critical section ----<br />
       put char into screen print buffer<br />
@@ -1500,6 +1940,7 @@
     <footer>---- END critical section ----</footer>
   </at>
   <at address="0x30e8">
+    <label>irq_scr_buf_cpy</label>
     <header>
       ---- START IRQ Handler Screen Buffer Copy ----<br />
       copy screen buffer chars to video RAM and clear the buffer
@@ -1597,10 +2038,60 @@
     <label>sound</label>
     <comment>generate sound</comment>
   </at>
+  <at address="0x3469">
+    <label>wave_period</label>
+    <comment>save BC on enter</comment>
+  </at>
+  <at address="0x346a">
+    <comment>I/O mask value with</comment>
+  </at>
+  <at address="0x346b">
+    <comment>speaker excited</comment>
+  </at>
+  <at address="0x346d">
+    <comment>update speaker elongation</comment>
+  </at>
+  <at address="0x3470">
+    <comment>BC := HL</comment>
+  </at>
+  <at address="0x3472">
+    <comment>loop_phase1</comment>
+  </at>
+  <at address="0x3473">
+    <comment>BC == 0?</comment>
+  </at>
+  <at address="0x3475">
+    <comment>no => continue loop</comment>
+  </at>
+  <at address="0x3477">
+    <comment>
+      I/O mask value with<br />
+      speaker in idle state again
+    </comment>
+  </at>
+  <at address="0x3478">
+    <comment>update speaker elongation</comment>
+  </at>
+  <at address="0x347b">
+    <comment>BC := HL</comment>
+  </at>
+  <at address="0x347d">
+    <comment>loop_phase2</comment>
+  </at>
+  <at address="0x347e">
+    <comment>BC == 0?</comment>
+  </at>
+  <at address="0x3480">
+    <comment>no => continue loop</comment>
+  </at>
+  <at address="0x3482">
+    <comment>restore BC on exit</comment>
+  </at>
   <at address="0x34a9">
     <comment>handler for token 0xba ("CSAVE")</comment>
   </at>
   <at address="0x3511">
+    <label>cass_cout</label>
     <header>
       ---- START character out (1 byte) to cassette port ----<br />
       * start with short cycle (via 3542h)<br />
@@ -1616,6 +2107,7 @@
     <footer>---- END character out (1 byte) to cassette port ----</footer>
   </at>
   <at address="0x352b">
+    <label>cass_long_cycle</label>
     <header>
       ---- START cassette out: long cycle ----<br />
       Cassette out: Long cycle<br />
@@ -1631,6 +2123,7 @@
     <footer>---- END cassette out: long cycle ----</footer>
   </at>
   <at address="0x3542">
+    <label>cass_short_cycle</label>
     <header>
       ---- START cassette out: short cycle ----<br />
       Cassette out: Short cyle<br />
@@ -1644,6 +2137,7 @@
     <footer>---- END cassette out: short cycle ----</footer>
   </at>
   <at address="0x3558">
+    <label>cass_wrt_hdr</label>
     <header>---- START cassette out: write file header ----</header>
     <comment>parse file name</comment>
   </at>
@@ -1703,6 +2197,7 @@
     <footer>---- END cassette out: write file header ----</footer>
   </at>
   <at address="0x35b1">
+    <label>cass_prepare_scr</label>
     <header>
       ---- START prepare screen for CLOAD / CRUN / VERIFY ----<br />
     </header>
@@ -1906,6 +2401,7 @@
     <comment>timeout => test succeeded, add bit "1"</comment>
   </at>
   <at address="0x37f4">
+    <label>cass_prt_status</label>
     <header>---- START print status message in bottom line ----</header>
   </at>
   <at address="0x37f9">
@@ -1943,6 +2439,7 @@
     <comment>comma separator</comment>
   </at>
   <at address="0x3903">
+    <label>graf_set</label>
     <header>
       ---- START SET(x, y) ----<br />
       function for setting a pixel on<br />
@@ -1992,6 +2489,7 @@
     <comment>CR+LF an Drucker senden</comment>
   </at>
   <at address="0x3ae8">
+    <label>kbd_scan_brk</label>
     <header>
       ---- START scan for "BREAK" key ----<br />
       if pressed, set flag C=1,<br />
@@ -2002,6 +2500,7 @@
     <footer>---- END scan for "BREAK" key ----</footer>
   </at>
   <at address="0x3af8">
+    <label>kbd_chk_brk</label>
     <header>
       ---- START check for "BREAK" ----<br />
       abort CLOAD / CRUN / VERIFY, if<br />
@@ -2025,6 +2524,7 @@
     <comment>call soft reset</comment>
   </at>
   <at address="0x3b54">
+    <label>cass_cout</label>
     <header>---- START cout for cassette ----</header>
   </at>
   <at address="0x3b63">
@@ -2053,6 +2553,7 @@
     <comment>comma separator</comment>
   </at>
   <at address="0x3cd4">
+    <label>prt_err</label>
     <header>
       ---- START print error message ----<br />
       error code in register E
@@ -2096,6 +2597,7 @@
     </footer>
   </at>
   <at address="0x3cec">
+    <label>err_msg_tbl</label>
     <header>
       ---- START ERROR MESSAGES TABLE ----<br />
       (first character of each message marked by bit 8=1)<br />
@@ -2247,6 +2749,7 @@
     <footer>---- END memory mapped I/O ----</footer>
   </at>
   <at address="0x7000">
+    <label>io_vid_all</label>
     <header>---- START video RAM (text + graphics) ----</header>
     <data-bytes length="0x200" />
   </at>
@@ -2254,6 +2757,7 @@
     <footer>---- END video RAM (text) ----</footer>
   </at>
   <at address="0x7200">
+    <label>io_vid_hires</label>
     <header>---- START video RAM (graphics only) ----</header>
     <data-bytes length="0x600" />
   </at>
@@ -2541,6 +3045,7 @@
     <data-bytes length="0x5" />
   </at>
   <at address="0x78d3">
+    <label>tmp_byte</label>
     <data-bytes length="0x1" />
     <comment>
       temporary variable space for e.g.<br />
@@ -2548,6 +3053,7 @@
     </comment>
   </at>
   <at address="0x78d4">
+    <label>tmp_ptr</label>
     <data-bytes length="0x2" />
     <comment>
       temporary pointer to e.g.<br />
@@ -2951,7 +3457,6 @@
   </at>
   <at address="0x7ae9">
     <label>prg_start</label>
-    <data-bytes length="0x517" />
     <header>
       start of memory area for BASIC program text and variables
     </header>
