@@ -414,7 +414,7 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
     printMessage("awaitStopRequest() done");
   }
 
-  public void awaitStop()
+  private void awaitStop()
   {
     printMessage("awaitStop()...");
     automaton.awaitState(CPUControlAutomaton.State.STOPPED);
@@ -470,7 +470,7 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
     }
   }
 
-  public void runSynchronized(final Runnable criticalSection)
+  private void runSynchronized(final Runnable criticalSection)
   {
     automaton.runSynchronized(criticalSection);
   }

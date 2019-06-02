@@ -148,26 +148,12 @@ public interface CPUControlAPI extends WallClockProvider
               final boolean doTry);
 
   /**
-   * Waits until the CPU has been stopped.
-   * Execution of this method is guarded by the locking mechanism.
-   */
-  void awaitStop();
-
-  /**
    * Non-blocking, asynchronous request for stopping the CPU.  Returns
    * immediately, even when the CPU has not yet stopped.
    * Execution of this method is guarded by the locking mechanism.
    * @return <code>Error</code>, if the CPU is already stopped.
    */
   Error stop(final boolean doTry);
-
-  /**
-   * Run the given Runnable as critical section, guarded
-   * by the CPUControlAutomaton's internal lock.
-   * @param criticalSection The code to run as critical section
-   * guarded by the CPUControlAutomaton's internal lock.
-   */
-  void runSynchronized(final Runnable criticalSection);
 }
 
 /*
