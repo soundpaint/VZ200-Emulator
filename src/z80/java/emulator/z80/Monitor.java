@@ -975,22 +975,26 @@ public class Monitor implements CPUControlAPI.LogListener,
   {
     final boolean singleStep = command == 'i';
     final boolean trace = command == 't';
-    logDebug("startCPU: start()");
+    logDebug("startCPU: start()...");
     final Error error = cpuControl.start(singleStep, trace, true);
-    if (error != null) {
+    if (error == null) {
+      logDebug("startCPU: start() done");
+    } else {
+      logDebug("startCPU: start() failed");
       logError(error.getMessage());
     }
-    logDebug("startCPU: start() done");
   }
 
   private void haltCPU()
   {
-    logDebug("haltCPU: stop()");
+    logDebug("haltCPU: stop()...");
     final Error error = cpuControl.stop(true);
-    if (error != null) {
+    if (error == null) {
+      logDebug("haltCPU: stop() done");
+    } else {
+      logDebug("haltCPU: stop() failed");
       logError(error.getMessage());
     }
-    logDebug("haltCPU: stop() done");
   }
 
   private void executeCommand() throws ParseError {

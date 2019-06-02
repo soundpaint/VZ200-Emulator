@@ -337,19 +337,27 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
 
   private void acknowledgeStartCompleted()
   {
-    printMessage("acknowledgeStartCompleted()");
+    printMessage("acknowledgeStartCompleted()...");
     automaton.setState(CPUControlAutomaton.State.RUNNING, false);
+    printMessage("acknowledgeStartCompleted() done");
   }
 
   private Error requestStart(final boolean singleStep, final boolean trace,
                              final boolean doTry)
   {
-    printMessage("requestStart()");
-    return automaton.setState(CPUControlAutomaton.State.STARTING, doTry,
-                              () -> {
-                                setSingleStep(singleStep);
-                                setTrace(trace);
-                              });
+    printMessage("requestStart()...");
+    final Error error =
+      automaton.setState(CPUControlAutomaton.State.STARTING, doTry,
+                         () -> {
+                           setSingleStep(singleStep);
+                           setTrace(trace);
+                         });
+    if (error == null) {
+      printMessage("requestStart() done");
+    } else {
+      printMessage("requestStart() failed");
+    }
+    return error;
   }
 
   private void awaitStartRequest()
@@ -388,8 +396,15 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
 
   private Error requestStop(final boolean doTry)
   {
-    printMessage("requestStop()");
-    return automaton.setState(CPUControlAutomaton.State.STOPPING, doTry);
+    printMessage("requestStop()...");
+    final Error error =
+      automaton.setState(CPUControlAutomaton.State.STOPPING, doTry);
+    if (error == null) {
+      printMessage("requestStop() done");
+    } else {
+      printMessage("requestStop() failed");
+    }
+    return error;
   }
 
   private void awaitStopRequest()
@@ -422,8 +437,9 @@ public class CPUControl implements CPUControlAPI, PreferencesChangeListener
 
   private void acknowledgeStopCompleted()
   {
-    printMessage("acknowledgeStopCompleted()");
+    printMessage("acknowledgeStopCompleted()...");
     automaton.setState(CPUControlAutomaton.State.STOPPED, false);
+    printMessage("acknowledgeStopCompleted() done");
   }
 
   public void requestIRQ()
