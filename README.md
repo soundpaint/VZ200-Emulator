@@ -252,3 +252,19 @@ thread safe; only then, I will re-integrate the
 
 If you do not need support for `.vz` files, you probably want to stick
 to the more stable `master` branch.
+
+Talk @ GPN19
+------------
+
+At Gulaschprogrammiernacht '19 (GPN19) in Karlsruhe, Germany, I held a
+talk on my VZ200/Z80 emulator (in German language).  You may want to
+see the
+
+<a href="https://media.ccc.de/v/gpn19-114-retrocomputing-emulator-vz200-z80">recorded stream</a>
+
+of my talk (with a short introduction by Prof. Sebastian Ritterbusch)
+or have a look into my set of
+
+<a href="src/doc/talk_gpn19_slides.odp">slides</a>
+
+for this talk in the documentation section.
