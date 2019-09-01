@@ -16,12 +16,25 @@ is already running:
 
 <figure>
   <a href="https://youtu.be/S65sOWSTnGA">
-    <img src="src/doc/screenshots/video-thumbnail.png">
+    <img src="src/doc/screenshots/video-demo-thumbnail.png">
   </a>
   <figcaption>Preliminary YouTobe Demo Video</caption>
 </figure>
 
 <!--[Preliminary YouTobe Demo Video](https://youtu.be/S65sOWSTnGA)-->
+
+For more documentation, see also my [talk at GPN 19][1] (in German
+language) as well as the corresponding slides as
+[OpenDocument presentation (.odp) file][2] (in English language).
+
+<figure>
+  <a href="https://media.ccc.de/v/gpn19-114-retrocomputing-emulator-vz200-z80">
+    <img src="src/doc/screenshots/video-gpn19-thumbnail.png">
+  </a>
+  <figcaption>Talk @ GPN19, ZKM Karlsruhe</caption>
+</figure>
+
+<!--[Talk @ GPN19, ZKM Karlsruhe](https://media.ccc.de/v/gpn19-114-retrocomputing-emulator-vz200-z80)-->
 
 Installing & Running
 --------------------
@@ -252,3 +265,6 @@ thread safe; only then, I will re-integrate the
 
 If you do not need support for `.vz` files, you probably want to stick
 to the more stable `master` branch.
+
+[1]: https://media.ccc.de/v/gpn19-114-retrocomputing-emulator-vz200-z80
+[2]: ./doc/talk-gpn19/vz200_emulator_gpn19.odp
