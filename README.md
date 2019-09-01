@@ -16,12 +16,26 @@ is already running:
 
 <figure>
   <a href="https://youtu.be/S65sOWSTnGA">
-    <img src="src/doc/screenshots/video-thumbnail.png">
+    <img src="doc/screenshots/video-demo-thumbnail.png">
   </a>
   <figcaption>Preliminary YouTobe Demo Video</caption>
 </figure>
 
-<!--[Preliminary YouTobe Demo Video](https://youtu.be/S65sOWSTnGA)-->
+Talk @ GPN19
+------------
+
+For more documentation, see also my [talk at GPN 19][1] at
+Gulaschprogrammiernacht '19 (GPN19) in Karlsruhe, Germany (in German
+language) with a short introduction by Prof. Sebastian Ritterbusch, as
+well as the corresponding set of slides as [OpenDocument presentation
+(.odp) file][2] (in English language).
+
+<figure>
+  <a href="https://media.ccc.de/v/gpn19-114-retrocomputing-emulator-vz200-z80">
+    <img src="doc/screenshots/video-gpn19-thumbnail.png">
+  </a>
+  <figcaption>Talk @ GPN19, ZKM Karlsruhe</caption>
+</figure>
 
 Installing & Running
 --------------------
@@ -68,7 +82,7 @@ The screen window currently supports three different zoom factors (1,
 2 and 3).  There are future plans for a full screen display mode that
 will mimick a cathode ray tube's specific appearance.
 
-![Fig. 1: VZ200 Screen](src/doc/screenshots/screen.png)
+![Fig. 1: VZ200 Screen](doc/screenshots/screen.png)
 
 Fig. 1: VZ200 Screen
 
@@ -86,7 +100,7 @@ possible in a reasonable way.  Some special characters or functions,
 however, may be accessible solely by clicking on the VZ200's virtual
 keyboard.
 
-![Fig. 2: VZ200 Keyboard](src/doc/screenshots/keyboard.png)
+![Fig. 2: VZ200 Keyboard](doc/screenshots/keyboard.png)
 
 Fig. 2: VZ200 Keyboard
 
@@ -102,7 +116,7 @@ data bytes.  Also, starting and stopping the CPU can be controlled via
 the monitor, including useful tools for debugging like a trace and
 single instruction step mode, or running until reaching a breakpoint.
 
-![Fig. 3: Monitor Console](src/doc/screenshots/monitor.png)
+![Fig. 3: Monitor Console](doc/screenshots/monitor.png)
 
 Fig. 3: Monitor Console
 
@@ -160,7 +174,7 @@ cassette input, and some properties of the CPU emulation.
 
 #### Speaker Settings
 
-![Fig. 4: Speaker Settings](src/doc/screenshots/speaker-settings.png)
+![Fig. 4: Speaker Settings](doc/screenshots/speaker-settings.png)
 
 Fig. 4: Speaker Settings
 
@@ -172,14 +186,14 @@ sample values.  The emulator automatically converts the emulated
 plucked membrane's state into a continuous stream of samples
 appropriate for a modern sound card.
 
-![Fig. 5: Speaker Line Selection](src/doc/screenshots/speaker-line-selection.png)
+![Fig. 5: Speaker Line Selection](doc/screenshots/speaker-line-selection.png)
 
 Fig. 5: Speaker Line Selection
 
 
 #### Cassette I/O Settings
 
-![Fig. 6: Cassette I/O Settings](src/doc/screenshots/cassette-io-settings.png)
+![Fig. 6: Cassette I/O Settings](doc/screenshots/cassette-io-settings.png)
 
 Fig. 6: Cassette I/O Settings
 
@@ -193,7 +207,7 @@ an audio file.
 
 #### CPU Settings
 
-![Fig. 7: CPU Settings](src/doc/screenshots/cpu-settings.png)
+![Fig. 7: CPU Settings](doc/screenshots/cpu-settings.png)
 
 Fig. 7: CPU Settings
 
@@ -207,7 +221,7 @@ Usually, even the more lazy mode will still produce a micro-scale
 timing good enough for generating sound and graphics without flicker
 (as compared to the busy waiting model).
 
-![Fig. 8: CPU Settings](src/doc/screenshots/cpu-speed-selection.png)
+![Fig. 8: CPU Settings](doc/screenshots/cpu-speed-selection.png)
 
 Fig. 8: CPU Speed Selection
 
@@ -253,18 +267,8 @@ thread safe; only then, I will re-integrate the
 If you do not need support for `.vz` files, you probably want to stick
 to the more stable `master` branch.
 
-Talk @ GPN19
-------------
+References
+----------
 
-At Gulaschprogrammiernacht '19 (GPN19) in Karlsruhe, Germany, I held a
-talk on my VZ200/Z80 emulator (in German language).  You may want to
-see the
-
-<a href="https://media.ccc.de/v/gpn19-114-retrocomputing-emulator-vz200-z80">recorded stream</a>
-
-of my talk (with a short introduction by Prof. Sebastian Ritterbusch)
-or have a look into my set of
-
-<a href="src/doc/talk_gpn19_slides.odp">slides</a>
-
-for this talk in the documentation section.
+[1]: https://media.ccc.de/v/gpn19-114-retrocomputing-emulator-vz200-z80
+[2]: ./doc/talk-gpn19/vz200_emulator_gpn19.odp
