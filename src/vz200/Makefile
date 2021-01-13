@@ -13,7 +13,6 @@ PLAIN_ROM	=	$(subst $(SRC_DIR),.,$(ROM))
 TIMESTAMP	=	$(BUILD_DIR)/$(PKG)/TIMESTAMP
 JAR_FILE	=	$(JAR_DIR)/vz200.jar
 MANIFEST	=	$(PWD)/MANIFEST.MF
-SRC_TARBALL	=	$(TARBALL_DIR)/vz200-src.bz2
 Z80_JAR		=	$(JAR_DIR)/z80.jar
 
 all: $(JAR_FILE)
@@ -56,7 +55,14 @@ clean: objclean libclean
 distclean: clean bkpclean
 
 tarball: distclean $(TARBALL_DIR)
-	cd .. ; tar -cvf - vz200 | bzip2 --best > $(SRC_TARBALL)
+	@TGZ_DATE=`date +%Y-%m-%d_%H-%M-%S` ; \
+	PROJECT_NAME=VZ200-Emulator ; \
+	PROJECT_PATH=`basename \`pwd\`` ; \
+	TGZ_PREFIX=$$PROJECT_NAME\_$$TGZ_DATE ; cd .. ; \
+	tar cvf $(TARBALL_DIR)/$$TGZ_PREFIX.vz200-src.tar.bz2 \
+		--exclude=untracked_files \
+		--transform=s/$$PROJECT_PATH/$$TGZ_PREFIX/ \
+		--bzip2 $$PROJECT_PATH
 
 #  Local Variables:
 #    coding:utf-8

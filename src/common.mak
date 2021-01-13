@@ -9,7 +9,7 @@ BUILD_DIR = $(VZ200_EMU_HOME)/build
 # (run 'make jar' to generate)
 JAR_DIR = $(VZ200_EMU_HOME)/jar
 
-TARBALL_DIR = $(VZ200_EMU_HOME)/tarball
+TARBALL_DIR = $(VZ200_EMU_HOME)/../VZ200-Emulator_tarballs
 
 JAVAC = javac -Xlint:all
 JAR = jar
