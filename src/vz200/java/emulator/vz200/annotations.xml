@@ -39,23 +39,25 @@
     <label>rst38</label>
     <comment>RST 38H entry point</comment>
   </at>
+  <at address="0x0050">
+    <label>cursor_store_ch</label>
+    <comment>store character under cursor</comment>
+  </at>
   <at address="0x010e">
     <label>greettxt</label>
     <comment>Manufacturer's name</comment>
     <data-bytes length="0x1f">"BASIC V2.0"</data-bytes>
   </at>
   <at address="0x0135">
-    <label>fn_set</label>
+    <label>cmd_set</label>
     <comment>
-      entry vector handler for<br />
-      BASIC command "SET"
+      handler for token 0x83 ("SET")
     </comment>
   </at>
   <at address="0x0138">
-    <label>fn_reset</label>
+    <label>cmd_reset</label>
     <comment>
-      entry vector handler for<br />
-      BASIC command "RESET"
+      handler for token 0x82 ("RESET")
     </comment>
   </at>
   <at address="0x013c">
@@ -121,15 +123,25 @@
     </comment>
   </at>
   <at address="0x01c9">
+    <label>cmd_cls</label>
     <comment>
-      entry vector handler for<br />
-      BASIC command "CLS"
+      handler for token 0x84 ("CLS")
+    </comment>
+  </at>
+  <at address="0x01cb">
+    <comment>
+      cursor home
+    </comment>
+  </at>
+  <at address="0x01ce">
+    <comment>
+      clear screen
     </comment>
   </at>
   <at address="0x01d3">
+    <label>cmd_0xa6</label>
     <comment>
-      entry vector handler for<br />
-      inactivated BASIC command with token 0xa6
+      handler for token 0xa6 (hidden)
     </comment>
   </at>
   <at address="0x02cf">
@@ -258,6 +270,7 @@
     <data-bytes length="0x02" />
   </at>
   <at address="0x030d">
+    <label>cursor_update</label>
     <comment>screen editor: update cursor</comment>
   </at>
   <at address="0x0321">
@@ -304,6 +317,7 @@
     </comment>
   </at>
   <at address="0x033a">
+    <label>entry_cout</label>
     <comment>
       entry for cout routine for screen device,<br />
       character in reg. A
@@ -465,6 +479,13 @@
     <label>init_cbs</label>
     <comment>
       initialize callback vectors
+    </comment>
+  </at>
+  <at address="0x09c2">
+    <label>ld_bc_de</label>
+    <comment>
+      load const values for regs<br />
+      DE and BC from mem, starting at (HL)
     </comment>
   </at>
   <at address="0x09d3">
@@ -1399,6 +1420,7 @@
     <comment>"N" with bit 8=1</comment>
   </at>
   <at address="0x1b49">
+    <label>cmd_new</label>
     <comment>handler for token 0xbb ("NEW")</comment>
   </at>
   <at address="0x1c90">
@@ -1429,6 +1451,7 @@
     </header>
   </at>
   <at address="0x1ca1">
+    <label>cmd_for</label>
     <comment>handler for token 0x81 ("FOR")</comment>
   </at>
   <at address="0x1cc6">
@@ -1467,24 +1490,31 @@
     <footer>---- END implementation of RST 10H ----</footer>
   </at>
   <at address="0x1d91">
+    <label>cmd_restore</label>
     <comment>handler for token 0x90 ("RESTORE")</comment>
   </at>
   <at address="0x1da9">
+    <label>cmd_stop</label>
     <comment>handler for token 0x94 ("STOP")</comment>
   </at>
   <at address="0x1dae">
+    <label>cmd_end</label>
     <comment>handler for token 0x80 ("END")</comment>
   </at>
   <at address="0x1de4">
+    <label>cmd_cont</label>
     <comment>handler for token 0xb3 ("CONT")</comment>
   </at>
   <at address="0x1e03">
+    <label>cmd_0x99</label>
     <comment>handler for token 0x99 (hidden)</comment>
   </at>
   <at address="0x1e06">
+    <label>cmd_0x9a</label>
     <comment>handler for token 0x9a (hidden)</comment>
   </at>
   <at address="0x1e09">
+    <label>cmd_0x9b</label>
     <comment>handler for token 0x9b (hidden)</comment>
   </at>
   <at address="0x1e4a">
@@ -1492,30 +1522,38 @@
     <comment>generate error "FUNCTION CODE ERROR"</comment>
   </at>
   <at address="0x1e7a">
+    <label>cmd_clear</label>
     <comment>handler for token 0xb8 ("CLEAR")</comment>
   </at>
   <at address="0x1ea3">
+    <label>cmd_run</label>
     <comment>handler for token 0x8e ("RUN")</comment>
   </at>
   <at address="0x1eb1">
+    <label>cmd_gosub</label>
     <comment>handler for token 0x91 ("GOSUB")</comment>
   </at>
   <at address="0x1ec2">
+    <label>cmd_goto</label>
     <comment>handler for token 0x8d ("GOTO")</comment>
   </at>
   <at address="0x1ede">
+    <label>cmd_return</label>
     <comment>handler for token 0x92 ("RETURN")</comment>
   </at>
   <at address="0x1f05">
+    <label>cmd_data</label>
     <comment>handler for token 0x88 ("DATA")</comment>
   </at>
   <at address="0x1f07">
+    <label>cmd_rem_else</label>
     <comment>
       handler for token 0x93 ("REM")<br />
       handler for token 0x95 ("ELSE")
     </comment>
   </at>
   <at address="0x1f21">
+    <label>cmd_let</label>
     <comment>handler for token 0x8c ("LET")</comment>
   </at>
   <at address="0x1f25">
@@ -1523,6 +1561,7 @@
     <comment>"U" with bit 8=1</comment>
   </at>
   <at address="0x1f6c">
+    <label>cmd_0xa1</label>
     <comment>handler for token 0xa1 (hidden)</comment>
   </at>
   <at address="0x1f72">
@@ -1534,9 +1573,11 @@
     <comment>CR with bit 8=1</comment>
   </at>
   <at address="0x1faf">
+    <label>cmd_0x9f</label>
     <comment>handler for token 0x9f (hidden)</comment>
   </at>
   <at address="0x2008">
+    <label>cmd_0xb7</label>
     <comment>handler for token 0xb7 (hidden)</comment>
   </at>
   <at address="0x2017">
@@ -1544,19 +1585,40 @@
     <comment>comma separator</comment>
   </at>
   <at address="0x2039">
+    <label>cmd_if</label>
     <comment>handler for token 0x8f ("IF")</comment>
   </at>
   <at address="0x2067">
+    <label>cmd_lprint</label>
     <comment>handler for token 0xaf ("LPRINT")</comment>
   </at>
   <at address="0x206f">
+    <label>cmd_print</label>
     <comment>handler for token 0xb2 ("PRINT")</comment>
+  </at>
+  <at address="0x2072">
+    <comment>"PRINT @"?</comment>
   </at>
   <at address="0x2076">
     <comment>
       parse "x" in "PRINT @x,y"<br />
       (positional print)
     </comment>
+  </at>
+  <at address="0x2079">
+    <comment>got valid params?</comment>
+  </at>
+  <at address="0x207e">
+    <comment>compute screen address from x,y</comment>
+  </at>
+  <at address="0x207f">
+    <comment>screen base address</comment>
+  </at>
+  <at address="0x2083">
+    <comment>put cursor to target position</comment>
+  </at>
+  <at address="0x2086">
+    <comment>update cursor x position</comment>
   </at>
   <at address="0x208d">
     <comment>parse "," in "PRINT @x,y"</comment>
@@ -1565,6 +1627,9 @@
     <data-bytes length="0x01">","</data-bytes>
     <comment>comma separator</comment>
   </at>
+  <at address="0x208f">
+    <comment>"PRINT #"?</comment>
+  </at>
   <at address="0x2093">
     <comment>handle "PRINT #" (print to file)</comment>
   </at>
@@ -1572,7 +1637,8 @@
     <comment>redirect output onto cassette recorder</comment>
   </at>
   <at address="0x209b">
-    <comment>handle ordinary "PRINT"</comment>
+    <label>prt_any_trgt</label>
+    <comment>handle "PRINT" to cout_target</comment>
   </at>
   <at address="0x213e">
     <data-bytes length="0x01">")"</data-bytes>
@@ -1582,6 +1648,7 @@
     <data-bytes length="0x07">"?REDO\r\0"</data-bytes>
   </at>
   <at address="0x219a">
+    <label>cmd_input</label>
     <comment>handler for token 0x89 ("INPUT")</comment>
   </at>
   <at address="0x21d5">
@@ -1589,6 +1656,7 @@
     <comment>semicolon separator</comment>
   </at>
   <at address="0x21ef">
+    <label>cmd_read</label>
     <comment>handler for token 0x8b ("READ")</comment>
   </at>
   <at address="0x21fc">
@@ -1596,6 +1664,7 @@
     <comment>comma separator</comment>
   </at>
   <at address="0x22b6">
+    <label>cmd_next</label>
     <comment>handler for token 0x87 ("NEXT")</comment>
   </at>
   <at address="0x2286">
@@ -1639,6 +1708,7 @@
     <footer>---- END implementation of RST 20H ----</footer>
   </at>
   <at address="0x2608">
+    <label>cmd_dim</label>
     <comment>handler for token 0x8a ("DIM")</comment>
   </at>
   <at address="0x2702">
@@ -1679,6 +1749,7 @@
     <comment>right parenthesis</comment>
   </at>
   <at address="0x2afb">
+    <label>cmd_out</label>
     <comment>handler for token 0xa0 ("OUT")</comment>
   </at>
   <at address="0x2b18">
@@ -1690,16 +1761,19 @@
     <comment>parse a value in the range 0..255</comment>
   </at>
   <at address="0x2b29">
+    <label>cmd_llist</label>
     <comment>handler for token 0xb5 ("LLIST")</comment>
   </at>
   <at address="0x2b2e">
+    <label>cmd_list</label>
     <comment>handler for token 0xb4 ("LIST")</comment>
   </at>
   <at address="0x2bc6">
+    <label>cmd_cl0xb6</label>
     <comment>handler for token 0xb6 (hidden)</comment>
   </at>
   <at address="0x2bf5">
-    <label>sound_handler</label>
+    <label>cmd_sound</label>
     <comment>parse sound pitch</comment>
   </at>
   <at address="0x2bf8">
@@ -1858,17 +1932,25 @@
     <comment>done with rest</comment>
   </at>
   <at address="0x2cb1">
+    <label>cmd_poke</label>
     <comment>handler for token 0xb1 ("POKE")</comment>
   </at>
   <at address="0x2cb6">
     <data-bytes length="0x01">","</data-bytes>
     <comment>comma separator</comment>
   </at>
+  <at address="0x2cb7">
+    <comment>parse value</comment>
+  </at>
+  <at address="0x2cbb">
+    <comment>poke value</comment>
+  </at>
   <at address="0x2cc4">
     <data-bytes length="0x01">";"</data-bytes>
     <comment>semicolon separator</comment>
   </at>
   <at address="0x2e63">
+    <label>cmd_mode</label>
     <comment>handler for token 0x9d ("MODE")</comment>
   </at>
   <at address="0x2a64">
@@ -1877,9 +1959,28 @@
   </at>
   <at address="0x2e71">
     <label>mode1_1</label>
+    <comment>graphics mode: clear memory with "\0"</comment>
+  </at>
+  <at address="0x2e76">
+    <comment>update mask for graphics mode</comment>
+  </at>
+  <at address="0x2e7d">
+    <comment>text mode: clear memory with " "</comment>
+  </at>
+  <at address="0x2e82">
+    <comment>update mask for text mode</comment>
   </at>
   <at address="0x2e87">
     <label>mode1_2</label>
+  </at>
+  <at address="0x2e8b">
+    <comment>video mem base addr</comment>
+  </at>
+  <at address="0x2e8e">
+    <comment>2k video memory</comment>
+  </at>
+  <at address="0x2e95">
+    <comment>BC &lt;&gt; 0?</comment>
   </at>
   <at address="0x2e9b">
     <data-bytes length="0x01">")"</data-bytes>
@@ -1967,6 +2068,29 @@
     <comment>
       CHR$(9) / CHR$(25):<br />
       move cursor one column to the right
+    </comment>
+  </at>
+  <at address="0x314d">
+    <comment>
+      strip off char color
+    </comment>
+  </at>
+  <at address="0x3153">
+    <comment>
+      set char color
+    </comment>
+  </at>
+  <at address="0x31f1">
+    <label>cursor_cr</label>
+  </at>
+  <at address="0x31f5">
+    <comment>
+      inc cursor addr
+    </comment>
+  </at>
+  <at address="0x31fc">
+    <comment>
+      new cursor pos beyond screen?
     </comment>
   </at>
   <at address="0x3227">
@@ -2094,6 +2218,7 @@
     <comment>restore BC on exit</comment>
   </at>
   <at address="0x34a9">
+    <label>cmd_csave</label>
     <comment>handler for token 0xba ("CSAVE")</comment>
   </at>
   <at address="0x3511">
@@ -2269,6 +2394,7 @@
     <comment>print "FOUND" at bottom left corner</comment>
   </at>
   <at address="0x3656">
+    <label>cmd_cload</label>
     <comment>handler for token 0xb9 ("CLOAD")</comment>
   </at>
   <at address="0x365f">
@@ -2290,9 +2416,11 @@
     <comment>print "READY"</comment>
   </at>
   <at address="0x372e">
+    <label>cmd_crun</label>
     <comment>handler for token 0x9c ("CRUN")</comment>
   </at>
   <at address="0x3738">
+    <label>cmd_verify</label>
     <comment>handler for token 0x98 ("VERIFY")</comment>
   </at>
   <at address="0x376c">
@@ -2409,12 +2537,20 @@
   <at address="0x37f4">
     <label>cass_prt_status</label>
     <header>---- START print status message in bottom line ----</header>
+    <comment>
+      data ready? => abort
+    </comment>
   </at>
   <at address="0x37f9">
     <comment>load video screen address of bottom line</comment>
   </at>
   <at address="0x37fc">
     <comment>clear bottom line</comment>
+  </at>
+  <at address="0x3804">
+    <comment>
+      data ready? => abort
+    </comment>
   </at>
   <at address="0x3808">
     <footer>---- END print status message in bottom line ----</footer>
@@ -2424,6 +2560,17 @@
       jump to actual status printing routine<br />
       (will return to caller of caller)
     </comment>
+  </at>
+  <at address="0x3814">
+    <comment>
+      data ready? -> abort
+    </comment>
+  </at>
+  <at address="0x3834">
+    <comment>next char</comment>
+  </at>
+  <at address="0x3836">
+    <comment>trailing "\0"? -> done</comment>
   </at>
   <at address="0x3842">
     <data-bytes length="0x08">"WAITING\0"</data-bytes>
@@ -2438,11 +2585,43 @@
     <data-bytes length="0x08">"LOADING\0"</data-bytes>
   </at>
   <at address="0x389d">
+    <label>cmd_color</label>
     <comment>handler for token 0x97 ("COLOR")</comment>
+  </at>
+  <at address="0x389e">
+    <comment>match ","? -> keep fg color</comment>
+  </at>
+  <at address="0x38a2">
+    <label>fg_color</label>
+    <comment>parse fg color</comment>
+  </at>
+  <at address="0x38a5">
+    <comment>fg color &lt; 1? -> error</comment>
+  </at>
+  <at address="0x38a9">
+    <comment>fg color &gt; 9? -> error</comment>
+  </at>
+  <at address="0x38ae">
+    <comment>internally 0-based</comment>
+  </at>
+  <at address="0x38b1">
+    <comment>in upper nybble</comment>
+  </at>
+  <at address="0x38bd">
+    <comment>have more params?</comment>
+  </at>
+  <at address="0x38bf">
+    <comment>":"? -> have another command</comment>
+  </at>
+  <at address="0x38c2">
+    <label>bg_color</label>
   </at>
   <at address="0x38c3">
     <data-bytes length="0x01">","</data-bytes>
     <comment>comma separator</comment>
+  </at>
+  <at address="0x38c4">
+    <comment>parse bg color</comment>
   </at>
   <at address="0x3903">
     <label>graf_set</label>
@@ -2489,6 +2668,7 @@
     <footer>---- END SET(x, y) ----</footer>
   </at>
   <at address="0x3912">
+    <label>cmd_copy</label>
     <comment>handler for token 0x96 ("COPY")</comment>
   </at>
   <at address="0x3ae2">
@@ -2707,7 +2887,20 @@
   <at address="0x3e1a">
     <data-bytes length="0x0f">"?SYNTAX ERROR\r\0"</data-bytes>
   </at>
+  <at address="0x3ef6">
+    <label>blank_de</label>
+    <comment>
+      put blank at (DE), consider dsp_mode
+    </comment>
+  </at>
+  <at address="0x3f02">
+    <label>get_blank</label>
+    <comment>
+      get blank char, consider dsp_mode
+    </comment>
+  </at>
   <at address="0x3f0e">
+    <label>prt_cass_status</label>
     <header>print cassette status</header>
     <comment>video buffer address of bottom text line</comment>
   </at>
@@ -2737,6 +2930,24 @@
   </at>
   <at address="0x3f1f">
     <comment>continue with next character</comment>
+  </at>
+  <at address="0x3f21">
+    <comment>consider inverse / normal</comment>
+  </at>
+  <at address="0x3f25">
+    <comment>read next char from (HL)</comment>
+  </at>
+  <at address="0x3f2a">
+    <comment>write next char (inverse) to (DE) </comment>
+  </at>
+  <at address="0x3f2c">
+    <comment>inverse char ":"</comment>
+  </at>
+  <at address="0x3f2f">
+    <comment>write next char (normal) to (DE) </comment>
+  </at>
+  <at address="0x3f30">
+    <comment>normal char ":"</comment>
   </at>
   <at address="0x3fb7">
     <data-bytes length="0x39">FILL(00, 39)</data-bytes>
@@ -2813,6 +3024,7 @@
     </comment>
   </at>
   <at address="0x7816">
+    <label>kbd_scan_addr</label>
     <data-bytes length="0x2" />
     <comment>
       address of kbd matrix scan subroutine,<br />
@@ -2820,6 +3032,7 @@
     </comment>
   </at>
   <at address="0x7818">
+    <label>dsp_mode</label>
     <data-bytes length="0x1" />
     <comment>
       text display mode<br />
@@ -2828,6 +3041,7 @@
     </comment>
   </at>
   <at address="0x7819">
+    <label>dsp_mode_mask</label>
     <data-bytes length="0x1" />
     <comment>
       text display mode mask(?)<br />
@@ -2867,6 +3081,7 @@
     </comment>
   </at>
   <at address="0x7839">
+    <label>cout_status</label>
     <data-bytes length="0x1" />
     <comment>
       bit 0=0: cursor off<br />
@@ -2918,6 +3133,11 @@
       ccc00000, where ccc is the color<br />
       code 0, ..., 7 (for colors 1, ..., 8).
     </comment>
+  </at>
+  <at address="0x784c">
+    <label>css_data_rdy</label>
+    <data-bytes length="0x1" />
+    <comment>toggle, if cass needs attention</comment>
   </at>
   <at address="0x787d">
     <label>cb_irq</label>
@@ -3164,7 +3384,7 @@
     </comment>
   </at>
   <at address="0x795b">
-    <label>cb_dsk_err1</label>
+    <label>cmd_dsk_err1</label>
     <comment>
       jump to handler for (hidden) token 0xb0<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -3172,7 +3392,7 @@
     </comment>
   </at>
   <at address="0x7973">
-    <label>cb_dsk_err2</label>
+    <label>cmd_dsk_err2</label>
     <comment>
       jump to handler for (hidden) token 0x85<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -3180,7 +3400,7 @@
     </comment>
   </at>
   <at address="0x7979">
-    <label>cb_dsk_err3</label>
+    <label>cmd_dsk_err3</label>
     <comment>
       jump to handler for (hidden) token 0xa2<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -3188,7 +3408,7 @@
     </comment>
   </at>
   <at address="0x797c">
-    <label>cb_dsk_err4</label>
+    <label>cmd_dsk_err4</label>
     <comment>
       jump to handler for (hidden) token 0xa3<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -3196,7 +3416,7 @@
     </comment>
   </at>
   <at address="0x797f">
-    <label>cb_dsk_err5</label>
+    <label>cmd_dsk_err5</label>
     <comment>
       jump to handler for (hidden) token 0xa4<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -3204,7 +3424,7 @@
     </comment>
   </at>
   <at address="0x7982">
-    <label>cb_dsk_err6</label>
+    <label>cmd_dsk_err6</label>
     <comment>
       jump to handler for (hidden) token 0xa5<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -3212,7 +3432,7 @@
     </comment>
   </at>
   <at address="0x7985">
-    <label>cb_dsk_err7</label>
+    <label>cmd_dsk_err7</label>
     <comment>
       jump to handler for (hidden) token 0xa6<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -3220,7 +3440,7 @@
     </comment>
   </at>
   <at address="0x7988">
-    <label>cb_dsk_err8</label>
+    <label>cmd_dsk_err8</label>
     <comment>
       jump to handler for (hidden) token 0xa7<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -3228,7 +3448,7 @@
     </comment>
   </at>
   <at address="0x798b">
-    <label>cb_dsk_err9</label>
+    <label>cmd_dsk_err9</label>
     <comment>
       jump to handler for (hidden) token 0xa8<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -3236,7 +3456,7 @@
     </comment>
   </at>
   <at address="0x798e">
-    <label>cb_dsk_err10</label>
+    <label>cmd_dsk_err10</label>
     <comment>
       jump to handler for (hidden) token 0xa9<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -3244,7 +3464,7 @@
     </comment>
   </at>
   <at address="0x7991">
-    <label>cb_dsk_err11</label>
+    <label>cmd_dsk_err11</label>
     <comment>
       jump to handler for (hidden) token 0xaa<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -3252,7 +3472,7 @@
     </comment>
   </at>
   <at address="0x7997">
-    <label>cb_dsk_err12</label>
+    <label>cmd_dsk_err12</label>
     <comment>
       jump to handler for (hidden) token 0xab<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -3260,7 +3480,7 @@
     </comment>
   </at>
   <at address="0x799a">
-    <label>cb_dsk_err13</label>
+    <label>cmd_dsk_err13</label>
     <comment>
       jump to handler for (hidden) token 0xac<br />
       defaults to a jump to 0x012d, which emits<br />
@@ -3268,7 +3488,7 @@
     </comment>
   </at>
   <at address="0x79a0">
-    <label>cb_dsk_err14</label>
+    <label>cmd_dsk_err14</label>
     <comment>
       jump to handler for (hidden) token 0xad<br />
       defaults to a jump to 0x012d, which emits<br />
