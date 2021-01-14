@@ -12,15 +12,15 @@
     <comment>cold entry point</comment>
   </at>
   <at address="0x0008">
-    <label>rst08</label>
+    <label>rst08_consume_char</label>
     <comment>RST 08H entry point</comment>
   </at>
   <at address="0x0010">
-    <label>rst10</label>
+    <label>rst10_parse_lookahead</label>
     <comment>RST 10H entry point</comment>
   </at>
   <at address="0x0018">
-    <label>rst18</label>
+    <label>rst18_cmp_DE_HL</label>
     <comment>RST 18H entry point</comment>
   </at>
   <at address="0x0020">
@@ -36,7 +36,7 @@
     <comment>RST 30H entry point</comment>
   </at>
   <at address="0x0038">
-    <label>rst38</label>
+    <label>rst38_kbd_scan</label>
     <comment>RST 38H entry point</comment>
   </at>
   <at address="0x0050">
@@ -121,6 +121,13 @@
       the loop wastes time by iterating 256 times,<br />
       while it would not needed to be entered at all.]
     </comment>
+  </at>
+  <at address="0x0183">
+    <label>exit_err</label>
+    <header>print "ERROR" and go in edit mode</header>
+  </at>
+  <at address="0x0188">
+    <comment>print "ERROR\r"</comment>
   </at>
   <at address="0x01c9">
     <label>cmd_cls</label>
@@ -1716,6 +1723,7 @@
     <comment>right parenthesis</comment>
   </at>
   <at address="0x28a7">
+    <label>str_print</label>
     <comment>
       Print \0-terminated<br />
       String with special handling for<br />
@@ -1953,34 +1961,66 @@
     <label>cmd_mode</label>
     <comment>handler for token 0x9d ("MODE")</comment>
   </at>
-  <at address="0x2a64">
+  <at address="0x2e64">
     <data-bytes length="0x01">"("</data-bytes>
     <comment>left parenthesis</comment>
   </at>
+  <at address="0x2e68">
+    <comment>mode 0 (text mode)?</comment>
+  </at>
+  <at address="0x2e6b">
+    <comment>(A == 1)?</comment>
+  </at>
+  <at address="0x2e6e">
+    <comment>invalid mode parameter</comment>
+  </at>
   <at address="0x2e71">
-    <label>mode1_1</label>
-    <comment>graphics mode: clear memory with "\0"</comment>
+    <label>mode_1</label>
+    <comment>
+      graphics mode: use zero bytes for<br />
+      clearing screen
+    </comment>
+  </at>
+  <at address="0x2e73">
+    <comment>set graphics bit on output latch shadow value</comment>
   </at>
   <at address="0x2e76">
     <comment>update mask for graphics mode</comment>
   </at>
   <at address="0x2e7d">
-    <comment>text mode: clear memory with " "</comment>
+    <label>mode_0</label>
+    <comment>text mode: clear screen with " " chars</comment>
+  </at>
+  <at address="0x2e7f">
+    <comment>clear graphics bit on output latch shadow value</comment>
   </at>
   <at address="0x2e82">
     <comment>update mask for text mode</comment>
   </at>
   <at address="0x2e87">
-    <label>mode1_2</label>
+    <label>mode_switch</label>
+    <comment>update output latch</comment>
   </at>
   <at address="0x2e8b">
     <comment>video mem base addr</comment>
   </at>
   <at address="0x2e8e">
-    <comment>2k video memory</comment>
+    <comment>2k of video memory</comment>
+  </at>
+  <at address="0x2e91">
+    <label>scr_next_byte_clear</label>
+  </at>
+  <at address="0x2e92">
+    <comment>clear next screen byte</comment>
   </at>
   <at address="0x2e95">
     <comment>BC &lt;&gt; 0?</comment>
+  </at>
+  <at address="0x2e97">
+    <comment>no: continue with next byte</comment>
+  </at>
+  <at address="0x2e9a">
+    <comment>consume closing ")"</comment>
   </at>
   <at address="0x2e9b">
     <data-bytes length="0x01">")"</data-bytes>
@@ -2221,6 +2261,27 @@
     <label>cmd_csave</label>
     <comment>handler for token 0xba ("CSAVE")</comment>
   </at>
+  <at address="0x34c6">
+    <comment>cout LO(prgmem_start)</comment>
+  </at>
+  <at address="0x34c9">
+    <comment>(IX) := (short)A</comment>
+  </at>
+  <at address="0x34d1">
+    <comment>cout HI(prgmem_start)</comment>
+  </at>
+  <at address="0x34fa">
+    <comment>checksum low byte</comment>
+  </at>
+  <at address="0x3500">
+    <comment>checksum high byte</comment>
+  </at>
+  <at address="0x3506">
+    <comment>write 20 * byte value 0</comment>
+  </at>
+  <at address="0x3509">
+    <comment>cass_leadout_next</comment>
+  </at>
   <at address="0x3511">
     <label>cass_cout</label>
     <header>
@@ -2278,6 +2339,9 @@
       abort on key press "BREAK"
     </comment>
   </at>
+  <at address="0x355d">
+    <label>cass_leadin_80_next</label>
+  </at>
   <at address="0x3562">
     <comment>check for "BREAK"</comment>
   </at>
@@ -2286,6 +2350,9 @@
       write value 0xfe 5 times, but<br />
       abort on key press "BREAK"
     </comment>
+  </at>
+  <at address="0x356a">
+    <label>cass_leadin_fe_next</label>
   </at>
   <at address="0x356f">
     <comment>check for "BREAK"</comment>
@@ -2302,8 +2369,23 @@
   <at address="0x357d">
     <comment>write file name into file header</comment>
   </at>
+  <at address="0x3584">
+    <label>cass_fname_nextchar</label>
+  </at>
   <at address="0x358c">
     <comment>prepare parsing the file header</comment>
+  </at>
+  <at address="0x3592">
+    <comment>statement separator ":"?</comment>
+  </at>
+  <at address="0x3594">
+    <comment>yes: no filename given</comment>
+  </at>
+  <at address="0x3596">
+    <comment>end of input line?</comment>
+  </at>
+  <at address="0x3597">
+    <comment>yes: no filename given</comment>
   </at>
   <at address="0x3599">
     <comment>
@@ -2315,10 +2397,17 @@
     <data-bytes length="0x01">'"'</data-bytes>
     <comment>quote char</comment>
   </at>
+  <at address="0x359b">
+    <label>parse_next_fname_char</label>
+  </at>
+  <at address="0x359c">
+    <comment>end of input line reached?</comment>
+  </at>
   <at address="0x35a0">
     <comment>check for closing quote char</comment>
   </at>
   <at address="0x35a8">
+    <label>parse_fname_finish</label>
     <comment>
       add trailing 0-byte to file name and<br />
       save file name length
@@ -2412,8 +2501,12 @@
   <at address="0x366a">
     <comment>call routine for printing status line</comment>
   </at>
+  <at address="0x367d">
+    <comment>pointer to check sum</comment>
+  </at>
   <at address="0x36cf">
-    <comment>print "READY"</comment>
+    <label>go_ready</label>
+    <header>print "READY" and enter edit mode</header>
   </at>
   <at address="0x372e">
     <label>cmd_crun</label>
@@ -2422,6 +2515,15 @@
   <at address="0x3738">
     <label>cmd_verify</label>
     <comment>handler for token 0x98 ("VERIFY")</comment>
+  </at>
+  <at address="0x3749">
+    <comment>print "\rVERIFY "</comment>
+  </at>
+  <at address="0x375d">
+    <comment>print "\rVERIFY "</comment>
+  </at>
+  <at address="0x3763">
+    <comment>print "OK\r"</comment>
   </at>
   <at address="0x376c">
     <data-bytes length="0x09">"\rVERIFY \0"</data-bytes>
@@ -2584,16 +2686,23 @@
   <at address="0x3860">
     <data-bytes length="0x08">"LOADING\0"</data-bytes>
   </at>
+  <at address="0x388e">
+    <label>add_at_ix</label>
+    <comment>(IX) += (int16)A</comment>
+  </at>
   <at address="0x389d">
     <label>cmd_color</label>
     <comment>handler for token 0x97 ("COLOR")</comment>
   </at>
   <at address="0x389e">
-    <comment>match ","? -> keep fg color</comment>
+    <comment>found ","?</comment>
+  </at>
+  <at address="0x38a0">
+    <comment>yes: no new fg color specified</comment>
   </at>
   <at address="0x38a2">
     <label>fg_color</label>
-    <comment>parse fg color</comment>
+    <comment>handle fg color</comment>
   </at>
   <at address="0x38a5">
     <comment>fg color &lt; 1? -> error</comment>
@@ -2602,26 +2711,39 @@
     <comment>fg color &gt; 9? -> error</comment>
   </at>
   <at address="0x38ae">
-    <comment>internally 0-based</comment>
+    <comment>internally 0-based, range now 0..7</comment>
   </at>
   <at address="0x38b1">
-    <comment>in upper nybble</comment>
+    <comment>shift into upper nybble</comment>
+  </at>
+  <at address="0x38b9">
+    <comment>save as new mask</comment>
+  </at>
+  <at address="0x38bc">
+    <comment>next input char</comment>
   </at>
   <at address="0x38bd">
     <comment>have more params?</comment>
   </at>
+  <at address="0x38be">
+    <comment>no bg color => done</comment>
+  </at>
   <at address="0x38bf">
-    <comment>":"? -> have another command</comment>
+    <comment>next char is statement separator ":"?</comment>
+  </at>
+  <at address="0x38c1">
+    <comment>yes => done with statement</comment>
   </at>
   <at address="0x38c2">
     <label>bg_color</label>
+    <comment>handle bg color</comment>
   </at>
   <at address="0x38c3">
     <data-bytes length="0x01">","</data-bytes>
     <comment>comma separator</comment>
   </at>
   <at address="0x38c4">
-    <comment>parse bg color</comment>
+    <comment>parse bg color value</comment>
   </at>
   <at address="0x3903">
     <label>graf_set</label>
@@ -2658,6 +2780,7 @@
     <comment>write SET(x, y) value into video RAM</comment>
   </at>
   <at address="0x390f">
+    <label>finish_func</label>
     <comment>parser: consume closing ")" character</comment>
   </at>
   <at address="0x3910">
@@ -2701,6 +2824,7 @@
     <comment>kick off cassette command stack frame</comment>
   </at>
   <at address="0x3afe">
+    <label>cass_cleanup</label>
     <comment>clean-up cassette command mode</comment>
   </at>
   <at address="0x3b08">
@@ -3063,7 +3187,18 @@
     </comment>
   </at>
   <at address="0x7822">
-    <data-bytes length="0x11" />
+    <data-bytes length="0x1" />
+  </at>
+  <at address="0x7823">
+    <label>cass_chk_sum</label>
+    <comment>
+      16 bits check sum for cassette<br />
+      load / save operations
+    </comment>
+    <data-bytes length="0x2" />
+  </at>
+  <at address="0x7825">
+    <data-bytes length="0xe" />
   </at>
   <at address="0x7836">
     <data-bytes length="0x1" />
@@ -3081,9 +3216,10 @@
     </comment>
   </at>
   <at address="0x7839">
-    <label>cout_status</label>
+    <label>cout_mode</label>
     <data-bytes length="0x1" />
     <comment>
+      operation mode:<br />
       bit 0=0: cursor off<br />
       bit 0=1: cursor on<br />
       bit 3=0, bit 6=0: CLOAD in progress<br />
