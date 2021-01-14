@@ -321,7 +321,7 @@ public class Monitor implements CPUControlAPI.LogListener
   loop:
     while (true) {
       switch (c = in.read()) {
-        case java.awt.Event.UP:
+        case java.awt.event.KeyEvent.VK_UP:
 	  return history.getPrecursor(1);
 	case -1:
 	case '\n':
@@ -1184,7 +1184,7 @@ public class Monitor implements CPUControlAPI.LogListener
       try {
 	cpuClassName = argv[0];
 	Class<?> cpuClass = Class.forName(cpuClassName);
-	cpu = (CPU)cpuClass.newInstance();
+	cpu = (CPU)cpuClass.getDeclaredConstructor().newInstance();
       } catch (Exception e) {
 	System.err.println("Could not instantiate CPU class '" +
                            cpuClassName + "': " + e);

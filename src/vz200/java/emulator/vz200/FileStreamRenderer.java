@@ -9,7 +9,7 @@ import java.io.IOException;
  * Encoding is 1 channel, 16 bits, signed PCM, little endian, 44100
  * Hz.
  */
-public class FileStreamRenderer extends Thread {
+public class FileStreamRenderer extends Thread implements AutoCloseable {
 
   private static final int BUFFER_FRAMES = 0xc00;
   private static final int BYTES_PER_FRAME = 2;
@@ -104,7 +104,8 @@ public class FileStreamRenderer extends Thread {
     render(fullBufferTime, bufferFramesPerTime);
   }
 
-  protected void finalize() {
+  @Override
+  public void close() {
     if (out != null) {
       printMessage(String.format("closing file %s", file.getName()));
       try {

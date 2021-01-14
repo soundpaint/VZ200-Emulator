@@ -8,7 +8,7 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
 
-public class AudioStreamRenderer extends Thread
+public class AudioStreamRenderer extends Thread implements AutoCloseable
 {
   private static final int BUFFER_FRAMES = 0xc00;
   private static final float SAMPLE_RATE = 44100.0f;
@@ -140,7 +140,8 @@ public class AudioStreamRenderer extends Thread
     renderLoop(fullBufferTime, bufferFramesPerTime);
   }
 
-  protected void finalize()
+  @Override
+  public void close()
   {
     if (sourceDataLine != null) {
       try {

@@ -8,7 +8,7 @@ import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
 
 public class MonoAudioStreamRenderer extends Thread
-  implements LineControlListener
+  implements AutoCloseable, LineControlListener
 {
   private static final int BUFFER_FRAMES = 0xc00;
   private static final float SAMPLE_RATE = 44100.0f;
@@ -187,7 +187,7 @@ public class MonoAudioStreamRenderer extends Thread
   }
 
   @Override
-  protected void finalize()
+  public void close()
   {
     releaseSourceDataLine();
   }

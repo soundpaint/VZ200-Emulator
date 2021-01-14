@@ -1062,7 +1062,7 @@ public class Z80 implements CPU {
       // vars.get((char code of some variable) minus code('a')) maps
       // to bit size of that variable.
       for (int i = 0; i < genericOpCode.length(); i++) {
-	Character varName = new Character(genericOpCode.charAt(i));
+	Character varName = genericOpCode.charAt(i);
 	if (varName.charValue() == '0')
 	  genericOpCodeBits[i] = 0;
 	else if (varName.charValue() == '1')
@@ -1070,7 +1070,7 @@ public class Z80 implements CPU {
 	else if ((varName.charValue() >= 'a') &&
 		 (varName.charValue() <= 'z')) {
 	  genericOpCodeBits[i] = varName.charValue() - (int)'a' + 2;
-	  Integer key = new Integer(varName.charValue() - (int)'a');
+	  Integer key = varName.charValue() - (int)'a';
 	  MutableInteger mutableInteger = vars.get(key);
 	  if (mutableInteger == null)
 	    vars.put(key, new MutableInteger(1));
