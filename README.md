@@ -267,8 +267,7 @@ thread safe; only then, I will re-integrate the
 If you do not need support for `.vz` files, you probably want to stick
 to the more stable `master` branch.
 
-References
-----------
+<!-- References -->
 
 [1]: https://media.ccc.de/v/gpn19-114-retrocomputing-emulator-vz200-z80
 [2]: ./doc/talk-gpn19/vz200_emulator_gpn19.odp

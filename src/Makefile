@@ -1,3 +1,5 @@
+include common.mak
+
 all:
 	cd z80 ; make
 	cd vz200 ; make
@@ -11,7 +13,7 @@ distclean:
 	cd vz200 ; make distclean
 
 run: all
-	java -cp ../build emulator.vz200.VZ200
+	$(JAVA) -cp ../build emulator.vz200.VZ200
 
 tarball:
 	cd z80 ; make tarball
