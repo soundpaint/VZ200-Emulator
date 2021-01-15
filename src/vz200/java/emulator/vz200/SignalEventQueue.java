@@ -1,5 +1,7 @@
 package emulator.vz200;
 
+import emulator.z80.WallClockProvider;
+
 /**
  * Cyclic first-in first-out ring buffer for signal value change
  * events.
@@ -144,21 +146,25 @@ public class SignalEventQueue
   private static final long INITIAL_AUDIO_DELAY = 100000000; // [ns]
 
   private final String label;
+  private final WallClockProvider wallClockProvider;
   private final Event[] events;
-  private short currentValue;
-  private long currentValueSince;
+  private short latestValue;
+  private long latestWallClockTime;
   private int consumerIndex;
   private int producerIndex;
   private long availableTimeSpan;
 
-  public SignalEventQueue(final String label, final long currentWallClockTime)
+  public SignalEventQueue(final String label,
+                          final WallClockProvider wallClockProvider,
+                          final short initialValue)
   {
     this.label = label;
+    this.wallClockProvider = wallClockProvider;
     events = new Event[BUFFER_SIZE];
     for (int i = 0; i < BUFFER_SIZE; i++) {
       events[i] = new Event();
     }
-    reset(currentWallClockTime);
+    reset(wallClockProvider.getWallClockTime(), initialValue);
   }
 
   /**
@@ -169,10 +175,10 @@ public class SignalEventQueue
     return availableTimeSpan;
   }
 
-  public synchronized void reset(final long currentWallClockTime)
+  public synchronized void reset(final long wallClockTime, final short value)
   {
-    currentValue = 0;
-    currentValueSince = currentWallClockTime;
+    latestWallClockTime = wallClockTime;
+    latestValue = value;
     consumerIndex = 0;
     producerIndex = 0;
     availableTimeSpan = 0;
@@ -185,9 +191,9 @@ public class SignalEventQueue
 
   public synchronized void put(final short value, final long wallClockTime)
   {
-    if (value != currentValue) {
+    if (value != latestValue) {
       final Event lastEvent = events[producerIndex];
-      final long timeSpan = wallClockTime - currentValueSince;
+      final long timeSpan = wallClockTime - latestWallClockTime;
       lastEvent.timeSpan += timeSpan;
       availableTimeSpan += timeSpan;
       producerIndex = (producerIndex + 1) % BUFFER_SIZE;
@@ -199,8 +205,8 @@ public class SignalEventQueue
       event.value = value;
       event.timeSpan = 0;
       event.plannedGap = false;
-      currentValueSince = wallClockTime;
-      currentValue = value;
+      latestWallClockTime = wallClockTime;
+      latestValue = value;
     }
   }
 
@@ -209,7 +215,7 @@ public class SignalEventQueue
     do {
       final Event event = events[consumerIndex];
       if (consumerIndex == producerIndex) {
-        result.value = currentValue;
+        result.value = latestValue;
         result.timeSpan = maxTimeSpan;
         event.timeSpan -= maxTimeSpan;
         availableTimeSpan -= maxTimeSpan;

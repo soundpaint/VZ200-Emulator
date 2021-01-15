@@ -48,11 +48,11 @@ public class IO implements
     video = new Video();
     video.addKeyListener(keyboard.getKeyListener());
     speakerRenderer = new MonoAudioStreamRenderer("speaker renderer");
-    speaker = new Speaker(currentWallClockTime);
+    speaker = new Speaker(this);
     speakerRenderer.setSignalEventSource(speaker);
     speakerRenderer.start();
     cassetteOutRenderer = new MonoAudioStreamRenderer("cassette out renderer");
-    cassetteOut = new CassetteOut(currentWallClockTime);
+    cassetteOut = new CassetteOut(this);
     cassetteOutRenderer.setSignalEventSource(cassetteOut);
     cassetteOutRenderer.start();
     settingsGUI = new SettingsGUI(cpuControl, cpu, speaker, speakerRenderer,

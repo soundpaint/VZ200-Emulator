@@ -1,5 +1,7 @@
 package emulator.vz200;
 
+import emulator.z80.WallClockProvider;
+
 public class Speaker implements SignalEventSource, LineControlListener
 {
   private final SignalEventQueue eventQueue;
@@ -11,15 +13,16 @@ public class Speaker implements SignalEventSource, LineControlListener
     throw new UnsupportedOperationException("unsupported empty constructor");
   }
 
-  public Speaker(final long currentWallClockTime)
+  public Speaker(final WallClockProvider wallClockProvider)
   {
     elongation = new short[3];
-    eventQueue = new SignalEventQueue("speaker", currentWallClockTime);
+    eventQueue =
+      new SignalEventQueue("speaker", wallClockProvider, (short)0);
   }
 
   public void lineChanged(final SourceDataLineChangeEvent event)
   {
-    eventQueue.reset(event.getCurrentWallClockTime());
+    eventQueue.reset(event.getCurrentWallClockTime(), (short)0);
   }
 
   public void resync()
