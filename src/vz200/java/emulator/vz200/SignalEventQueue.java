@@ -6,9 +6,15 @@ package emulator.vz200;
  *
  * Invariants:
  *
+ * • The buffer is cyclic.  That is, when an index into the buffer
+ *   (specifically, the producerIndex and the consumerIndex) points to
+ *   the maximum index of the buffer, increasing it by one means
+ *   setting it to the minimum index of the buffer.  In other words,
+ *   handling of indices is always modulo the size of the buffer.
+ *
  * • There is always at least one event in the queue, namely the
- *   "head" event, i.e. the event that has been inserted most
- *   recently.  Upon startup, the initial head event is that of
+ *   latest or "head" event, i.e. the event that has been inserted
+ *   most recently.  Upon startup, the initial head event is that of
  *   resetting the signal to a neutral value at zero wall clock time.
  *
  * • Variable producerIndex always points to the "head" event
@@ -16,14 +22,22 @@ package emulator.vz200;
  *   update).
  *
  * • When the event producer inserts a new event, it is put behind the
- *   current "head" event and then becomes the new "head" event, that
+ *   "head" event (i.e. at the position with the next upper index).
+ *   This newly inserted event then becomes the new "head" event, that
  *   is, the value of producerIndex increases by one.  The new head
  *   event's delta time field is initialized to 0.
  *
+ * • If the new event to be inserted would not effectively change the
+ *   current signal value, then no new event is inserted into the
+ *   queue.  Instead, for confirming that the signal keeps its value
+ *   for longer, the head event is updated to cover the timespan from
+ *   its original creation time to the new current time.
+ *
  * • The producer ignores any buffer overflow.  That is, it will
  *   overwrite any pending old data that has not yet been consumed.
- *   However, the consumerIndex must be updated accordingly.  That is,
- *   it must be increased by one, just as the producerIndex.
+ *   However, in the case of a buffer overflow, the consumerIndex will
+ *   be updated accordingly.  That is, it must be increased by one,
+ *   just as the producerIndex.
  *
  * • The event to insert comes along with the absolute wall clock time
  *   at which the event happens.  The difference between this time and
@@ -33,14 +47,6 @@ package emulator.vz200;
  * • The head event's delta time field is unused.  However, for safety
  *   reasons, it always should be set to 0.
  *
- * • If an event to be inserted effectively would not change the
- *   current signal value (except for confirming that the signal keeps
- *   its value for longer), then the event is ignored.
- *
- * • The buffer is cyclic, that is, when producerIndex points to the
- *   maximum index of the buffer, increasing it by one means setting
- *   it to the minimum index of the buffer.
- *
  * • Variable consumerIndex always points to the event that would be
  *   consumed next (provided the queue is not just in the act of
  *   undergoing an update).  If there is only the "head" event in the
@@ -48,27 +54,30 @@ package emulator.vz200;
  *   case, consumerIndex and producerIndex consequently have the same
  *   value.
  *
- * • The buffer is cyclic, that is, when consumerIndex points to the
- *   maximum index of the buffer, increasing it by one means setting
- *   it to the minimum index of the buffer.
- *
  * • When consuming an event, the consumer indicates the maximum time
- *   span that the event to be consumed may cover.
+ *   span that the event to be consumed may cover.  This means, that
+ *   if an event spans a larger amount of time, this event will stay
+ *   in the buffer, but only its remaining span time will be reduced
+ *   by the maximum time.  Only, if the maximum time exceeds the
+ *   event's span time, this event will be marked as exhausted and,
+ *   consequently, the consumerIndex increased to point to the next
+ *   event.
  *
- * • If the actual time span of the next event to consume is greater
- *   than the maximum desired span, than the event keeps in the queue,
- *   but only its delta time is reduced by the maximum value.
+ * • If there is only the head event in the queue, its span time will
+ *   be reduced, but no event dropped from the queue.  That is, the
+ *   queue is not changed (except for the head event's updated span
+ *   time), but only data from the head event is returned.
  *
- * • If there is only the head event in the queue, a pseudo event is
- *   created on-the-fly.  That is, the queue is not changed, but only
- *   data from the head event is returned.
+ * • Note that the previous point means that in the case of a buffer
+ *   underrun, the span time of the head event may (temporily) drop
+ *   below zero.
  */
 public class SignalEventQueue
 {
   public static class Event
   {
     /**
-     * Signal value.
+     * Signal value that is announced with this event.
      */
     public short value;
 
@@ -103,19 +112,36 @@ public class SignalEventQueue
   private static final int BUFFER_SIZE = 0x2800;
 
   /**
-   * Increasing initial audio delay value will reduce the likelyhood
-   * of audio glitches caused by buffer underruns.  However,
-   * increasing this value also means increasing overall audio
-   * latency, resulting in hearably delayed audio output.  75ms seems
-   * to be a good trade-off, but a good choice for this value may
-   * depend on the hardware and operating system that this emulation
-   * is running on.  For example, when using a kernel with realtime
-   * patches, you may want to decrease this value to reduce audio
-   * delay caused by latency.  On the contrary, if you still hear
+   * On the long-term average, the simulated CPU will run with
+   * constant speed: If it runs too fast, a few milliseconds of delay
+   * will be inserted; if it is behind time, it will run as fast as
+   * possible to catch up with the actual time (as observed by the
+   * user), resulting in observable jitter in the range of a few
+   * milliseconds.  This jitter is relevant when e.g. rendering a
+   * simulated speaker to e.g. the host's soundcard, which runs with
+   * its own clock.  The jitter, as observed when comparing these two
+   * clocks, leads to fluctuations between the distance of the
+   * producerIndex and consumerIndex.  Therefore, some headroom is
+   * required to tolerate these fluctuations.  We create this headroom
+   * by slightly delaying audio (or whatever else) signal output.
+   *
+   * Increasing the delay value will reduce the likelyhood of signal
+   * glitches caused by buffer underruns.  However, at the same time,
+   * it increases the likelyhood of buffer overflows.  That is, when
+   * increasing this value, the BUFFER_SIZE value should also be
+   * increased.  Moreover, overly increased latency will eventually
+   * result in perceptible delay, which can be perceived as
+   * uncomfortable.
+   *
+   * 100ms seems to be a good trade-off, but a good choice for this
+   * value may depend on the hardware and operating system that this
+   * emulation is running on.  For example, when using a kernel with
+   * realtime patches, you may want to decrease this value to reduce
+   * perceivable audio delay.  On the contrary, if you still hear
    * audio glitches, you may want to increase this value, if you can
    * bear higher audio delay.
    */
-  private static final long INITIAL_AUDIO_DELAY = 75000000; // [ns]
+  private static final long INITIAL_AUDIO_DELAY = 100000000; // [ns]
 
   private final String label;
   private final Event[] events;
