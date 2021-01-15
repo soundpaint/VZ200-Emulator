@@ -143,7 +143,7 @@ public class SignalEventQueue
    * audio glitches, you may want to increase this value, if you can
    * bear higher audio delay.
    */
-  private static final long INITIAL_AUDIO_DELAY = 100000000; // [ns]
+  private static final long INITIAL_DELAY = 100000000; // [ns]
 
   private final String label;
   private final WallClockProvider wallClockProvider;
@@ -172,38 +172,64 @@ public class SignalEventQueue
    */
   public long getAvailableNanoSeconds()
   {
+    updateLatestEventForTime(wallClockProvider.getWallClockTime());
     return availableTimeSpan;
   }
 
   public synchronized void reset(final long wallClockTime, final short value)
   {
-    latestWallClockTime = wallClockTime;
+    latestWallClockTime = wallClockTime - INITIAL_DELAY;
     latestValue = value;
     consumerIndex = 0;
     producerIndex = 0;
-    availableTimeSpan = 0;
+    final Event event = events[producerIndex];
+    event.value = value;
+    event.timeSpan = INITIAL_DELAY;
+    event.plannedGap = false;
+    availableTimeSpan = INITIAL_DELAY;
+    put(value, wallClockTime);
   }
 
   public synchronized void resync()
   {
+    reset(wallClockProvider.getWallClockTime(), events[producerIndex].value);
     events[consumerIndex].plannedGap = true;
+  }
+
+  private Event updateLatestEventForTime(final long wallClockTime)
+  {
+    final Event latestEvent = events[producerIndex];
+    final long timeSpan = wallClockTime - latestWallClockTime;
+    latestEvent.timeSpan += timeSpan;
+    availableTimeSpan += timeSpan;
+    latestWallClockTime = wallClockTime;
+    return latestEvent;
   }
 
   public synchronized void put(final short value, final long wallClockTime)
   {
+    if (wallClockTime < latestWallClockTime) {
+      System.err.printf("Warning: %s: ignoring out-of-order event%n", label);
+      return;
+    }
+    final Event latestEvent = updateLatestEventForTime(wallClockTime);
     if (value != latestValue) {
-      final Event lastEvent = events[producerIndex];
-      final long timeSpan = wallClockTime - latestWallClockTime;
-      lastEvent.timeSpan += timeSpan;
-      availableTimeSpan += timeSpan;
       producerIndex = (producerIndex + 1) % BUFFER_SIZE;
       if (producerIndex == consumerIndex) {
-        System.err.printf("Warning: %s event queue overflow%n", label);
+        // drop oldest event
+        System.err.printf("Warning: %s: event queue overflow%n", label);
+        availableTimeSpan -= events[consumerIndex].timeSpan;
         consumerIndex = (consumerIndex + 1) % BUFFER_SIZE;
       }
       final Event event = events[producerIndex];
       event.value = value;
-      event.timeSpan = 0;
+      if (latestEvent.timeSpan < 0) {
+        // transfer borrowed time, if any, to latest event
+        event.timeSpan = latestEvent.timeSpan;
+        latestEvent.timeSpan = 0;
+      } else {
+        event.timeSpan = 0;
+      }
       event.plannedGap = false;
       latestWallClockTime = wallClockTime;
       latestValue = value;
@@ -212,35 +238,29 @@ public class SignalEventQueue
 
   public synchronized void get(final Event result, final long maxTimeSpan)
   {
-    do {
-      final Event event = events[consumerIndex];
-      if (consumerIndex == producerIndex) {
-        result.value = latestValue;
+    updateLatestEventForTime(wallClockProvider.getWallClockTime());
+    final Event event = events[consumerIndex];
+    if (consumerIndex != producerIndex) {
+      result.value = event.value;
+      if (event.timeSpan > maxTimeSpan) {
         result.timeSpan = maxTimeSpan;
         event.timeSpan -= maxTimeSpan;
         availableTimeSpan -= maxTimeSpan;
       } else {
-        result.value = event.value;
-        if (event.timeSpan > maxTimeSpan) {
-          result.timeSpan = maxTimeSpan;
-          event.timeSpan -= maxTimeSpan;
-          availableTimeSpan -= maxTimeSpan;
-        } else {
-          result.timeSpan = event.timeSpan;
-          availableTimeSpan -= event.timeSpan;
-          if (result.timeSpan >= 0) {
-            consumerIndex = (consumerIndex + 1) % BUFFER_SIZE;
-          } else {
-            event.timeSpan = INITIAL_AUDIO_DELAY;
-            availableTimeSpan += INITIAL_AUDIO_DELAY;
-            if (!event.plannedGap) {
-              System.out.printf("Warning: %s buffer underflow, gap=%s%n",
-                                label, result.prettyTimeSpanString());
-            }
-          }
-        }
+        result.timeSpan = event.timeSpan;
+        availableTimeSpan -= event.timeSpan;
+        consumerIndex = (consumerIndex + 1) % BUFFER_SIZE;
       }
-    } while (result.timeSpan <= 0);
+    } else {
+      result.value = latestValue;
+      result.timeSpan = maxTimeSpan;
+      event.timeSpan -= maxTimeSpan;
+      availableTimeSpan -= maxTimeSpan;
+      if ((event.timeSpan < 0) && !event.plannedGap) {
+        System.out.printf("Warning: %s: buffer underflow, gap=%s%n",
+                          label, event.prettyTimeSpanString());
+      }
+    }
   }
 }
 
