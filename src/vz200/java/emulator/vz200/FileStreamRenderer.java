@@ -15,34 +15,50 @@ public class FileStreamRenderer extends Thread implements AutoCloseable {
   private static final int BYTES_PER_FRAME = 2;
   private static final float SAMPLE_RATE = 44100.0f;
 
-  private File file;
-  private byte[] buffer;
+  private final File file;
+  private final byte[] buffer;
   private FileOutputStream out;
   private SignalEventSource eventSource;
 
-  public FileStreamRenderer(File file) throws IOException {
+  private FileStreamRenderer()
+  {
+    throw new UnsupportedOperationException("unsupported empty constructor");
+  }
+
+  public FileStreamRenderer(final File file)
+    throws IOException
+  {
     super("FileStreamRenderer for file " + file);
     this.file = file;
     buffer = new byte[BYTES_PER_FRAME * BUFFER_FRAMES];
     try {
       out = new FileOutputStream(file);
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new IOException("failed opening file " + file.getPath(), e);
     }
   }
 
-  public void setEventSource(SignalEventSource eventSource) {
+  public void setEventSource(SignalEventSource eventSource)
+  {
     this.eventSource = eventSource;
   }
 
-  private void printMessage(String message) {
+  public String getFileName()
+  {
+    return file.getName();
+  }
+
+  private void printMessage(final String message)
+  {
     System.out.printf("FileStreamRenderer (%s): %s%n", file, message);
   }
 
-  private int renderEvent(short sample, int bufferIndex,
-                          int frameIndex, int nextFrameIndex) {
-    byte sampleHi = (byte)(sample >> 8);
-    byte sampleLo = (byte)(sample - sampleHi << 8);
+  private int renderEvent(final short sample, final int bufferStartIndex,
+                          final int frameIndex, final int nextFrameIndex)
+  {
+    final byte sampleHi = (byte)(sample >>> 8);
+    final byte sampleLo = (byte)(sample & 0xff);
+    int bufferIndex = bufferStartIndex;
     for (int i = frameIndex; i < nextFrameIndex; i++) {
       buffer[bufferIndex++] = sampleLo;
       buffer[bufferIndex++] = sampleHi;
@@ -50,9 +66,12 @@ public class FileStreamRenderer extends Thread implements AutoCloseable {
     return bufferIndex;
   }
 
-  private void renderChannel(SignalEventSource eventSource,
-                             int bufferOffset, SignalEventQueue.Event event,
-                             int fullBufferTime, double bufferFramesPerTime) {
+  private void renderChannel(final SignalEventSource eventSource,
+                             final int bufferOffset,
+                             final SignalEventQueue.Event event,
+                             final int fullBufferTime,
+                             final double bufferFramesPerTime)
+  {
     if (eventSource == null) {
       renderEvent((short)0, bufferOffset, 0, BUFFER_FRAMES);
       return;
@@ -75,42 +94,46 @@ public class FileStreamRenderer extends Thread implements AutoCloseable {
     }
   }
 
-  private void render(int fullBufferTime, double bufferFramesPerTime) {
-    SignalEventQueue.Event event = new SignalEventQueue.Event();
+  private void renderLoop(final int fullBufferTime,
+                          final double bufferFramesPerTime)
+  {
+    final SignalEventQueue.Event event = new SignalEventQueue.Event();
     while (true) {
       while (eventSource.getAvailableNanoSeconds() < fullBufferTime) {
         try {
           Thread.sleep(10);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
           // ignore for now
         }
       }
       renderChannel(eventSource, 0, event, fullBufferTime, bufferFramesPerTime);
       try {
         out.write(buffer, 0, buffer.length);
-      } catch (IOException e) {
+      } catch (final IOException e) {
         printMessage(String.format("file stream buffer overflow: %s%n", e));
       }
     }
   }
 
-  public void run() {
-    double nanoSampleRate = ((double)SAMPLE_RATE) * 0.000000001;
-    double inv_fullBufferTime = nanoSampleRate / BUFFER_FRAMES;
-    int fullBufferTime = (int)(1.0 / inv_fullBufferTime + 0.5);
-    double bufferFramesPerTime = BUFFER_FRAMES * inv_fullBufferTime;
+  public void run()
+  {
+    final double nanoSampleRate = ((double)SAMPLE_RATE) * 0.000000001;
+    final double inv_fullBufferTime = nanoSampleRate / BUFFER_FRAMES;
+    final int fullBufferTime = (int)(1.0 / inv_fullBufferTime + 0.5);
+    final double bufferFramesPerTime = BUFFER_FRAMES * inv_fullBufferTime;
     printMessage(String.format("fullBufferTime=%d", fullBufferTime));
     printMessage(String.format("writing to file %s", file.getName()));
-    render(fullBufferTime, bufferFramesPerTime);
+    renderLoop(fullBufferTime, bufferFramesPerTime);
   }
 
   @Override
-  public void close() {
+  public void close()
+  {
     if (out != null) {
       printMessage(String.format("closing file %s", file.getName()));
       try {
         out.close();
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         printMessage(String.format("failed closing file %s: %s",
                                    file.getName(), t));
       }
