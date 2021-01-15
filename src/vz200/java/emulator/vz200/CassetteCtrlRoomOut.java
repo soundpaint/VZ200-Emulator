@@ -2,29 +2,32 @@ package emulator.vz200;
 
 import emulator.z80.WallClockProvider;
 
-public class CassetteOut implements SignalEventSource, LineControlListener
+public class CassetteCtrlRoomOut
+  implements SignalEventSource, LineControlListener
 {
   private final SignalEventQueue eventQueue;
   private final short[] elongation;
   private boolean muted;
 
-  private CassetteOut()
+  private CassetteCtrlRoomOut()
   {
     throw new UnsupportedOperationException("unsupported empty constructor");
   }
 
-  public CassetteOut(final WallClockProvider wallClockProvider)
+  public CassetteCtrlRoomOut(final WallClockProvider wallClockProvider)
   {
     elongation = new short[4];
     eventQueue =
-      new SignalEventQueue("cassette out", wallClockProvider, (short)0);
+      new SignalEventQueue("cassette ctrl room out",
+                           wallClockProvider, (short)0);
   }
 
   private void printMessage(final String message)
   {
-    System.out.printf("CassetteOut: %s%n", message);
+    System.out.printf("CassetteCtrlRoomOut: %s%n", message);
   }
 
+  @Override
   public void lineChanged(final SourceDataLineChangeEvent event)
   {
     eventQueue.reset(event.getCurrentWallClockTime(), (short)0);
@@ -35,22 +38,25 @@ public class CassetteOut implements SignalEventSource, LineControlListener
     eventQueue.resync();
   }
 
+  @Override
   public void volumeChanged(final double volume)
   {
     final int amplitude =
       (int)Math.min(Math.max(volume * 32767.0, 0.0), 32767.0);
-    elongation[0] = 0;
-    elongation[1] = (short)amplitude;
+    elongation[0] = (short)(amplitude >>> 8);
+    elongation[1] = (short)(amplitude >>> 4);
     elongation[2] = (short)amplitude;
-    elongation[3] = (short)(2 * amplitude + 1);
+    elongation[3] = (short)(-(amplitude >>> 8) - 1);
     printMessage("amplitude changed: " + amplitude);
   }
 
+  @Override
   public void mutedChanged(final boolean muted)
   {
     this.muted = muted;
   }
 
+  @Override
   public long getAvailableNanoSeconds()
   {
     return eventQueue.getAvailableNanoSeconds();
@@ -59,11 +65,12 @@ public class CassetteOut implements SignalEventSource, LineControlListener
   public void putEvent(final int dataValue, final long wallClockTime)
   {
     if (!muted) {
-      short signalValue = elongation[dataValue];
+      final short signalValue = elongation[dataValue];
       eventQueue.put(signalValue, wallClockTime);
     }
   }
 
+  @Override
   public void getEvent(final SignalEventQueue.Event event,
                        final long maxTimeSpan)
   {

@@ -24,9 +24,10 @@ public class IO implements
   private final Keyboard keyboard;
   private final SettingsGUI settingsGUI;
   private final Speaker speaker;
-  private final CassetteOut cassetteOut;
+  private final CassetteCtrlRoomOut cassetteCtrlRoomOut;
+  private final CassetteFileOut cassetteFileOut;
   private final MonoAudioStreamRenderer speakerRenderer;
-  private final MonoAudioStreamRenderer cassetteOutRenderer;
+  private final MonoAudioStreamRenderer cassetteCtrlRoomOutRenderer;
   private FileStreamRenderer fileStreamRenderer;
   private FileStreamSampler fileStreamSampler;
   private long timePerClockCycle;
@@ -51,12 +52,15 @@ public class IO implements
     speaker = new Speaker(this);
     speakerRenderer.setSignalEventSource(speaker);
     speakerRenderer.start();
-    cassetteOutRenderer = new MonoAudioStreamRenderer("cassette out renderer");
-    cassetteOut = new CassetteOut(this);
-    cassetteOutRenderer.setSignalEventSource(cassetteOut);
-    cassetteOutRenderer.start();
+    cassetteCtrlRoomOutRenderer =
+      new MonoAudioStreamRenderer("cassette out renderer");
+    cassetteCtrlRoomOut = new CassetteCtrlRoomOut(this);
+    cassetteCtrlRoomOutRenderer.setSignalEventSource(cassetteCtrlRoomOut);
+    cassetteCtrlRoomOutRenderer.start();
+    cassetteFileOut = new CassetteFileOut(this);
     settingsGUI = new SettingsGUI(cpuControl, cpu, speaker, speakerRenderer,
-                                  cassetteOut, cassetteOutRenderer,
+                                  cassetteCtrlRoomOut,
+                                  cassetteCtrlRoomOutRenderer,
                                   this);
     settingsGUI.addTransportListener(this);
   }
@@ -64,7 +68,12 @@ public class IO implements
   public void resync(final long wallClockTime)
   {
     speaker.resync();
-    cassetteOut.resync();
+    if (cassetteCtrlRoomOut != null) {
+      cassetteCtrlRoomOut.resync();
+    }
+    if (cassetteFileOut != null) {
+      cassetteFileOut.resync();
+    }
   }
 
   public Video getVideo()
@@ -114,8 +123,12 @@ public class IO implements
       if (speaker != null) {
         speaker.putEvent((value >> 5) & 0x1, value  & 0x1, wallClockTime);
       }
-      if (cassetteOut != null) {
-        cassetteOut.putEvent((value >> 1) & 0x3, wallClockTime);
+      final int cassetteOutValue = (value >> 1) & 0x3;
+      if (cassetteCtrlRoomOut != null) {
+        cassetteCtrlRoomOut.putEvent(cassetteOutValue, wallClockTime);
+      }
+      if (cassetteFileOut != null) {
+        cassetteFileOut.putEvent(cassetteOutValue, wallClockTime);
       }
       video.setDisplayMode((value & 0x08) != 0x0);
       video.setColorMode((value & 0x10) != 0x0);
@@ -176,7 +189,8 @@ public class IO implements
   public void cassetteStartRecording(final File file) throws IOException
   {
     try {
-      fileStreamRenderer = new FileStreamRenderer(file, cassetteOut);
+      cassetteFileOut.resync();
+      fileStreamRenderer = new FileStreamRenderer(file, cassetteFileOut);
     } catch (final Throwable t) {
       throw new IOException("WARNING: I/O: failed opening file stream: " +
                             t.getMessage() +
