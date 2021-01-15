@@ -4,12 +4,13 @@ import java.io.IOException;
 import java.io.File;
 
 import emulator.z80.CPU;
-import emulator.z80.CPUControlAPI;
+import emulator.z80.CPUControl;
 import emulator.z80.MemoryBus;
 import emulator.z80.Util;
 import emulator.z80.WallClockProvider;
 
 public class IO implements
+                  CPU.WallClockListener,
                   WallClockProvider,
                   MemoryBus.BusReader, MemoryBus.BusWriter,
                   CassetteTransportListener
@@ -17,6 +18,7 @@ public class IO implements
   private final static int DEFAULT_BASE_ADDRESS = 0x6800;
   private final static int MEMORY_SIZE = 0x0800;
 
+  private final CPUControl cpuControl;
   private final int baseAddress;
   private final Video video;
   private final Keyboard keyboard;
@@ -36,10 +38,11 @@ public class IO implements
     throw new UnsupportedOperationException("unsupported empty constructor");
   }
 
-  public IO(final CPUControlAPI cpuControl, final CPU cpu,
+  public IO(final CPUControl cpuControl, final CPU cpu,
             final long currentWallClockTime)
     throws IOException
   {
+    this.cpuControl = cpuControl;
     this.baseAddress = DEFAULT_BASE_ADDRESS;
     keyboard = new Keyboard(baseAddress);
     video = new Video();
@@ -126,14 +129,16 @@ public class IO implements
     writeByte(address, (value >> 8) & 0xff, wallClockTime);
   }
 
-  public boolean updateWallClock(final long timePerClockCycle,
-                                 final long wallClockCycles,
-                                 final long wallClockTime)
+  public void wallClockChanged(final long timePerClockCycle,
+                               final long wallClockCycles,
+                               final long wallClockTime)
   {
     this.timePerClockCycle = timePerClockCycle;
     this.wallClockCycles = wallClockCycles;
     this.wallClockTime = wallClockTime;
-    return video.updateWallClock(wallClockCycles, wallClockTime);
+    if (video.updateWallClock(wallClockCycles, wallClockTime)) {
+      cpuControl.requestIRQ();
+    }
   }
 
   public long getTimePerClockCycle()

@@ -13,7 +13,7 @@ import emulator.z80.RAMMemory;
 import emulator.z80.ROMMemory;
 import emulator.z80.Z80;
 
-public class VZ200 implements CPU.WallClockListener
+public class VZ200
 {
   private static final String IMAGES_ROOT_PATH = ".";
   private static final int RAM_START = 0x7800;
@@ -47,11 +47,11 @@ public class VZ200 implements CPU.WallClockListener
     portMemoryBus = new MemoryBus();
     mainMemoryBus = new MemoryBus();
     final Z80 z80 = new Z80(mainMemoryBus, portMemoryBus);
-    z80.addWallClockListener(this);
     cpuControl = new CPUControl(z80);
     cpuControl.addResourceLocation(VZ200.class);
     final RAMMemory ram = new RAMMemory(RAM_START, RAM_LENGTH);
     io = new IO(cpuControl, z80, z80.getWallClockTime());
+    z80.addWallClockListener(io);
     final Video video = io.getVideo();
     mainMemoryBus.addReader(ram);
     mainMemoryBus.addWriter(ram);
@@ -61,15 +61,6 @@ public class VZ200 implements CPU.WallClockListener
     mainMemoryBus.addReader(video);
     mainMemoryBus.addWriter(video);
     monitor = new Monitor(cpuControl);
-  }
-
-  public void wallClockChanged(final long timePerClockCycle,
-                               final long wallClockCycles,
-                               final long wallClockTime)
-  {
-    if (io.updateWallClock(timePerClockCycle, wallClockCycles, wallClockTime)) {
-      cpuControl.requestIRQ();
-    }
   }
 
   private void run()
