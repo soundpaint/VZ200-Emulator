@@ -20,9 +20,6 @@ public class AudioStreamRenderer extends Thread implements AutoCloseable
   private static final boolean BIG_ENDIAN = true;
 
   private final byte[] buffer;
-  private final Mixer.Info[] mixerInfo;
-  private final Mixer mixer;
-  private final Line.Info[] sourceLineInfo;
   private final SourceDataLine sourceDataLine;
   private SignalEventSource leftChannelSource, rightChannelSource;
 
@@ -31,16 +28,16 @@ public class AudioStreamRenderer extends Thread implements AutoCloseable
     super("AudioStreamRenderer");
     buffer = new byte[FRAME_SIZE * BUFFER_FRAMES];
     try {
-      mixerInfo = AudioSystem.getMixerInfo();
+      final Mixer.Info[] mixerInfo = AudioSystem.getMixerInfo();
       if (mixerInfo.length == 0) {
         throw new RuntimeException("no mixer found");
       }
       for (int i = 0; i < mixerInfo.length; i++) {
         printMessage(String.format("found mixer: %s", mixerInfo[i]));
       }
-      mixer = AudioSystem.getMixer(mixerInfo[0]);
+      final Mixer mixer = AudioSystem.getMixer(mixerInfo[0]);
       printMessage("using mixer: " + mixer);
-      sourceLineInfo = mixer.getSourceLineInfo();
+      final Line.Info[] sourceLineInfo = mixer.getSourceLineInfo();
       if (sourceLineInfo.length == 0) {
         throw new RuntimeException("no source line found in mixer " + mixer);
       }
