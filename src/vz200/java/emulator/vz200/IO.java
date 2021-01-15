@@ -151,7 +151,8 @@ public class IO implements
     return wallClockTime;
   }
 
-  public void startPlaying(final File file) throws IOException
+  @Override
+  public void cassetteStartPlaying(final File file) throws IOException
   {
     try {
       fileStreamSampler = new FileStreamSampler(wallClockTime, file, 0);
@@ -166,7 +167,8 @@ public class IO implements
     }
   }
 
-  public void startRecording(final File file) throws IOException
+  @Override
+  public void cassetteStartRecording(final File file) throws IOException
   {
     try {
       fileStreamRenderer = new FileStreamRenderer(file);
@@ -179,7 +181,8 @@ public class IO implements
     fileStreamRenderer.start();
   }
 
-  public void stop()
+  @Override
+  public void cassetteStop()
   {
     if (fileStreamSampler != null) {
       System.out.printf("%s: aborted%n", fileStreamSampler.getFileName());

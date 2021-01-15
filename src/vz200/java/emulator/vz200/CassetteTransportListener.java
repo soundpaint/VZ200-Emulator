@@ -3,10 +3,11 @@ package emulator.vz200;
 import java.io.File;
 import java.io.IOException;
 
-public interface CassetteTransportListener {
-  public void startPlaying(File file) throws IOException;
-  public void startRecording(File file) throws IOException;
-  public void stop();
+public interface CassetteTransportListener
+{
+  void cassetteStartPlaying(final File file) throws IOException;
+  void cassetteStartRecording(final File file) throws IOException;
+  void cassetteStop();
 }
 
 /*

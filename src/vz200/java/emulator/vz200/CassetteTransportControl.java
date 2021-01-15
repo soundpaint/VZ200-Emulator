@@ -100,7 +100,7 @@ public class CassetteTransportControl extends Box
     if (notifyListeners) {
       for (final CassetteTransportListener listener : listeners) {
         try {
-          listener.startPlaying(file);
+          listener.cassetteStartPlaying(file);
           havePlayer = true;
         } catch (final IOException e) {
           JOptionPane.showMessageDialog(this, e.getMessage(), "IO Error",
@@ -139,7 +139,7 @@ public class CassetteTransportControl extends Box
     if (notifyListeners) {
       for (CassetteTransportListener listener : listeners) {
         try {
-          listener.startRecording(file);
+          listener.cassetteStartRecording(file);
           haveRecorder = true;
         } catch (final IOException e) {
           JOptionPane.showMessageDialog(this, e.getMessage(), "IO Error",
@@ -191,7 +191,7 @@ public class CassetteTransportControl extends Box
     file = null;
     if (notifyListeners) {
       for (final CassetteTransportListener listener : listeners) {
-        listener.stop();
+        listener.cassetteStop();
       }
     }
     statusLine.stop();

@@ -62,7 +62,7 @@ public class FileStreamSampler {
   private void stop() {
     stopped = true;
     for (CassetteTransportListener listener : listeners) {
-      listener.stop();
+      listener.cassetteStop();
     }
     inputFilter.resetInputValue(0.0);
   }
