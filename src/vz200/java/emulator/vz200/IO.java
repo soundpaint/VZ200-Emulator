@@ -176,13 +176,12 @@ public class IO implements
   public void cassetteStartRecording(final File file) throws IOException
   {
     try {
-      fileStreamRenderer = new FileStreamRenderer(file);
+      fileStreamRenderer = new FileStreamRenderer(file, cassetteOut);
     } catch (final Throwable t) {
       throw new IOException("WARNING: I/O: failed opening file stream: " +
                             t.getMessage() +
                             ".  No audio output will be saved.", t);
     }
-    fileStreamRenderer.setEventSource(cassetteOut);
     fileStreamRenderer.start();
   }
 
@@ -194,6 +193,11 @@ public class IO implements
       fileStreamSampler = null;
     }
     if (fileStreamRenderer != null) {
+      System.out.printf("%s: stopping renderer...%n",
+                        fileStreamRenderer.getFileName());
+      fileStreamRenderer.close();
+      System.out.printf("%s: stopped%n",
+                        fileStreamRenderer.getFileName());
       fileStreamRenderer = null;
     }
   }

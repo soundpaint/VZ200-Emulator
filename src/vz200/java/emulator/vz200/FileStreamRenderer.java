@@ -9,38 +9,41 @@ import java.io.IOException;
  * Encoding is 1 channel, 16 bits, signed PCM, little endian, 44100
  * Hz.
  */
-public class FileStreamRenderer extends Thread implements AutoCloseable {
-
+public class FileStreamRenderer extends Thread
+{
   private static final int BUFFER_FRAMES = 0xc00;
   private static final int BYTES_PER_FRAME = 2;
   private static final float SAMPLE_RATE = 44100.0f;
 
   private final File file;
+  private final SignalEventSource eventSource;
   private final byte[] buffer;
-  private FileOutputStream out;
-  private SignalEventSource eventSource;
+  private final FileOutputStream out;
+  private boolean started;
+  private boolean closing;
+  private boolean closed;
 
   private FileStreamRenderer()
   {
     throw new UnsupportedOperationException("unsupported empty constructor");
   }
 
-  public FileStreamRenderer(final File file)
+  public FileStreamRenderer(final File file,
+                            final SignalEventSource eventSource)
     throws IOException
   {
     super("FileStreamRenderer for file " + file);
     this.file = file;
+    this.eventSource = eventSource;
     buffer = new byte[BYTES_PER_FRAME * BUFFER_FRAMES];
     try {
       out = new FileOutputStream(file);
     } catch (final IOException e) {
       throw new IOException("failed opening file " + file.getPath(), e);
     }
-  }
-
-  public void setEventSource(SignalEventSource eventSource)
-  {
-    this.eventSource = eventSource;
+    started = false;
+    closing = false;
+    closed = false;
   }
 
   public String getFileName()
@@ -98,20 +101,36 @@ public class FileStreamRenderer extends Thread implements AutoCloseable {
                           final double bufferFramesPerTime)
   {
     final SignalEventQueue.Event event = new SignalEventQueue.Event();
-    while (true) {
-      while (eventSource.getAvailableNanoSeconds() < fullBufferTime) {
+    synchronized(this) {
+      if (started) throw new RuntimeException("renderer already started");
+      started = true;
+      while (true) {
+        while (eventSource.getAvailableNanoSeconds() < fullBufferTime) {
+          try {
+            wait(100);
+          } catch (final InterruptedException e) {
+            // ignore here, but check for (closing) below
+          }
+          if (closing) break;
+        }
+        if (closing) break;
+        renderChannel(eventSource, 0, event,
+                      fullBufferTime, bufferFramesPerTime);
         try {
-          Thread.sleep(10);
-        } catch (final InterruptedException e) {
-          // ignore for now
+          out.write(buffer, 0, buffer.length);
+        } catch (final IOException e) {
+          printMessage(String.format("file stream buffer overflow: %s%n", e));
         }
       }
-      renderChannel(eventSource, 0, event, fullBufferTime, bufferFramesPerTime);
+      printMessage(String.format("closing file %s", file.getName()));
       try {
-        out.write(buffer, 0, buffer.length);
-      } catch (final IOException e) {
-        printMessage(String.format("file stream buffer overflow: %s%n", e));
+        out.close();
+      } catch (final Throwable t) {
+        printMessage(String.format("failed closing file %s: %s",
+                                   file.getName(), t));
       }
+      closed = true;
+      notifyAll();
     }
   }
 
@@ -126,18 +145,23 @@ public class FileStreamRenderer extends Thread implements AutoCloseable {
     renderLoop(fullBufferTime, bufferFramesPerTime);
   }
 
-  @Override
   public void close()
   {
-    if (out != null) {
-      printMessage(String.format("closing file %s", file.getName()));
-      try {
-        out.close();
-      } catch (final Throwable t) {
-        printMessage(String.format("failed closing file %s: %s",
-                                   file.getName(), t));
+    synchronized(this) {
+      if (closing) {
+        System.err.printf("Warning: FileStreamRenderer: " + file.getPath() +
+                          " already closed");
+        return;
       }
-      out = null;
+      closing = true;
+      notifyAll();
+      while (!closed) {
+        try {
+          wait();
+        } catch (final InterruptedException e) {
+          // ignore here, but check for (!closed) above
+        }
+      }
     }
   }
 }
