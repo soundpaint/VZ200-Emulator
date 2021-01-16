@@ -3,11 +3,16 @@ package emulator.vz200;
 /**
  * Simple first-order IIR filter.
  */
-public class SimpleIIRFilter {
-  private double alpha;
-  private double beta;
-  private long significantSamples;
-  private double initialValue;
+public class SimpleIIRFilter
+{
+  private static final String MSG_ALPHA_OUT_OF_RANGE =
+    "alpha too near to 0.0 for acceptable number of feed samples; " +
+    "please choose a higher value for alpha";
+
+  private final double alpha;
+  private final double beta;
+  private final long feedLength;
+  private final double initialValue;
   private double value;
 
   /**
@@ -15,61 +20,71 @@ public class SimpleIIRFilter {
    * 1.0 - alpha.
    * @param resolution Targeted resolution, e.g. 32767 for integer
    * values (such as for a 16 bit audio input signal).  Needed to
-   * estimate the maximum number of input samples ("significant
-   * samples") to be considered for reaching transient state.
+   * estimate the maximum number of input samples ("feed length") to
+   * be considered for reaching transient state.
    */
-  public SimpleIIRFilter(double alpha, long resolution, double initialValue) {
+  public SimpleIIRFilter(final double alpha,
+                         final long resolution,
+                         final double initialValue)
+  {
     if ((alpha < 0.0) || (alpha > 1.0)) {
       throw new IllegalArgumentException("alpha not in [0,1.0]");
     }
     this.alpha = alpha;
     beta = 1.0 - alpha;
     try {
-      significantSamples = getSignificantSamples(alpha, resolution);
-    } catch (RuntimeException e) {
-      throw new IllegalArgumentException("alpha too near to 0.0 for acceptable number of significant samples; " +
-                                         "please choose a higher value for alpha");
+      feedLength = getFeedLength(alpha, resolution);
+    } catch (final RuntimeException e) {
+      throw new IllegalArgumentException(MSG_ALPHA_OUT_OF_RANGE);
     }
     this.initialValue = initialValue;
     value = initialValue;
   }
 
-  public double getAlpha() {
+  public double getAlpha()
+  {
     return alpha;
   }
 
-  public double getBeta() {
+  public double getBeta()
+  {
     return beta;
   }
 
-  public long getSignificantSamples() {
-    return significantSamples;
+  public long getFeedLength()
+  {
+    return feedLength;
   }
 
-  public double getOutputValue() {
+  public double getOutputValue()
+  {
     return value;
   }
 
-  public double addInputValue(double inputValue) {
-    value = alpha * inputValue + beta * value;
+  public double addInputValue(final double value)
+  {
+    this.value = alpha * value + beta * this.value;
+    return this.value;
+  }
+
+  public double resetToValue(final double value)
+  {
+    this.value = value;
     return value;
   }
 
-  public double resetInputValue(double inputValue) {
-    value = inputValue;
-    return value;
+  public double reset()
+  {
+    return resetToValue(initialValue);
   }
 
-  public double resetInputValue() {
-    return resetInputValue(initialValue);
-  }
-
-  private static long getSignificantSamples(double alpha, double resolution) {
-    double beta = 1.0 - alpha; // IIR feedback
-    // return minimum n such that beta^n < 1 / resolution
+  private static long getFeedLength(final double alpha,
+                                    final double resolution)
+  {
+    final double beta = 1.0 - alpha; // IIR feedback
+    // minimum n such that beta^n < 1 / resolution
     return (long)(Math.ceil(-Math.log(resolution) / Math.log(beta)) + 0.5);
   }
-
 }
 
 /*

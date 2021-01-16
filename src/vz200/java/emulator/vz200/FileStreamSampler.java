@@ -6,68 +6,78 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileStreamSampler {
+public class FileStreamSampler
+{
   private static final int BYTES_PER_FRAME = 2;
   private static final float SAMPLE_RATE = 44100.0f;
   private static final double INPUT_FILTER_ALPHA = 0.9;
-  private static final long MAX_SIGNIFICANT_SAMPLES = 10;
+  private static final long MAX_FEED_LENGTH = 10;
 
-  private boolean stopped;
-  private List<CassetteTransportListener> listeners;
-  private SimpleIIRFilter inputFilter;
-  private long significantSamples;
-  private File file;
-  private long holdTime;
-  private long timeOffs;
-  private FileInputStream inputStream;
+  private static final String MSG_FEED_LENGTH_OUT_OF_RANGE =
+    "number of max feed length too high; " +
+    "please choose higher value for alpha";
+
+  private final long startWallClockTime;
+  private final File file;
+  private final long holdTime;
+  private final double framesPerNanoSecond;
+  private final List<CassetteTransportListener> listeners;
+  private final FileInputStream inputStream;
+  private final SimpleIIRFilter inputFilter;
+  private final long feedLength;
   private long filePos;
   private double volume;
-  private double framesPerNanoSecond;
-  private short previousValue;
+  private boolean stopped;
 
-  private FileStreamSampler() {
+  private FileStreamSampler()
+  {
     throw new UnsupportedOperationException("unsupported constructor");
   }
 
-  public FileStreamSampler(long wallClockTime,
-                           File file, long holdTime) throws IOException {
-    stopped = false;
-    listeners = new ArrayList<CassetteTransportListener>();
+  public FileStreamSampler(final long wallClockTime,
+                           final File file, final long holdTime)
+    throws IOException
+  {
     this.file = file;
     this.holdTime = holdTime;
-    timeOffs = wallClockTime;
+    startWallClockTime = wallClockTime;
+    framesPerNanoSecond = ((double)SAMPLE_RATE) * 0.000000001;
+    listeners = new ArrayList<CassetteTransportListener>();
     inputStream = new FileInputStream(file);
+    inputFilter = new SimpleIIRFilter(INPUT_FILTER_ALPHA, Short.MAX_VALUE, 0.0);
+    feedLength = inputFilter.getFeedLength();
+    if (feedLength > MAX_FEED_LENGTH) {
+      throw new IllegalArgumentException(MSG_FEED_LENGTH_OUT_OF_RANGE);
+    }
     filePos = 0;
     volume = 1.0;
-    framesPerNanoSecond = ((double)SAMPLE_RATE) * 0.000000001;
-    previousValue = 0;
-    inputFilter = new SimpleIIRFilter(INPUT_FILTER_ALPHA, Short.MAX_VALUE, 0.0);
-    significantSamples = inputFilter.getSignificantSamples();
-    System.out.printf("%s: start playing with #%d samples hold time%n",
-                      getFileName(), significantSamples);
-    if (significantSamples > MAX_SIGNIFICANT_SAMPLES) {
-      throw new IllegalArgumentException("number of max significant samples too high; " +
-                                         "please choose higher value for alpha");
-    }
+    stopped = false;
+    System.out.printf("%s: start playing with hold time of #%d feed samples%n",
+                      getFileName(), feedLength);
   }
 
-  public String getFileName() {
+  public String getFileName()
+  {
     return file.getName();
   }
 
-  public void addTransportListener(CassetteTransportListener listener) {
+  public void addTransportListener(final CassetteTransportListener listener)
+  {
     listeners.add(listener);
   }
 
-  private void stop() {
+  private void stop()
+  {
+    System.out.printf("%s: end of file reached%n", getFileName());
     stopped = true;
-    for (CassetteTransportListener listener : listeners) {
+    for (final CassetteTransportListener listener : listeners) {
       listener.cassetteStop();
     }
-    inputFilter.resetInputValue(0.0);
+    inputFilter.reset();
   }
 
-  public void setVolume(double volume) {
+  public void setVolume(final double volume)
+  {
     if (volume < 0.0) {
       throw new IllegalArgumentException("volume < 0.0");
     }
@@ -77,26 +87,35 @@ public class FileStreamSampler {
     this.volume = volume;
   }
 
-  public short getValue(long wallClockTime) {
-    computeValue(wallClockTime);
-    long value = (long)inputFilter.getOutputValue();
-    if (value < -32768) value = -32768;
-    if (value > 32767) value = 32767;
+  public short getValue(final long wallClockTime)
+  {
+    seek(wallClockTime);
+    final double value = inputFilter.getOutputValue();
+    if (value <= -32768.0) return -32768;
+    if (value >= 32767.0) return 32767;
     return (short)value;
   }
 
-  private void computeValue(long wallClockTime) {
+  /**
+   * Wind to the file location that represents the specified point of
+   * time.
+   *
+   * Note: Only seek forward!  Trying to seek backward may result in
+   * unexpected behavior.
+   */
+  private void seek(final long wallClockTime)
+  {
     if (stopped) {
       // no more data available => keep previous value
       return;
     }
     try {
-      long time = wallClockTime - timeOffs;
+      final long time = wallClockTime - startWallClockTime;
       if (time < 0) {
-        // Stream not yet started => keep initial value.
+        // stream not yet started => keep initial value
         return;
       }
-      long nextFilePos =
+      final long nextFilePos =
         ((long)(framesPerNanoSecond * time + 0.5)) * BYTES_PER_FRAME;
       if (filePos > nextFilePos) {
         // rounding error
@@ -109,15 +128,13 @@ public class FileStreamSampler {
         // valid.
         return;
       }
-      long nextFilterFilePos =
-        nextFilePos - significantSamples * BYTES_PER_FRAME;
-      long bytesToSkip = nextFilterFilePos - filePos;
+      final long nextFilterFilePos =
+        nextFilePos - feedLength * BYTES_PER_FRAME;
+      final long bytesToSkip = nextFilterFilePos - filePos;
       if (bytesToSkip > 0) {
         filePos += inputStream.skip(bytesToSkip);
       }
       if (nextFilterFilePos > filePos) {
-        // This happens when the end of the input stream has been
-        // reached.
         stop();
         return;
       }
@@ -127,18 +144,19 @@ public class FileStreamSampler {
           eof = true;
           break;
         }
-        short value = (short)((inputStream.read() & 0xff) |
-                              ((inputStream.read() << 8) & 0xff00));
+        // 16 bit little endian, mono
+        final short value =
+          (short)((inputStream.read() & 0xff) |
+                  ((inputStream.read() << 8) & 0xff00));
         inputFilter.addInputValue(value);
       }
       if (eof) {
         for (; (filePos < nextFilePos); filePos += 2) {
           inputFilter.addInputValue(0);
         }
-        System.out.printf("%s: end of file reached%n", getFileName());
         stop();
       }
-    } catch (IOException e) {
+    } catch (final IOException e) {
       System.out.printf("WARNING: io exception: %s%n", e);
     }
   }
