@@ -2450,6 +2450,9 @@
       initial check sum value
     </comment>
   </at>
+  <at address="0x34c6">
+    <comment>and zero MSB</comment>
+  </at>
   <at address="0x34d1">
     <comment>cout MSB of prgmem_start</comment>
   </at>
@@ -2459,12 +2462,24 @@
   <at address="0x34db">
     <comment>cout LSB of vlt_start</comment>
   </at>
+  <at address="0x34df">
+    <comment>and add to check sum</comment>
+  </at>
   <at address="0x34e2">
     <comment>cout MSB of vlt_start</comment>
+  </at>
+  <at address="0x34e6">
+    <comment>and add to check sum</comment>
   </at>
   <at address="0x34ec">
     <label>csave_prg_next</label>
     <comment>cout next byte of prg code</comment>
+  </at>
+  <at address="0x34f1">
+    <comment>and add to check sum</comment>
+  </at>
+  <at address="0x34f8">
+    <comment>repeat until all bytes of prg code written</comment>
   </at>
   <at address="0x34fa">
     <comment>cout LSB of check sum</comment>
@@ -2491,6 +2506,9 @@
       &nbsp; * otherwise (bit is 0) produce one<br />
       &nbsp;   long cycle (via 352bh)
     </header>
+  </at>
+  <at address="0x3514">
+    <comment>serialize byte into 8 bits</comment>
   </at>
   <at address="0x3517">
     <label>cass_cout_nxt</label>
@@ -2528,6 +2546,15 @@
       bit of the current byte to write
     </header>
   </at>
+  <at address="0x352e">
+    <comment>cassette out max signal level</comment>
+  </at>
+  <at address="0x3533">
+    <comment>#iterations for long cycle</comment>
+  </at>
+  <at address="0x3537">
+    <comment>cassette out min signal level</comment>
+  </at>
   <at address="0x3541">
     <footer>---- END cassette out: long cycle ----</footer>
   </at>
@@ -2541,6 +2568,15 @@
       status "00" for ca. 64µs<br />
       (~230 CPU clock cycles)
     </header>
+  </at>
+  <at address="0x3545">
+    <comment>cassette out max signal level</comment>
+  </at>
+  <at address="0x354a">
+    <comment>#iterations for short cycle</comment>
+  </at>
+  <at address="0x354e">
+    <comment>cassette out min signal level</comment>
   </at>
   <at address="0x3557">
     <footer>---- END cassette out: short cycle ----</footer>
@@ -2600,8 +2636,18 @@
       including the trailing "\0"
     </comment>
   </at>
+  <at address="0x3581">
+    <comment>location of filename buffer</comment>
+  </at>
   <at address="0x3584">
     <label>cass_fname_nextchar</label>
+    <comment>get next filename char</comment>
+  </at>
+  <at address="0x3586">
+    <comment>output filename char to cassette</comment>
+  </at>
+  <at address="0x3589">
+    <comment>repeat for all filename chars</comment>
   </at>
   <at address="0x358c">
     <label>cass_parse_fname</label>
@@ -2663,12 +2709,16 @@
     <comment>still in graphics mode?</comment>
   </at>
   <at address="0x35bd">
+    <comment>no => skip switch to text mode</comment>
+  </at>
+  <at address="0x35bd">
     <comment>yes => switch to text mode</comment>
   </at>
   <at address="0x35c5">
     <comment>clear screen</comment>
   </at>
   <at address="0x35c8">
+    <label>cass_stat_line_init2</label>
     <comment>move cursor to lower right corner</comment>
   </at>
   <at address="0x35d0">
@@ -2971,6 +3021,47 @@
     <label>go_ready</label>
     <header>print "READY" and enter edit mode</header>
   </at>
+  <at address="0x36d9">
+    <comment>location of cout_mode</comment>
+  </at>
+  <at address="0x36dc">
+    <comment>executing "CRUN"?</comment>
+  </at>
+  <at address="0x36de">
+    <comment>yes => run loaded program</comment>
+  </at>
+  <at address="0x36e0">
+    <comment>no => back to BASIC editor</comment>
+  </at>
+  <at address="0x36e3">
+    <label>css_run_prg</label>
+    <comment>clear "CRUN" flag of cout_mode</comment>
+  </at>
+  <at address="0x36e8">
+    <comment>load prg code start address</comment>
+  </at>
+  <at address="0x36f5">
+    <comment>cursor off</comment>
+  </at>
+  <at address="0x36fb">
+    <comment>copy into BASIC input line buffer</comment>
+  </at>
+  <at address="0x36fe">
+    <comment>textual command "RUN\0"</comment>
+  </at>
+  <at address="0x3701">
+    <label>cp_run_nxt</label>
+  </at>
+  <at address="0x3704">
+    <comment>copy complete</comment>
+  </at>
+  <at address="0x3706">
+    <comment>prepare to copy next char of command</comment>
+  </at>
+  <at address="0x370a">
+    <label>exec_cmd</label>
+    <comment>run command in input line buffer</comment>
+  </at>
   <at address="0x3711">
     <label>css_ld_error</label>
     <comment>pointer to message "\rLOADING ERROR\r"</comment>
@@ -3054,7 +3145,10 @@
   </at>
   <at address="0x3779">
     <label>css_rd_next_bit</label>
-    <comment>read next bit and shift left it into reg A</comment>
+    <comment>
+      read next bit and shift left it into reg D,<br />
+      holding a copy in reg A
+    </comment>
   </at>
   <at address="0x377c">
     <comment>failed? => exit with C flag set</comment>
@@ -3088,11 +3182,12 @@
     </comment>
   </at>
   <at address="0x3790">
-    <comment>max 0x0800 iterations</comment>
+    <label>css_rd_bit2</label>
+    <comment>max 0x07ff iterations</comment>
   </at>
   <at address="0x3793">
-    <label>css_test_0</label>
-    <comment>next try</comment>
+    <label>css_await_lvl0</label>
+    <comment>await signal level "0"</comment>
   </at>
   <at address="0x3796">
     <comment>got signal level "0"?</comment>
@@ -3116,104 +3211,149 @@
     <comment>abort with read error</comment>
   </at>
   <at address="0x37a2">
-    <label>css_stable0</label>
-    <comment>still get "0", or just got jitter?</comment>
+    <label>css_stable_lvl0</label>
+    <comment>still signal level "0", or detected jitter?</comment>
   </at>
   <at address="0x37a7">
-    <comment>just jitter => wait again for stable "0"</comment>
+    <comment>
+      jitter detected<br />
+      => wait again for stable signal level "0"
+    </comment>
   </at>
   <at address="0x37a9">
-    <comment>still get "0", or just got jitter?</comment>
+    <comment>still signal level "0", or detected jitter?</comment>
   </at>
   <at address="0x37ae">
-    <comment>just jitter => wait again for stable "0"</comment>
+    <comment>
+      jitter detected<br />
+      => wait again for stable signal level "0"
+    </comment>
   </at>
   <at address="0x37b0">
-    <comment>skip remaining "0" phase (0x52 iterations)</comment>
+    <comment>
+      skip half of bit (ca. 0x52 iterations) to see<br />
+      if this bit frame contains a long cycle (i.e. bit=0)<br />
+      or only short cycles (i.e. bit=1)
+    </comment>
+  </at>
+  <at address="0x37b2">
+    <label>css_skip_halfbit</label>
   </at>
   <at address="0x37b4">
     <comment>
-      long cycle (still "0") or<br />
-      short cycle (now "1")?
+      long cycle (still signal level "0") or<br />
+      short cycle (now signal level "1")?
     </comment>
   </at>
   <at address="0x37b9">
-    <comment>yes => check for stable "1"</comment>
+    <comment>yes => check for stable "1" of short cycle</comment>
   </at>
   <at address="0x37bb">
-    <label>css_await_1</label>
+    <label>css_await_lvl1</label>
     <comment>
-      wait for cassette in value "1"<br />
-      (note: this loop can *not* be "BREAK"ed)
+      wait for signal level "1"<br />
+      (NB: this loop can *not* be "BREAK"ed)
     </comment>
   </at>
   <at address="0x37c0">
-    <comment>"0"? => continue waiting</comment>
+    <comment>
+      signal level "0"?<br />
+      => continue waiting
+    </comment>
   </at>
   <at address="0x37c2">
-    <comment>retry getting a "0" with timeout after 0x0800 cycles</comment>
+    <comment>
+      signal level "1"?<br />
+      => retry getting signal level "0"<br />
+      with timeout after max 0x07ff cycles
+    </comment>
   </at>
   <at address="0x37c4">
-    <label>css_chk_1_5a</label>
+    <label>css_stable_lvl1</label>
     <comment>
-      test if cassette in value keeps "1"<br />
-      for at least 0x5a loop iterations
+      check for short stable phase<br />
+      (&gt;= 0x5a loop iterations for either phase)
     </comment>
+  </at>
+  <at address="0x37c6">
+    <comment>assume bit "1"</comment>
   </at>
   <at address="0x37c8">
     <label>css_chk_stable1</label>
-    <comment>next try</comment>
-  </at>
-  <at address="0x37cb">
-    <comment>got "0"?</comment>
+    <comment>signal level "0"?</comment>
   </at>
   <at address="0x37cd">
-    <comment>yes => test failed => goto 0x37da</comment>
+    <comment>
+      yes => check for long stable phase "0"
+    </comment>
   </at>
   <at address="0x37cf">
-    <comment>no => ok, continue test</comment>
+    <label>css_chk_phase1</label>
+    <comment>no => continue checking for short stable phase "1"</comment>
   </at>
   <at address="0x37d1">
-    <comment>test succeeded, add bit "1"</comment>
+    <label>css_rd_bit_ok</label>
+    <comment>
+      stable phase confirmed;<br />
+      shift bit value into resulting byte
+    </comment>
   </at>
   <at address="0x37d2">
-    <comment>A=ff</comment>
+    <comment>
+      now A=ff (case: bit=1)<br />
+      or A=00 (case: bit=0)
+    </comment>
   </at>
   <at address="0x37d4">
-    <comment>add as LSB of reg D</comment>
+    <comment>left-shift result bit into LSB of reg D</comment>
   </at>
-  <at address="0x37d9">
+  <at address="0x37d7">
     <comment>return with copy of D in A</comment>
   </at>
+  <at address="0x37d8">
+    <comment>and C flag cleared</comment>
+  </at>
+  <at address="0x37d9">
+    <comment>cassette read bit successfully completed</comment>
+  </at>
   <at address="0x37da">
-    <comment>test failed, check if stable "0"</comment>
+    <label>css_chk_phase0</label>
+    <comment>test failed, check if long stable phase "0"</comment>
   </at>
   <at address="0x37dd">
-    <comment>still get "0", or just got jitter?</comment>
+    <comment>still signal level "0", or detect jitter?</comment>
   </at>
   <at address="0x37df">
-    <comment>just jitter => jump to 0x37cf</comment>
+    <comment>
+      jitter detected<br />
+      => check phase
+    </comment>
   </at>
   <at address="0x37e4">
-    <comment>still get "0", or just got jitter?</comment>
+    <comment>still signal level "0", or detect jitter?</comment>
   </at>
   <at address="0x37e6">
-    <comment>just jitter => jump to 0x37cf</comment>
+    <comment>
+      jitter detected<br />
+      => check phase
+    </comment>
   </at>
   <at address="0x37e8">
-    <comment>is this a stable "0" phase?</comment>
+    <comment>long stable phase "0" => assume bit "0"</comment>
   </at>
   <at address="0x37ec">
-    <comment>got "0"?</comment>
+    <comment>got signal level "0"?</comment>
   </at>
   <at address="0x37ee">
-    <comment>no => test failed => goto 0x37cf</comment>
+    <comment>
+      no => check for short phase "1"<br />
+    </comment>
   </at>
   <at address="0x37f0">
     <comment>next try</comment>
   </at>
   <at address="0x37f2">
-    <comment>timeout => test succeeded, add bit "1"</comment>
+    <comment>bit "0" confirmed</comment>
   </at>
   <at address="0x37f4">
     <label>cass_prt_status</label>
@@ -3426,6 +3566,24 @@
     <label>cmd_copy</label>
     <comment>handler for token 0x96 ("COPY")</comment>
   </at>
+  <at address="0x391c">
+    <comment>with screen starting at 0x7000,</comment>
+  </at>
+  <at address="0x391f">
+    <comment>for all 16 lines of the screen,</comment>
+  </at>
+  <at address="0x3921">
+    <comment>and for all 32 chars of each line,</comment>
+  </at>
+  <at address="0x3924">
+    <comment>text char or block graphics?</comment>
+  </at>
+  <at address="0x3928">
+    <label>cmd_copy_grph</label>
+  </at>
+  <at address="0x392d">
+    <label>cmd_copy_txt</label>
+  </at>
   <at address="0x3ae2">
     <comment>send CR+LF to printer</comment>
   </at>
@@ -3490,6 +3648,9 @@
     <label>cass_cout</label>
     <header>---- START cout for cassette ----</header>
   </at>
+  <at address="0x3b5a">
+    <comment>file_type for ascii data written to cassette</comment>
+  </at>
   <at address="0x3b63">
     <comment>read file name: parse '"'</comment>
   </at>
@@ -3507,6 +3668,10 @@
   <at address="0x3b67">
     <footer>---- END cout for cassette ----</footer>
   </at>
+  <at address="0x3b68">
+    <label>cass_cin</label>
+    <header>---- START cin from cassette ----</header>
+  </at>
   <at address="0x3b6f">
     <data-bytes length="0x01">'"'</data-bytes>
     <comment>quote char</comment>
@@ -3514,6 +3679,15 @@
   <at address="0x3b71">
     <data-bytes length="0x01">","</data-bytes>
     <comment>comma separator</comment>
+  </at>
+  <at address="0x3b76">
+    <comment>pointer to "WAITING\0"</comment>
+  </at>
+  <at address="0x3b82">
+    <comment>file_type 0xf2 for ascii data?</comment>
+  </at>
+  <at address="0x3b84">
+    <comment>no => wait for other data from cassette</comment>
   </at>
   <at address="0x3cd4">
     <label>prt_err</label>
