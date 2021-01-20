@@ -1248,6 +1248,11 @@
   </at>
   <at address="0x1822">
     <label>tbl_tok_hndl</label>
+    <header>
+      ---- START BASIC TOKEN VECTOR TABLE ----<br />
+      for tokens 0x80..0xbb;<br />
+      2 bytes (address LSB, address MSB) per entry
+    </header>
     <comment>vector to handler for token 0x80 ("END")</comment>
     <data-bytes length="0x02" />
   </at>
@@ -1488,6 +1493,7 @@
   </at>
   <at address="0x1898">
     <comment>vector to handler for token 0xbb ("NEW")</comment>
+    <footer>---- END BASIC TOKEN VECTOR TABLE ----</footer>
     <data-bytes length="0x02" />
   </at>
   <at address="0x18f7">
@@ -1595,6 +1601,47 @@
   <at address="0x1cc6">
     <data-bytes length="0x01">0xbd</data-bytes>
     <comment>"=" with bit 8=1</comment>
+  </at>
+  <at address="0x1d60">
+    <comment>token byte or char?</comment>
+  </at>
+  <at address="0x1d62">
+    <comment>char => got LHS of variable assignment</comment>
+  </at>
+  <at address="0x1d65">
+    <label>parse_tok</label>
+    <comment>
+      token >= 0xbc?<br />
+      (token vector table valid only for tokens 0x80..0xbb)
+    </comment>
+  </at>
+  <at address="0x1d67">
+    <comment>yes => handle other token, not in token vector list</comment>
+  </at>
+  <at address="0x1d6a">
+    <label>parse_tok1</label>
+    <comment>token table offset := 2 * (token value - 0x80)</comment>
+  </at>
+  <at address="0x1d6e">
+    <comment>tmp save HL</comment>
+  </at>
+  <at address="0x1d6f">
+    <comment>start address of token table,</comment>
+  </at>
+  <at address="0x1d72">
+    <comment>plus table offset for token</comment>
+  </at>
+  <at address="0x1d72">
+    <comment>token vector LSB</comment>
+  </at>
+  <at address="0x1d75">
+    <comment>token vector MSB</comment>
+  </at>
+  <at address="0x1d75">
+    <comment>for use as dst addr upon next RET</comment>
+  </at>
+  <at address="0x1d77">
+    <comment>restore tmp'ly saved HL</comment>
   </at>
   <at address="0x1d78">
     <label>rst10_impl</label>
@@ -1899,6 +1946,16 @@
   <at address="0x2ae1">
     <data-bytes length="0x01">")"</data-bytes>
     <comment>right parenthesis</comment>
+  </at>
+  <at address="0x2ae7">
+    <label>parse_tok2</label>
+    <comment>parse token not in token vector list</comment>
+  </at>
+  <at address="0x2aec">
+    <label>handle_tok_0xfa</label>
+  </at>
+  <at address="0x2ae9">
+    <comment>no => other token</comment>
   </at>
   <at address="0x2afb">
     <label>cmd_out</label>
