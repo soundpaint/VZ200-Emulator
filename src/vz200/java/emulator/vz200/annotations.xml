@@ -1631,13 +1631,13 @@
   <at address="0x1d72">
     <comment>plus table offset for token</comment>
   </at>
-  <at address="0x1d72">
+  <at address="0x1d73">
     <comment>token vector LSB</comment>
   </at>
   <at address="0x1d75">
     <comment>token vector MSB</comment>
   </at>
-  <at address="0x1d75">
+  <at address="0x1d76">
     <comment>for use as dst addr upon next RET</comment>
   </at>
   <at address="0x1d77">
@@ -2507,7 +2507,7 @@
       initial check sum value
     </comment>
   </at>
-  <at address="0x34c6">
+  <at address="0x34cc">
     <comment>and zero MSB</comment>
   </at>
   <at address="0x34d1">
@@ -2558,10 +2558,24 @@
       * start with short cycle (via 3542h)<br />
       * for each of the 8 bits of the byte in reg A,<br />
       &nbsp; starting with the uppermost bit, do:<br />
-      &nbsp; * if bit is 1, then produce two<br />
+      &nbsp; * if bit is 1, then produce three<br />
       &nbsp;   short cycles (via 3542h),<br />
+      +--+  +--+  +--+<br />
+      |  |  |  |  |  |<br />
+      +  +--+  +--+  +--<br />
       &nbsp; * otherwise (bit is 0) produce one<br />
-      &nbsp;   long cycle (via 352bh)
+      &nbsp;   short and one long cycle (via 352bh)
+      +--+  +-----+<br />
+      |  |  |     |<br />
+      +  +--+     +-----<br />
+      <br />
+      Note that both sequence have the same<br />
+      total length of ~192µs, thus building a<br />
+      bit frame of (roughly) constant length.<br />
+      That is, for reading in again, it is<br />
+      sufficient to count the number of rising<br />
+      (or falling) edges within this bit frame<br />
+      of known length.
     </header>
   </at>
   <at address="0x3514">
@@ -2599,6 +2613,9 @@
       (~470 CPU clock cycles), then<br />
       status "00" for ca. 128µs<br />
       (~461 CPU clock cycles),<br />
+      ----+<br />
+          |<br />
+          +----<br />
       then goto 3524h to continue with next<br />
       bit of the current byte to write
     </header>
@@ -2624,6 +2641,9 @@
       (~230 CPU clock cycles), then<br />
       status "00" for ca. 64µs<br />
       (~230 CPU clock cycles)
+      --+<br />
+        |<br />
+        +--<br />
     </header>
   </at>
   <at address="0x3545">
@@ -2765,7 +2785,7 @@
   <at address="0x35b6">
     <comment>still in graphics mode?</comment>
   </at>
-  <at address="0x35bd">
+  <at address="0x35bb">
     <comment>no => skip switch to text mode</comment>
   </at>
   <at address="0x35bd">
@@ -2811,11 +2831,11 @@
     <comment>got signal level "1"?</comment>
   </at>
   <at address="0x35ef">
-    <comment>no => continue waiting</comment>
+    <comment>yes => continue waiting for "0"</comment>
   </at>
   <at address="0x35f1">
     <label>css_rd_hdr_next_bit</label>
-    <comment>yes => try reading a single bit</comment>
+    <comment>got level "0" => try reading a single bit</comment>
   </at>
   <at address="0x35f4">
     <comment>if read error, retry from start</comment>
@@ -2842,7 +2862,7 @@
   <at address="0x3603">
     <comment>finally got bit pattern %10000000?</comment>
   </at>
-  <at address="0x35ff">
+  <at address="0x3605">
     <comment>no => retry from start</comment>
   </at>
   <at address="0x3607">
@@ -3230,8 +3250,12 @@
     <label>css_rd_bit</label>
     <header>
       ---- cassette input: read bit ----<br />
-      on error, C flag is set<br />
-      otherwise, resulting bit will be left-shifted into reg A
+      On error, C flag is set<br />
+      otherwise, resulting bit will be<br />
+      left-shifted into reg A.<br />
+      for detailed description of the<br />
+      signal encoding, see annotations<br />
+      for code at memory location 0x3511.
     </header>
     <comment>
       wait for cassette input signal level of "0",<br />
@@ -3262,7 +3286,7 @@
     <comment>no => continue</comment>
   </at>
   <at address="0x37a0">
-    <comment>yes => set C flag to indicate error</comment>
+    <comment>yes => set C flag to indicate read error</comment>
   </at>
   <at address="0x37a1">
     <comment>abort with read error</comment>
@@ -3288,8 +3312,10 @@
   </at>
   <at address="0x37b0">
     <comment>
-      skip half of bit (ca. 0x52 iterations) to see<br />
-      if this bit frame contains a long cycle (i.e. bit=0)<br />
+      bit frame starts here;<br />
+      skip roughly the first half of the bit frame<br />
+      (0x52 iterations) to see if this frame<br />
+      contains a long cycle (i.e. bit=0)<br />
       or only short cycles (i.e. bit=1)
     </comment>
   </at>
@@ -3298,12 +3324,14 @@
   </at>
   <at address="0x37b4">
     <comment>
-      long cycle (still signal level "0") or<br />
-      short cycle (now signal level "1")?
+      now, examine 2nd half of the bit frame
     </comment>
   </at>
+  <at address="0x37b7">
+    <comment>signal level "0"?</comment>
+  </at>
   <at address="0x37b9">
-    <comment>yes => check for stable "1" of short cycle</comment>
+    <comment>no => check for stable "1"</comment>
   </at>
   <at address="0x37bb">
     <label>css_await_lvl1</label>
@@ -3328,12 +3356,13 @@
   <at address="0x37c4">
     <label>css_stable_lvl1</label>
     <comment>
-      check for short stable phase<br />
-      (&gt;= 0x5a loop iterations for either phase)
+      count falling edges for a fixed<br />
+      interval of time matching roughly the<br />
+      2nd half of the bit frame
     </comment>
   </at>
   <at address="0x37c6">
-    <comment>assume bit "1"</comment>
+    <comment>reset falling-edge counter to 0</comment>
   </at>
   <at address="0x37c8">
     <label>css_chk_stable1</label>
@@ -3341,25 +3370,23 @@
   </at>
   <at address="0x37cd">
     <comment>
-      yes => check for long stable phase "0"
+      yes => check for falling edge
     </comment>
   </at>
   <at address="0x37cf">
     <label>css_chk_phase1</label>
-    <comment>no => continue checking for short stable phase "1"</comment>
+    <comment>no => decrease timer and continue watching</comment>
   </at>
   <at address="0x37d1">
-    <label>css_rd_bit_ok</label>
+    <label>css_rd_bit_ready</label>
     <comment>
-      stable phase confirmed;<br />
-      shift bit value into resulting byte
+      bit frame timed out;<br />
+      now determine bit value from number of<br />
+      detected falling edges,
     </comment>
   </at>
   <at address="0x37d2">
-    <comment>
-      now A=ff (case: bit=1)<br />
-      or A=00 (case: bit=0)
-    </comment>
+    <comment>excluding extra falling edge</comment>
   </at>
   <at address="0x37d4">
     <comment>left-shift result bit into LSB of reg D</comment>
@@ -3375,7 +3402,7 @@
   </at>
   <at address="0x37da">
     <label>css_chk_phase0</label>
-    <comment>test failed, check if long stable phase "0"</comment>
+    <comment>check if long stable phase "0"</comment>
   </at>
   <at address="0x37dd">
     <comment>still signal level "0", or detect jitter?</comment>
@@ -3383,7 +3410,7 @@
   <at address="0x37df">
     <comment>
       jitter detected<br />
-      => check phase
+      => not a true falling edge
     </comment>
   </at>
   <at address="0x37e4">
@@ -3392,25 +3419,28 @@
   <at address="0x37e6">
     <comment>
       jitter detected<br />
-      => check phase
+      => not a true falling edge
     </comment>
   </at>
   <at address="0x37e8">
-    <comment>long stable phase "0" => assume bit "0"</comment>
+    <comment>falling edge detected</comment>
   </at>
   <at address="0x37ec">
-    <comment>got signal level "0"?</comment>
+    <comment>still got signal level "0"?</comment>
   </at>
   <at address="0x37ee">
     <comment>
-      no => check for short phase "1"<br />
+      no => rising edge detected
     </comment>
   </at>
   <at address="0x37f0">
-    <comment>next try</comment>
+    <comment>decrease timer and continue watching</comment>
   </at>
   <at address="0x37f2">
-    <comment>bit "0" confirmed</comment>
+    <comment>
+      bit frame timed out;<br />
+      time to evaluate edge count
+    </comment>
   </at>
   <at address="0x37f4">
     <label>cass_prt_status</label>
