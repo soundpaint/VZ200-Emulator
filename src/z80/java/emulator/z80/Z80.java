@@ -1590,7 +1590,7 @@ public class Z80 implements CPU {
       public void init() {
 	init("CALL \\COND[c],\\ADR16[x]",
 	     "11ccc100xxxxxxxxxxxxxxxx",
-	     10, 17);
+	     17, 10);
       }
       public void execute0(Arguments args) {
 	if (COND[getArg(args, 'c')].isTrue())
@@ -1808,7 +1808,7 @@ public class Z80 implements CPU {
       public void init() {
 	init("DJNZ \\REL8[r]",
 	     "00010000rrrrrrrr",
-	     8, 13);
+	     13, 8);
       }
       public void execute0(Arguments args) {
 	regB.decrement();
@@ -2058,7 +2058,7 @@ public class Z80 implements CPU {
       public void init() {
 	init("INDR",
 	     "1110110110111010",
-	     20, 15);
+	     21, 16);
       }
       public void execute0(Arguments args) {
 	doIND();
@@ -2082,7 +2082,7 @@ public class Z80 implements CPU {
       public void init() {
 	init("INIR",
 	     "1110110110110010",
-	     20, 15);
+	     21, 16);
       }
       public void execute0(Arguments args) {
 	doINI();
@@ -2159,7 +2159,7 @@ public class Z80 implements CPU {
       public void init() {
 	init("JR NZ,\\REL8[r]",
 	     "00100000rrrrrrrr",
-	     7, 12);
+	     12, 7);
       }
       public void execute0(Arguments args) {
 	if (condNZ.isTrue())
@@ -2172,7 +2172,7 @@ public class Z80 implements CPU {
       public void init() {
 	init("JR Z,\\REL8[r]",
 	     "00101000rrrrrrrr",
-	     7, 12);
+	     12, 7);
       }
       public void execute0(Arguments args) {
 	if (condZ.isTrue())
@@ -2185,7 +2185,7 @@ public class Z80 implements CPU {
       public void init() {
 	init("JR NC,\\REL8[r]",
 	     "00110000rrrrrrrr",
-	     7, 12);
+	     12, 7);
       }
       public void execute0(Arguments args) {
 	if (condNC.isTrue())
@@ -2198,7 +2198,7 @@ public class Z80 implements CPU {
       public void init() {
 	init("JR C,\\REL8[r]",
 	     "00111000rrrrrrrr",
-	     7, 12);
+	     12, 7);
       }
       public void execute0(Arguments args) {
 	if (condC.isTrue())
@@ -2573,7 +2573,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	doLDD();
-	if (condPE.isTrue())
+	if (regBC.getValue() != 0x0000)
 	  regPC.setValue((regPC.getValue() + 0xfffe) & 0xffff);
 	else
 	  args.useDefaultClockPeriods = false;
@@ -2597,7 +2597,7 @@ public class Z80 implements CPU {
       }
       public void execute0(Arguments args) {
 	doLDI();
-	if (condPE.isTrue())
+	if (regBC.getValue() != 0x0000)
 	  regPC.setValue((regPC.getValue() + 0xfffe) & 0xffff);
 	else
 	  args.useDefaultClockPeriods = false;
@@ -2679,7 +2679,7 @@ public class Z80 implements CPU {
       public void init() {
 	init("OTDR",
 	     "1110110110111011",
-	     20, 15);
+	     21, 16);
       }
       public void execute0(Arguments args) {
 	doOUTD();
@@ -2693,7 +2693,7 @@ public class Z80 implements CPU {
       public void init() {
 	init("OTIR",
 	     "1110110110110011",
-	     20, 15);
+	     21, 16);
       }
       public void execute0(Arguments args) {
 	doOUTI();
@@ -2863,7 +2863,7 @@ public class Z80 implements CPU {
       public void init() {
 	init("RET \\COND[c]",
 	     "11ccc000",
-	     5, 11);
+	     11, 5);
       }
       public void execute0(Arguments args) {
 	if (COND[getArg(args, 'c')].isTrue())
