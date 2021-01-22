@@ -2559,19 +2559,20 @@
       * for each of the 8 bits of the byte in reg A,<br />
       &nbsp; starting with the uppermost bit, do:<br />
       &nbsp; * if bit is 1, then produce three<br />
-      &nbsp;   short cycles (via 3542h),<br />
+      &nbsp;   short cycles (~192µs each, via 3542h),<br />
       +--+  +--+  +--+<br />
       |  |  |  |  |  |<br />
       +  +--+  +--+  +--<br />
       &nbsp; * otherwise (bit is 0) produce one<br />
-      &nbsp;   short and one long cycle (via 352bh)
+      &nbsp;   short cycle (~192µs) and one long<br />
+      &nbsp;   cycle (~384µs, via 352bh)
       +--+  +-----+<br />
       |  |  |     |<br />
       +  +--+     +-----<br />
       <br />
-      Note that both sequence have the same<br />
-      total length of ~192µs, thus building a<br />
-      bit frame of (roughly) constant length.<br />
+      Note that both sequence have roughly the<br />
+      same total length of ~576µs, thus building<br />
+      a bit frame of (roughly) constant length.<br />
       That is, for reading in again, it is<br />
       sufficient to count the number of rising<br />
       (or falling) edges within this bit frame<br />
@@ -2609,10 +2610,10 @@
     <header>
       ---- START cassette out: long cycle ----<br />
       Cassette out: Long cycle<br />
-      Status "11" for ca. 128µs<br />
-      (~470 CPU clock cycles), then<br />
-      status "00" for ca. 128µs<br />
-      (~461 CPU clock cycles),<br />
+      Status "11" for ca. 192µs<br />
+      (~685 CPU T state cycles), then<br />
+      status "00" for ca. 192µs<br />
+      (~685 CPU T state cycles),<br />
       ----+<br />
           |<br />
           +----<br />
@@ -2637,10 +2638,10 @@
     <header>
       ---- START cassette out: short cycle ----<br />
       Cassette out: Short cyle<br />
-      Status "11" for ca. 64µs<br />
-      (~230 CPU clock cycles), then<br />
-      status "00" for ca. 64µs<br />
-      (~230 CPU clock cycles)
+      Status "11" for ca. 96µs<br />
+      (~343 CPU T state cycles), then<br />
+      status "00" for ca. 96µs<br />
+      (~343 CPU T state cycles)
       --+<br />
         |<br />
         +--<br />
