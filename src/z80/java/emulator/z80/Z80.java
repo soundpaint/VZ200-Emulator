@@ -2048,7 +2048,7 @@ public class Z80 implements CPU {
       public void init() {
 	init("IND",
 	     "1110110110101010",
-	     15, 0);
+	     16, 0);
       }
       public void execute0(Arguments args) {
 	doIND();
@@ -2072,7 +2072,7 @@ public class Z80 implements CPU {
       public void init() {
 	init("INI",
 	     "1110110110100010",
-	     15, 0);
+	     16, 0);
       }
       public void execute0(Arguments args) {
 	doINI();
@@ -2730,7 +2730,7 @@ public class Z80 implements CPU {
       public void init() {
 	init("OUTD",
 	     "1110110110101011",
-	     15, 0);
+	     16, 0);
       }
       public void execute0(Arguments args) {
 	doOUTD();
@@ -2740,7 +2740,7 @@ public class Z80 implements CPU {
       public void init() {
 	init("OUTI",
 	     "1110110110100011",
-	     15, 0);
+	     16, 0);
       }
       public void execute0(Arguments args) {
 	doOUTI();
