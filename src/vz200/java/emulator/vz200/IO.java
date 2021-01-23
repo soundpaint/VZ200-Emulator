@@ -81,15 +81,11 @@ public class IO implements
     return video;
   }
 
-  private boolean cassetteInputActive(final long wallClockTime)
+  private boolean isCassInHigh(final long wallClockTime)
   {
-    if (fileStreamSampler != null) {
-      final short value = fileStreamSampler.getValue(wallClockTime);
-      final boolean active = value > 0;
-      return active;
-    } else {
-      return false;
-    }
+    return
+      (fileStreamSampler != null) &&
+      (fileStreamSampler.getValue(wallClockTime) <= 0);
   }
 
   public int readByte(final int address, final long wallClockTime)
@@ -97,8 +93,8 @@ public class IO implements
     final int addressOffset = (address - baseAddress) & 0xffff;
     int data;
     if (addressOffset < MEMORY_SIZE) {
-      data = keyboard.readByte(address, wallClockTime);
-      if (cassetteInputActive(wallClockTime))
+      data = keyboard.readByte(address, wallClockTime) & 0x3f;
+      if (isCassInHigh(wallClockTime))
         data |= 0x40;
       if (video.hs())
         data |= 0x80;

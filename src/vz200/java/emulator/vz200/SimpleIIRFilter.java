@@ -33,7 +33,7 @@ public class SimpleIIRFilter
     this.alpha = alpha;
     beta = 1.0 - alpha;
     try {
-      feedLength = getFeedLength(alpha, resolution);
+      feedLength = determineFeedLength(beta, resolution);
     } catch (final RuntimeException e) {
       throw new IllegalArgumentException(MSG_ALPHA_OUT_OF_RANGE);
     }
@@ -78,12 +78,12 @@ public class SimpleIIRFilter
     return resetToValue(initialValue);
   }
 
-  private static long getFeedLength(final double alpha,
-                                    final double resolution)
+  private static long determineFeedLength(final double beta,
+                                          final double resolution)
   {
-    final double beta = 1.0 - alpha; // IIR feedback
-    // minimum n such that beta^n < 1 / resolution
-    return (long)(Math.ceil(-Math.log(resolution) / Math.log(beta)) + 0.5);
+    // minimum n such that beta^n < (1 / resolution)
+    return (beta <= 0.0) ? 1 :
+      (long)(Math.ceil(-Math.log(resolution) / Math.log(beta)) + 0.5);
   }
 }
 
