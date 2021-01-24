@@ -1,15 +1,22 @@
 package emulator.vz200;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
+/**
+ * Reconstructs a single-channel audio stream from an audio file.
+ * Encoding is 1 channel, 16 bits, signed PCM, little endian, 44100
+ * Hz.
+ */
 public class FileStreamSampler
 {
-  private static final int BYTES_PER_FRAME = 2;
-  private static final float SAMPLE_RATE = 44100.0f;
   private static final double INPUT_FILTER_ALPHA = 0.9;
   private static final long MAX_FEED_LENGTH = 10;
 
@@ -22,9 +29,10 @@ public class FileStreamSampler
   private final long holdTime;
   private final double framesPerNanoSecond;
   private final List<CassetteTransportListener> listeners;
-  private final FileInputStream inputStream;
+  private final AudioInputStream inputStream;
   private final SimpleIIRFilter inputFilter;
   private final long feedLength;
+  private final byte[] buffer;
   private long filePos;
   private double volume;
   private boolean stopped;
@@ -34,6 +42,12 @@ public class FileStreamSampler
     throw new UnsupportedOperationException("unsupported constructor");
   }
 
+  private static boolean checkAudioFileFormat(final AudioFileFormat fileFormat)
+  {
+    final AudioFormat format = fileFormat.getFormat();
+    return format.matches(CassetteFileChooser.TOGGLE_BIT_AUDIO);
+  }
+
   public FileStreamSampler(final long wallClockTime,
                            final File file, final long holdTime)
     throws IOException
@@ -41,13 +55,22 @@ public class FileStreamSampler
     this.file = file;
     this.holdTime = holdTime;
     startWallClockTime = wallClockTime;
-    framesPerNanoSecond = ((double)SAMPLE_RATE) * 0.000000001;
+    framesPerNanoSecond =
+      ((double)CassetteFileChooser.DEFAULT_SAMPLE_RATE) * 0.000000001;
     listeners = new ArrayList<CassetteTransportListener>();
-    inputStream = new FileInputStream(file);
     inputFilter = new SimpleIIRFilter(INPUT_FILTER_ALPHA, Short.MAX_VALUE, 0.0);
     feedLength = inputFilter.getFeedLength();
     if (feedLength > MAX_FEED_LENGTH) {
       throw new IllegalArgumentException(MSG_FEED_LENGTH_OUT_OF_RANGE);
+    }
+    buffer = new byte[2];
+    try {
+      if (!checkAudioFileFormat(AudioSystem.getAudioFileFormat(file))) {
+        throw new IOException("unsupported audio file format");
+      }
+      inputStream = AudioSystem.getAudioInputStream(file);
+    } catch (final UnsupportedAudioFileException e) {
+      throw new IOException("unsupported audio file format", e);
     }
     filePos = 0;
     volume = 1.0;
@@ -116,7 +139,8 @@ public class FileStreamSampler
         return;
       }
       final long nextFilePos =
-        ((long)(framesPerNanoSecond * time + 0.5)) * BYTES_PER_FRAME;
+        ((long)(framesPerNanoSecond * time + 0.5)) *
+        CassetteFileChooser.DEFAULT_BYTES_PER_FRAME;
       if (filePos > nextFilePos) {
         // rounding error
         System.out.printf("WARNING: rounding error: (%d > %d)%n",
@@ -129,7 +153,7 @@ public class FileStreamSampler
         return;
       }
       final long nextFilterFilePos =
-        nextFilePos - feedLength * BYTES_PER_FRAME;
+        nextFilePos - feedLength * CassetteFileChooser.DEFAULT_BYTES_PER_FRAME;
       final long bytesToSkip = nextFilterFilePos - filePos;
       if (bytesToSkip > 0) {
         filePos += inputStream.skip(bytesToSkip);
@@ -144,10 +168,11 @@ public class FileStreamSampler
           eof = true;
           break;
         }
+        inputStream.read(buffer, 0, 2);
         // 16 bit little endian, mono
         final short value =
-          (short)((inputStream.read() & 0xff) |
-                  ((inputStream.read() << 8) & 0xff00));
+          (short)((buffer[0] & 0xff) |
+                  ((buffer[1] << 8) & 0xff00));
         inputFilter.addInputValue(value);
       }
       if (eof) {

@@ -192,7 +192,7 @@ public class IO implements
                             t.getMessage() +
                             ".  No audio output will be saved.", t);
     }
-    fileStreamRenderer.start();
+    new Thread(fileStreamRenderer).start();
   }
 
   @Override
@@ -205,8 +205,13 @@ public class IO implements
     if (fileStreamRenderer != null) {
       System.out.printf("%s: stopping renderer...%n",
                         fileStreamRenderer.getFileName());
-      fileStreamRenderer.close();
+      fileStreamRenderer.stop();
       System.out.printf("%s: stopped%n",
+                        fileStreamRenderer.getFileName());
+      System.out.printf("%s: closing renderer...%n",
+                        fileStreamRenderer.getFileName());
+      fileStreamRenderer.close();
+      System.out.printf("%s: closed%n",
                         fileStreamRenderer.getFileName());
       fileStreamRenderer = null;
     }

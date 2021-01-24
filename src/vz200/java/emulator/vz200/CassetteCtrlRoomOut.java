@@ -33,6 +33,7 @@ public class CassetteCtrlRoomOut
     eventQueue.reset(event.getCurrentWallClockTime(), (short)0);
   }
 
+  @Override
   public void resync()
   {
     eventQueue.resync();

@@ -24,6 +24,7 @@ public class CassetteFileOut implements SignalEventSource
     System.out.printf("CassetteFileOut: %s%n", message);
   }
 
+  @Override
   public void resync()
   {
     eventQueue.resync();

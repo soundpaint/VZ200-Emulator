@@ -25,6 +25,7 @@ public class Speaker implements SignalEventSource, LineControlListener
     eventQueue.reset(event.getCurrentWallClockTime(), (short)0);
   }
 
+  @Override
   public void resync()
   {
     eventQueue.resync();

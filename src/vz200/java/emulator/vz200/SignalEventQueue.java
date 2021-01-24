@@ -257,8 +257,10 @@ public class SignalEventQueue
       event.timeSpan -= maxTimeSpan;
       availableTimeSpan -= maxTimeSpan;
       if ((event.timeSpan < 0) && !event.plannedGap) {
-        System.out.printf("Warning: %s: buffer underflow, gap=%s%n",
-                          label, event.prettyTimeSpanString());
+        System.out.printf("Warning: %s: buffer underflow, gap=%s, " +
+                          "availableTimeSpan=%s%n",
+                          label, event.prettyTimeSpanString(),
+                          availableTimeSpan);
       }
     }
   }

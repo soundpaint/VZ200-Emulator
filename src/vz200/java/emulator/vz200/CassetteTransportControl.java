@@ -59,10 +59,10 @@ public class CassetteTransportControl extends Box
 
     playFileChooser =
       new CassetteFileChooser("Receive Cassette Input from External Audio File",
-                              "Start Playing");
+                              "Start Playing", false, true, false);
     recordFileChooser =
       new CassetteFileChooser("Record Cassette Output to External Audio File",
-                              "Start Recording");
+                              "Start Recording", false, true, false);
     final JToolBar tbTransportControl = new JToolBar("Cassette Tape");
     add(tbTransportControl);
     btnPlay =
