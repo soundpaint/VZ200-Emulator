@@ -15,7 +15,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
  * Encoding is 1 channel, 16 bits, signed PCM, little endian, 44100
  * Hz.
  */
-public class FileStreamSampler
+public class FileStreamSampler implements CassetteInputSampler
 {
   private static final double INPUT_FILTER_ALPHA = 0.9;
   private static final long MAX_FEED_LENGTH = 10;
@@ -26,9 +26,7 @@ public class FileStreamSampler
 
   private final long startWallClockTime;
   private final File file;
-  private final long holdTime;
   private final double framesPerNanoSecond;
-  private final List<CassetteTransportListener> listeners;
   private final AudioInputStream inputStream;
   private final SimpleIIRFilter inputFilter;
   private final long feedLength;
@@ -48,16 +46,13 @@ public class FileStreamSampler
     return format.matches(CassetteFileChooser.TOGGLE_BIT_AUDIO);
   }
 
-  public FileStreamSampler(final long wallClockTime,
-                           final File file, final long holdTime)
+  public FileStreamSampler(final long wallClockTime, final File file)
     throws IOException
   {
     this.file = file;
-    this.holdTime = holdTime;
     startWallClockTime = wallClockTime;
     framesPerNanoSecond =
       ((double)CassetteFileChooser.DEFAULT_SAMPLE_RATE) * 0.000000001;
-    listeners = new ArrayList<CassetteTransportListener>();
     inputFilter = new SimpleIIRFilter(INPUT_FILTER_ALPHA, Short.MAX_VALUE, 0.0);
     feedLength = inputFilter.getFeedLength();
     if (feedLength > MAX_FEED_LENGTH) {
@@ -79,23 +74,23 @@ public class FileStreamSampler
                       getFileName(), feedLength);
   }
 
+  @Override
   public String getFileName()
   {
     return file.getName();
   }
 
-  public void addTransportListener(final CassetteTransportListener listener)
+  @Override
+  public boolean isStopped()
   {
-    listeners.add(listener);
+    return stopped;
   }
 
   private void stop()
   {
+    System.out.println();
     System.out.printf("%s: end of file reached%n", getFileName());
     stopped = true;
-    for (final CassetteTransportListener listener : listeners) {
-      listener.cassetteStop();
-    }
     inputFilter.reset();
   }
 
@@ -110,6 +105,7 @@ public class FileStreamSampler
     this.volume = volume;
   }
 
+  @Override
   public short getValue(final long wallClockTime)
   {
     seek(wallClockTime);

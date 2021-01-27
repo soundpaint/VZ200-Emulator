@@ -29,7 +29,7 @@ public class IO implements
   private final MonoAudioStreamRenderer speakerRenderer;
   private final MonoAudioStreamRenderer cassetteCtrlRoomOutRenderer;
   private FileStreamRenderer fileStreamRenderer;
-  private FileStreamSampler fileStreamSampler;
+  private CassetteInputSampler cassetteInputSampler;
   private long timePerClockCycle;
   private long wallClockCycles;
   private long wallClockTime;
@@ -83,9 +83,17 @@ public class IO implements
 
   private boolean isCassInHigh(final long wallClockTime)
   {
-    return
-      (fileStreamSampler != null) &&
-      (fileStreamSampler.getValue(wallClockTime) <= 0);
+    if (cassetteInputSampler == null)
+      return false;
+    final short value = cassetteInputSampler.getValue(wallClockTime);
+    if (cassetteCtrlRoomOut != null) {
+      cassetteCtrlRoomOut.putEvent(value <= 0 ? 3 : 0, wallClockTime);
+    }
+    if (cassetteInputSampler.isStopped()) {
+      settingsGUI.cassetteStop();
+      cassetteInputSampler = null;
+    }
+    return value <= 0;
   }
 
   public int readByte(final int address, final long wallClockTime)
@@ -169,11 +177,11 @@ public class IO implements
   public void cassetteStartPlaying(final File file) throws IOException
   {
     try {
-      fileStreamSampler = new FileStreamSampler(wallClockTime, file, 0);
-
-      // FIXME: Introduce central event dispatcher rather than
-      // chaining listeners.
-      fileStreamSampler.addTransportListener(settingsGUI);
+      if (file.getName().toLowerCase().endsWith(".vz")) {
+        cassetteInputSampler = new VZFileSampler(wallClockTime, file);
+      } else {
+        cassetteInputSampler = new FileStreamSampler(wallClockTime, file);
+      }
     } catch (final Throwable t) {
       throw new IOException("WARNING: I/O: failed opening file stream: " +
                             t.getMessage() +
@@ -198,9 +206,9 @@ public class IO implements
   @Override
   public void cassetteStop()
   {
-    if (fileStreamSampler != null) {
-      System.out.printf("%s: aborted%n", fileStreamSampler.getFileName());
-      fileStreamSampler = null;
+    if (cassetteInputSampler != null) {
+      System.out.printf("%s: aborted%n", cassetteInputSampler.getFileName());
+      cassetteInputSampler = null;
     }
     if (fileStreamRenderer != null) {
       System.out.printf("%s: stopping renderer...%n",

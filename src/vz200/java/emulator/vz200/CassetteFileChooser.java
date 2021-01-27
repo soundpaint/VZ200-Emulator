@@ -9,15 +9,15 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class CassetteFileChooser extends JFileChooser
 {
   private static final long serialVersionUID = 35066383232434466L;
-  private static final FileFilter vzFileFilter =
-    new FileNameExtensionFilter("VZ files (.vz)",
-                                "vz");
-  private static final FileFilter wavFileFilter =
-    new FileNameExtensionFilter("Wave Audio Files, 44.1kHz, 16 bit PCM mono (.wav)",
-                                "wav");
   private static final FileFilter rawFileFilter =
     new FileNameExtensionFilter("Raw Audio Files, 44.1kHz, 16 bit PCM mono (.raw)",
                                 "raw");
+  private static final FileFilter wavFileFilter =
+    new FileNameExtensionFilter("Wave Audio Files, 44.1kHz, 16 bit PCM mono (.wav)",
+                                "wav");
+  private static final FileFilter vzFileFilter =
+    new FileNameExtensionFilter("VZ files (.vz)",
+                                "vz");
 
   public static final AudioFileFormat.Type DEFAULT_FILE_TYPE =
     AudioFileFormat.Type.WAVE;
@@ -33,25 +33,25 @@ public class CassetteFileChooser extends JFileChooser
 
   public CassetteFileChooser(final String dialogTitle,
                              final String approveButtonText,
-                             final boolean acceptVzFiles,
+                             final boolean acceptRawFiles,
                              final boolean acceptWavFiles,
-                             final boolean acceptRawFiles)
+                             final boolean acceptVzFiles)
   {
     setDialogTitle(dialogTitle);
     setDialogType(CassetteFileChooser.CUSTOM_DIALOG);
     setApproveButtonText(approveButtonText);
     setMultiSelectionEnabled(false);
-    if (acceptVzFiles) {
-      addChoosableFileFilter(vzFileFilter);
-      setFileFilter(vzFileFilter);
+    if (acceptRawFiles) {
+      addChoosableFileFilter(rawFileFilter);
+      setFileFilter(rawFileFilter);
     }
     if (acceptWavFiles) {
       addChoosableFileFilter(wavFileFilter);
       setFileFilter(wavFileFilter);
     }
-    if (acceptRawFiles) {
-      addChoosableFileFilter(rawFileFilter);
-      setFileFilter(rawFileFilter);
+    if (acceptVzFiles) {
+      addChoosableFileFilter(vzFileFilter);
+      setFileFilter(vzFileFilter);
     }
   }
 }

@@ -59,7 +59,7 @@ public class CassetteTransportControl extends Box
 
     playFileChooser =
       new CassetteFileChooser("Receive Cassette Input from External Audio File",
-                              "Start Playing", false, true, false);
+                              "Start Playing", false, true, true);
     recordFileChooser =
       new CassetteFileChooser("Record Cassette Output to External Audio File",
                               "Start Recording", false, true, false);
