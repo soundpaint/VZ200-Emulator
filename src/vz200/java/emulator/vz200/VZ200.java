@@ -17,7 +17,7 @@ public class VZ200
 {
   private static final String IMAGES_ROOT_PATH = ".";
   private static final int RAM_START = 0x7800;
-  private static final int RAM_LENGTH = 0x2800;
+  private static final int RAM_LENGTH = 0x8800;
   private static final String OS_RESOURCENAME = "os.rom";
   private static final int OS_START = 0x0000;
   private static final int OS_LENGTH = 0x4000;
