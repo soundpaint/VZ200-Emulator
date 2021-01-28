@@ -5,7 +5,7 @@ import java.io.IOException;
 
 public interface CassetteTransportListener
 {
-  void cassetteStartPlaying(final File file) throws IOException;
+  void cassetteStartPlaying(final CassetteInputSampler cassetteInputSampler);
   void cassetteStartRecording(final File file) throws IOException;
   void cassetteStop();
 }

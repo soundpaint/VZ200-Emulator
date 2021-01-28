@@ -10,6 +10,8 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+import emulator.z80.WallClockProvider;
+
 /**
  * Reconstructs a single-channel audio stream from an audio file.
  * Encoding is 1 channel, 16 bits, signed PCM, little endian, 44100
@@ -24,13 +26,17 @@ public class FileStreamSampler implements CassetteInputSampler
     "number of max feed length too high; " +
     "please choose higher value for alpha";
 
-  private final long startWallClockTime;
   private final File file;
+  private final WallClockProvider wallClockProvider;
+  private final long startWallClockTime;
   private final double framesPerNanoSecond;
+  private final double nanoSecondsPerFrame;
   private final AudioInputStream inputStream;
   private final SimpleIIRFilter inputFilter;
   private final long feedLength;
   private final byte[] buffer;
+  private final long size;
+  private final double totalNanoSeconds;
   private long filePos;
   private double volume;
   private boolean stopped;
@@ -46,13 +52,17 @@ public class FileStreamSampler implements CassetteInputSampler
     return format.matches(CassetteFileChooser.TOGGLE_BIT_AUDIO);
   }
 
-  public FileStreamSampler(final long wallClockTime, final File file)
+  public FileStreamSampler(final File file,
+                           final WallClockProvider wallClockProvider,
+                           final long wallClockTime)
     throws IOException
   {
     this.file = file;
+    this.wallClockProvider = wallClockProvider;
     startWallClockTime = wallClockTime;
     framesPerNanoSecond =
       ((double)CassetteFileChooser.DEFAULT_SAMPLE_RATE) * 0.000000001;
+    nanoSecondsPerFrame = 1.0 / framesPerNanoSecond;
     inputFilter = new SimpleIIRFilter(INPUT_FILTER_ALPHA, Short.MAX_VALUE, 0.0);
     feedLength = inputFilter.getFeedLength();
     if (feedLength > MAX_FEED_LENGTH) {
@@ -67,17 +77,20 @@ public class FileStreamSampler implements CassetteInputSampler
     } catch (final UnsupportedAudioFileException e) {
       throw new IOException("unsupported audio file format", e);
     }
+    size = inputStream.available();
+    totalNanoSeconds =
+      size * nanoSecondsPerFrame / CassetteFileChooser.DEFAULT_BYTES_PER_FRAME;
     filePos = 0;
     volume = 1.0;
     stopped = false;
     System.out.printf("%s: start playing with hold time of #%d feed samples%n",
-                      getFileName(), feedLength);
+                      file.getName(), feedLength);
   }
 
   @Override
-  public String getFileName()
+  public File getFile()
   {
-    return file.getName();
+    return file;
   }
 
   @Override
@@ -86,10 +99,11 @@ public class FileStreamSampler implements CassetteInputSampler
     return stopped;
   }
 
-  private void stop()
+  @Override
+  public void stop()
   {
     System.out.println();
-    System.out.printf("%s: end of file reached%n", getFileName());
+    System.out.printf("%s: end of file reached%n", file.getName());
     stopped = true;
     inputFilter.reset();
   }
@@ -108,11 +122,24 @@ public class FileStreamSampler implements CassetteInputSampler
   @Override
   public short getValue(final long wallClockTime)
   {
+    if (stopped) {
+      System.out.printf("WARNING: %s: EOF%n", file.getName());
+    }
     seek(wallClockTime);
     final double value = inputFilter.getOutputValue();
-    if (value <= -32768.0) return -32768;
-    if (value >= 32767.0) return 32767;
+    if (value <= VALUE_LO) return VALUE_LO;
+    if (value >= VALUE_HI) return VALUE_HI;
     return (short)value;
+  }
+
+  @Override
+  public float getProgress()
+  {
+    if (stopped) return 2.0f;
+    final long wallClockTime = wallClockProvider.getWallClockTime();
+    final float t1 = wallClockTime - startWallClockTime;
+    final float t2 = (float)totalNanoSeconds;
+    return t1 / t2;
   }
 
   /**

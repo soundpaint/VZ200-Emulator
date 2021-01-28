@@ -1,10 +1,16 @@
 package emulator.vz200;
 
-public interface CassetteInputSampler
+import java.io.File;
+
+public interface CassetteInputSampler extends ProgressProvider
 {
+  static final short VALUE_LO = -32768;
+  static final short VALUE_HI = 32767;
+
   short getValue(final long wallClockTime);
+  void stop();
   boolean isStopped();
-  String getFileName();
+  File getFile();
 }
 
 /*

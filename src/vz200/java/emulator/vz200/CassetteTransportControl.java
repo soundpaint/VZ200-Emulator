@@ -16,15 +16,17 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JToolBar;
 
+import emulator.z80.WallClockProvider;
+
 public class CassetteTransportControl extends Box
 {
   private static final long serialVersionUID = 5283444125008636282L;
 
+  private final WallClockProvider wallClockProvider;
   private final List<CassetteTransportListener> listeners;
   private final CassetteFileChooser recordFileChooser, playFileChooser;
   private final CassetteStatusLine statusLine;
   private final JButton btnPlay, btnRecord, btnStop;
-  private File file;
 
   public void addListener(final CassetteTransportListener listener)
   {
@@ -51,9 +53,10 @@ public class CassetteTransportControl extends Box
     return button;
   }
 
-  public CassetteTransportControl()
+  public CassetteTransportControl(final WallClockProvider wallClockProvider)
   {
     super(BoxLayout.Y_AXIS);
+    this.wallClockProvider = wallClockProvider;
     setBorder(BorderFactory.createTitledBorder("Cassette Audio File Binding"));
     listeners = new ArrayList<CassetteTransportListener>();
 
@@ -94,25 +97,21 @@ public class CassetteTransportControl extends Box
     add(statusLine);
   }
 
-  private void play(final File file, final boolean notifyListeners)
+  private void play(final CassetteInputSampler cassetteInputSampler,
+                    final boolean notifyListeners)
   {
     boolean havePlayer = false;
     if (notifyListeners) {
       for (final CassetteTransportListener listener : listeners) {
-        try {
-          listener.cassetteStartPlaying(file);
-          havePlayer = true;
-        } catch (final IOException e) {
-          JOptionPane.showMessageDialog(this, e.getMessage(), "IO Error",
-                                        JOptionPane.WARNING_MESSAGE);
-        }
+        listener.cassetteStartPlaying(cassetteInputSampler);
+        havePlayer = true;
       }
     }
     if (!notifyListeners || havePlayer) {
       btnPlay.setEnabled(false);
       btnRecord.setEnabled(false);
       btnStop.setEnabled(true);
-      statusLine.play(file);
+      statusLine.play(cassetteInputSampler);
     }
   }
 
@@ -121,8 +120,26 @@ public class CassetteTransportControl extends Box
     final int option = playFileChooser.showDialog(this, null);
     switch (option) {
     case JFileChooser.APPROVE_OPTION:
-      file = playFileChooser.getSelectedFile();
-      play(file, true);
+      final File file = playFileChooser.getSelectedFile();
+      final CassetteInputSampler cassetteInputSampler;
+      try {
+        final long wallClockTime = wallClockProvider.getWallClockTime();
+        if (file.getName().toLowerCase().endsWith(".vz")) {
+          cassetteInputSampler =
+            new VZFileSampler(file, wallClockProvider, wallClockTime);
+        } else {
+          cassetteInputSampler =
+            new FileStreamSampler(file, wallClockProvider, wallClockTime);
+        }
+        play(cassetteInputSampler, true);
+      } catch (final IOException e) {
+        final String message =
+          "I/O Error: failed opening cassette input stream: " +
+          e.getMessage() +
+          ".  No cassette input will be recognized.";
+        JOptionPane.showMessageDialog(this, e.getMessage(), message,
+                                      JOptionPane.WARNING_MESSAGE);
+      }
       break;
     case JFileChooser.CANCEL_OPTION:
       break;
@@ -160,7 +177,7 @@ public class CassetteTransportControl extends Box
     final int option = recordFileChooser.showDialog(this, null);
     switch (option) {
     case JFileChooser.APPROVE_OPTION:
-      file = recordFileChooser.getSelectedFile();
+      final File file = recordFileChooser.getSelectedFile();
       if (file.exists()) {
         final int choice =
           JOptionPane.showConfirmDialog(this,
@@ -188,7 +205,6 @@ public class CassetteTransportControl extends Box
     btnPlay.setEnabled(true);
     btnRecord.setEnabled(true);
     btnStop.setEnabled(false);
-    file = null;
     if (notifyListeners) {
       for (final CassetteTransportListener listener : listeners) {
         listener.cassetteStop();
@@ -197,9 +213,9 @@ public class CassetteTransportControl extends Box
     statusLine.stop();
   }
 
-  public void startPlaying(final File file) throws IOException
+  public void startPlaying(final CassetteInputSampler cassetteInputSampler)
   {
-    play(file, false);
+    play(cassetteInputSampler, false);
   }
 
   public void startRecording(final File file) throws IOException

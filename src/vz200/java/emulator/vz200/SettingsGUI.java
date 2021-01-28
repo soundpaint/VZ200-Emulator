@@ -78,9 +78,9 @@ public class SettingsGUI extends JFrame
   }
 
   @Override
-  public void cassetteStartPlaying(final File file) throws IOException
+  public void cassetteStartPlaying(final CassetteInputSampler cassetteInputSampler)
   {
-    transportControl.startPlaying(file);
+    transportControl.startPlaying(cassetteInputSampler);
   }
 
   @Override

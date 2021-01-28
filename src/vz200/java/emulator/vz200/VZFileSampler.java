@@ -5,21 +5,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import emulator.z80.WallClockProvider;
+
 /**
  * Reconstructs a single-channel audio stream from a VZ file.
  */
 public class VZFileSampler implements CassetteInputSampler
 {
-  private static final short VALUE_LO = -32768;
-  private static final short VALUE_HI = 32767;
   private static final int leadIn1Bytes = 255;
   private static final int leadIn2Bytes = 5;
   private static final long halfShortCycle = 287103; // [ns]
   private static final long bitTimeSpan = 6 * halfShortCycle; // [ns]
   private static final long byteTimeSpan = 8 * bitTimeSpan; // [ns]
   private static final long gapTimeSpan = 3065000; // [ns]
-  private final long startWallClockTime;
   private final File file;
+  private final WallClockProvider wallClockProvider;
+  private final long startWallClockTime;
   private final VZFile vzFile;
   private final long leadIn1StartTime;
   private final long leadIn2StartTime;
@@ -35,7 +36,6 @@ public class VZFileSampler implements CassetteInputSampler
   private final long chkSumHiStartTime;
   private final long leadOutStartTime;
   private final long eofStartTime;
-  private long filePos;
   private byte lastValue;
   private boolean stopped;
 
@@ -44,11 +44,15 @@ public class VZFileSampler implements CassetteInputSampler
     throw new UnsupportedOperationException("unsupported constructor");
   }
 
-  public VZFileSampler(final long wallClockTime, final File file)
+  public VZFileSampler(final File file,
+                       final WallClockProvider wallClockProvider,
+                       final long wallClockTime)
     throws IOException
   {
     this.file = file;
-    this.vzFile = VZFile.fromFile(file);
+    this.wallClockProvider = wallClockProvider;
+    startWallClockTime = wallClockTime;
+    vzFile = VZFile.fromFile(file);
     leadIn1StartTime = wallClockTime;
     leadIn2StartTime = leadIn1StartTime + leadIn1Bytes * byteTimeSpan;
     fileTypeStartTime = leadIn2StartTime + leadIn2Bytes * byteTimeSpan;
@@ -65,9 +69,8 @@ public class VZFileSampler implements CassetteInputSampler
     chkSumHiStartTime = chkSumLoStartTime + 1 * byteTimeSpan;
     leadOutStartTime = chkSumHiStartTime + 1 * byteTimeSpan;
     eofStartTime = leadOutStartTime + 20 * byteTimeSpan;
-    startWallClockTime = wallClockTime;
     stopped = false;
-    System.out.printf("%s: start playing %s%n", getFileName(), vzFile);
+    System.out.printf("%s: start playing %s%n", file.getName(), vzFile);
   }
 
   @Override
@@ -77,15 +80,26 @@ public class VZFileSampler implements CassetteInputSampler
   }
 
   @Override
-  public String getFileName()
+  public File getFile()
   {
-    return file.getName();
+    return file;
   }
 
-  private void stop()
+  @Override
+  public float getProgress()
+  {
+    if (stopped) return 2.0f;
+    final long wallClockTime = wallClockProvider.getWallClockTime();
+    final float t1 = (float)(wallClockTime - startWallClockTime);
+    final float t2 = (float)(eofStartTime - startWallClockTime);
+    return t1 / t2;
+  }
+
+  @Override
+  public void stop()
   {
     System.out.println();
-    System.out.printf("%s: end of file reached%n", getFileName());
+    System.out.printf("%s: end of file reached%n", getFile().getName());
     stopped = true;
   }
 
@@ -115,8 +129,10 @@ public class VZFileSampler implements CassetteInputSampler
   @Override
   public short getValue(final long wallClockTime)
   {
-    if (stopped)
-      throw new IllegalStateException("VZFileSampler: EOF");
+    if (stopped) {
+      System.out.printf("WARNING: %s: EOF (%s)%n", file.getName(), vzFile);
+      return VALUE_LO;
+    }
     if (wallClockTime < leadIn2StartTime) {
       return getValueOfByte((byte)0x80, wallClockTime - leadIn1StartTime);
     }

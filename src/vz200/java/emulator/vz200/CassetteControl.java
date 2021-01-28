@@ -66,7 +66,7 @@ public class CassetteControl extends JPanel
     cassOutLineControl.addListener(cassetteOut);
     cassOutLineControl.addListener(cassetteOutRenderer);
 
-    transportControl = new CassetteTransportControl();
+    transportControl = new CassetteTransportControl(wallClockProvider);
     add(transportControl);
   }
 

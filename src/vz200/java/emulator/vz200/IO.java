@@ -18,6 +18,22 @@ public class IO implements
   private final static int DEFAULT_BASE_ADDRESS = 0x6800;
   private final static int MEMORY_SIZE = 0x0800;
 
+  private final static CassetteInputSampler CLOSED_INPUT_SAMPLER =
+    new CassetteInputSampler() {
+      public float getProgress() { return 2.0f; }
+      public short getValue(final long wallClockTime)
+      {
+        System.out.printf("WARNING: %s: EOF%n", this);
+        return VALUE_LO;
+      }
+      public void stop()
+      {
+        System.out.printf("WARNING: %s: already stopped%n", this);
+      }
+      public boolean isStopped() { return true; }
+      public File getFile() { return null; }
+    };
+
   private final CPUControl cpuControl;
   private final int baseAddress;
   private final Video video;
@@ -63,6 +79,7 @@ public class IO implements
                                   cassetteCtrlRoomOutRenderer,
                                   this);
     settingsGUI.addTransportListener(this);
+    cassetteInputSampler = CLOSED_INPUT_SAMPLER;
   }
 
   public void resync(final long wallClockTime)
@@ -81,17 +98,22 @@ public class IO implements
     return video;
   }
 
+  private long lastWallClockTime = 0;
+
   private boolean isCassInHigh(final long wallClockTime)
   {
-    if (cassetteInputSampler == null)
+    if (cassetteInputSampler == CLOSED_INPUT_SAMPLER)
       return false;
+    if ((wallClockTime - lastWallClockTime) > 0x04000000) {
+      lastWallClockTime = wallClockTime;
+    }
     final short value = cassetteInputSampler.getValue(wallClockTime);
     if (cassetteCtrlRoomOut != null) {
       cassetteCtrlRoomOut.putEvent(value <= 0 ? 3 : 0, wallClockTime);
     }
     if (cassetteInputSampler.isStopped()) {
       settingsGUI.cassetteStop();
-      cassetteInputSampler = null;
+      cassetteInputSampler = CLOSED_INPUT_SAMPLER;
     }
     return value <= 0;
   }
@@ -174,19 +196,12 @@ public class IO implements
   }
 
   @Override
-  public void cassetteStartPlaying(final File file) throws IOException
+  public void cassetteStartPlaying(final CassetteInputSampler cassetteInputSampler)
   {
-    try {
-      if (file.getName().toLowerCase().endsWith(".vz")) {
-        cassetteInputSampler = new VZFileSampler(wallClockTime, file);
-      } else {
-        cassetteInputSampler = new FileStreamSampler(wallClockTime, file);
-      }
-    } catch (final Throwable t) {
-      throw new IOException("WARNING: I/O: failed opening file stream: " +
-                            t.getMessage() +
-                            ".  No cassette input will be recognized.", t);
+    if (cassetteInputSampler == null) {
+      throw new NullPointerException("cassetteInputSampler");
     }
+    this.cassetteInputSampler = cassetteInputSampler;
   }
 
   @Override
@@ -206,9 +221,11 @@ public class IO implements
   @Override
   public void cassetteStop()
   {
-    if (cassetteInputSampler != null) {
-      System.out.printf("%s: aborted%n", cassetteInputSampler.getFileName());
-      cassetteInputSampler = null;
+    if (cassetteInputSampler != CLOSED_INPUT_SAMPLER) {
+      System.out.printf("%s: aborted%n",
+                        cassetteInputSampler.getFile().getName());
+      cassetteInputSampler.stop();
+      cassetteInputSampler = CLOSED_INPUT_SAMPLER;
     }
     if (fileStreamRenderer != null) {
       System.out.printf("%s: stopping renderer...%n",
