@@ -17,7 +17,7 @@ import emulator.z80.WallClockProvider;
  * Encoding is 1 channel, 16 bits, signed PCM, little endian, 44100
  * Hz.
  */
-public class FileStreamSampler implements CassetteInputSampler
+public class AudioFileSampler implements CassetteInputSampler
 {
   private static final double INPUT_FILTER_ALPHA = 0.9;
   private static final long MAX_FEED_LENGTH = 10;
@@ -41,7 +41,7 @@ public class FileStreamSampler implements CassetteInputSampler
   private double volume;
   private boolean stopped;
 
-  private FileStreamSampler()
+  private AudioFileSampler()
   {
     throw new UnsupportedOperationException("unsupported constructor");
   }
@@ -52,9 +52,9 @@ public class FileStreamSampler implements CassetteInputSampler
     return format.matches(CassetteFileChooser.TOGGLE_BIT_AUDIO);
   }
 
-  public FileStreamSampler(final File file,
-                           final WallClockProvider wallClockProvider,
-                           final long wallClockTime)
+  public AudioFileSampler(final File file,
+                          final WallClockProvider wallClockProvider,
+                          final long wallClockTime)
     throws IOException
   {
     this.file = file;

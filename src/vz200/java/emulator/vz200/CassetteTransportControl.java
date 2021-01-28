@@ -129,7 +129,7 @@ public class CassetteTransportControl extends Box
             new VZFileSampler(file, wallClockProvider, wallClockTime);
         } else {
           cassetteInputSampler =
-            new FileStreamSampler(file, wallClockProvider, wallClockTime);
+            new AudioFileSampler(file, wallClockProvider, wallClockTime);
         }
         play(cassetteInputSampler, true);
       } catch (final IOException e) {
