@@ -133,11 +133,12 @@ public class CassetteTransportControl extends Box
         }
         play(cassetteInputSampler, true);
       } catch (final IOException e) {
+        final String title = "Cassette Input Error";
         final String message =
-          "I/O Error: failed opening cassette input stream: " +
-          e.getMessage() +
-          ".  No cassette input will be recognized.";
-        JOptionPane.showMessageDialog(this, e.getMessage(), message,
+          "I/O error: failed opening cassette input stream:\n" +
+          e.getMessage() + ".\n" +
+          "No cassette input will be recognized.";
+        JOptionPane.showMessageDialog(this, message, title,
                                       JOptionPane.WARNING_MESSAGE);
       }
       break;
