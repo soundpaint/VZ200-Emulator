@@ -2474,7 +2474,7 @@
       * 20 × lead out value "0"<br />
       <br />
       check sum includes all written bytes from<br />
-      with prgmem_start to last byte of<br />
+      prgmem_start to last byte of<br />
       program code sequence
     </header>
     <comment>handler for token 0xba ("CSAVE")</comment>
@@ -4128,7 +4128,16 @@
     </comment>
   </at>
   <at address="0x781b">
-    <data-bytes length="0x5" />
+    <data-bytes length="0x3" />
+  </at>
+  <at address="0x781e">
+    <label>vlt_start_tmp</label>
+    <data-bytes length="0x2" />
+    <comment>
+      prospective new value of memory pointer to<br />
+      end of BASIC program / start of simple variables<br />
+      list table ("VLT"), while load is still in progress
+    </comment>
   </at>
   <at address="0x7820">
     <label>curs_addr</label>
