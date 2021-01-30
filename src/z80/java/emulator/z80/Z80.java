@@ -634,6 +634,10 @@ public class Z80 implements CPU {
     }
   }
 
+  /**
+   * Returns the total number of time in ns per CPU T cycle
+   * (i.e. the reciprocal of the CPU speed in MHz).
+   */
   public long getTimePerClockCycle() {
     return timePerClockCycle;
   }

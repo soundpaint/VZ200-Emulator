@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import emulator.z80.UserPreferences;
 import emulator.z80.WallClockProvider;
 
 /**
@@ -12,18 +13,22 @@ import emulator.z80.WallClockProvider;
  */
 public class VZFileSampler implements CassetteInputSampler
 {
-  private static final int leadIn1Bytes = 255;
-  private static final int leadIn2Bytes = 5;
-  private static final long halfShortCycle = 287103; // [ns]
-  private static final long bitTimeSpan = 6 * halfShortCycle; // [ns]
-  private static final long byteTimeSpan = 8 * bitTimeSpan; // [ns]
-  private static final long gapTimeSpan = 3065000; // [ns]
+  private static final int LEAD_IN_0X80_COUNT = 255;
+  private static final int LEAD_IN_0X80_TRIMMED_COUNT = 10;
+  private static final int LEAD_IN_0XFE_COUNT = 5;
+  private static final long DEFAULT_HALF_SHORT_CYCLE = 287103; // [ns]
+  private static final long DEFAULT_GAP_TIME_SPAN = 3065000; // [ns]
   private final File file;
+  private final boolean trimLeadIn;
   private final WallClockProvider wallClockProvider;
   private final long startWallClockTime;
   private final VZFile vzFile;
-  private final long leadIn1StartTime;
-  private final long leadIn2StartTime;
+  private final long halfShortCycle; // [ns]
+  private final long bitTimeSpan; // [ns]
+  private final long byteTimeSpan; // [ns]
+  private final long gapTimeSpan; // [ns]
+  private final long leadIn0x80StartTime;
+  private final long leadIn0xfeStartTime;
   private final long fileTypeStartTime;
   private final long fileNameStartTime;
   private final long gapStartTime;
@@ -41,21 +46,40 @@ public class VZFileSampler implements CassetteInputSampler
 
   private VZFileSampler()
   {
-    throw new UnsupportedOperationException("unsupported constructor");
+    throw new UnsupportedOperationException("unsupported empty constructor");
   }
 
   public VZFileSampler(final File file,
+                       final double speed,
+                       final boolean trimLeadIn,
                        final WallClockProvider wallClockProvider,
                        final long wallClockTime)
     throws IOException
   {
     this.file = file;
+    this.trimLeadIn = trimLeadIn;
     this.wallClockProvider = wallClockProvider;
     startWallClockTime = wallClockTime;
     vzFile = VZFile.fromFile(file);
-    leadIn1StartTime = wallClockTime;
-    leadIn2StartTime = leadIn1StartTime + leadIn1Bytes * byteTimeSpan;
-    fileTypeStartTime = leadIn2StartTime + leadIn2Bytes * byteTimeSpan;
+    final long timePerClockCycle = wallClockProvider.getTimePerClockCycle();
+    final double designedFrequency = UserPreferences.PREFS_DEFAULT_FREQUENCY;
+    /*
+     * FIXME: Due to the fact that timePerClockCycle is a long value
+     * with nanoseconds resolution only rather than a double value,
+     * the rounding error here is finally up to around 1% (assuming a
+     * CPU speed up to 10MHz).
+     */
+    final double cycleScale =
+      designedFrequency * timePerClockCycle / 1000000000.0 / speed;
+    halfShortCycle = Math.round(DEFAULT_HALF_SHORT_CYCLE * cycleScale);
+    bitTimeSpan = 6 * halfShortCycle;
+    byteTimeSpan = 8 * bitTimeSpan;
+    gapTimeSpan = Math.round(DEFAULT_GAP_TIME_SPAN * cycleScale);
+    leadIn0x80StartTime = wallClockTime;
+    final int leadIn0x80Count =
+      trimLeadIn ? LEAD_IN_0X80_TRIMMED_COUNT : LEAD_IN_0X80_COUNT;
+    leadIn0xfeStartTime = leadIn0x80StartTime + leadIn0x80Count * byteTimeSpan;
+    fileTypeStartTime = leadIn0xfeStartTime + LEAD_IN_0XFE_COUNT * byteTimeSpan;
     fileNameStartTime = fileTypeStartTime + 1 * byteTimeSpan;
     gapStartTime = fileNameStartTime +
       (vzFile.getFileName().length() + 1) * byteTimeSpan;
@@ -133,11 +157,11 @@ public class VZFileSampler implements CassetteInputSampler
       System.out.printf("WARNING: %s: EOF (%s)%n", file.getName(), vzFile);
       return VALUE_LO;
     }
-    if (wallClockTime < leadIn2StartTime) {
-      return getValueOfByte((byte)0x80, wallClockTime - leadIn1StartTime);
+    if (wallClockTime < leadIn0xfeStartTime) {
+      return getValueOfByte((byte)0x80, wallClockTime - leadIn0x80StartTime);
     }
     if (wallClockTime < fileTypeStartTime) {
-      return getValueOfByte((byte)0xfe, wallClockTime - leadIn2StartTime);
+      return getValueOfByte((byte)0xfe, wallClockTime - leadIn0xfeStartTime);
     }
     if (wallClockTime < fileNameStartTime) {
       final int b = vzFile.getFileType();

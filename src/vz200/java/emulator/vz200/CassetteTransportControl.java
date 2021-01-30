@@ -1,5 +1,7 @@
 package emulator.vz200;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -11,6 +13,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -57,21 +60,32 @@ public class CassetteTransportControl extends Box
   {
     super(BoxLayout.Y_AXIS);
     this.wallClockProvider = wallClockProvider;
-    setBorder(BorderFactory.createTitledBorder("Cassette Audio File Binding"));
+    setBorder(BorderFactory.
+              createTitledBorder("VZ200 Cassette I/O ↔ Host File"));
     listeners = new ArrayList<CassetteTransportListener>();
 
     playFileChooser =
-      new CassetteFileChooser("Receive Cassette Input from External Audio File",
+      new CassetteFileChooser("Receive Cassette Input from Host File",
                               "Start Playing", false, true, true);
+    final JLabel lbWarn =
+      new JLabel("<html>Ensure to run a command " +
+                 "like “CLOAD” or “CRUN” before starting playback!</html>");
+    lbWarn.setForeground(new Color(0xffffdd));
+    lbWarn.setBackground(new Color(0x000022));
+    lbWarn.setOpaque(true);
+    final JComponent chooserInnerComponent = (JComponent)
+      ((BorderLayout)playFileChooser.getLayout()).
+      getLayoutComponent(BorderLayout.NORTH);
+    chooserInnerComponent.add(lbWarn, BorderLayout.NORTH);
     recordFileChooser =
-      new CassetteFileChooser("Record Cassette Output to External Audio File",
+      new CassetteFileChooser("Record Cassette Output to Host File",
                               "Start Recording", false, true, false);
     final JToolBar tbTransportControl = new JToolBar("Cassette Tape");
     add(tbTransportControl);
     btnPlay =
       createToolButton("play32x32.png",
                        "Start receiving cassette input from " +
-                       "external audio file.");
+                       "host file.");
     btnPlay.addActionListener((final ActionEvent event) -> { play(); });
     btnPlay.setEnabled(true);
     tbTransportControl.add(btnPlay);
@@ -79,7 +93,7 @@ public class CassetteTransportControl extends Box
     btnRecord =
       createToolButton("record32x32.png",
                        "Start recording cassette output to " +
-                       "external audio file.");
+                       "host file.");
     btnRecord.addActionListener((final ActionEvent event) -> { record(); });
     btnRecord.setEnabled(true);
     tbTransportControl.add(btnRecord);
@@ -123,13 +137,24 @@ public class CassetteTransportControl extends Box
       final File file = playFileChooser.getSelectedFile();
       final CassetteInputSampler cassetteInputSampler;
       try {
-        final long wallClockTime = wallClockProvider.getWallClockTime();
+        final UserPreferences userPreferences = UserPreferences.getInstance();
+        final long startWallClockTime = wallClockProvider.getWallClockTime();
+        final double speed = userPreferences.getCassetteInSpeed();
         if (file.getName().toLowerCase().endsWith(".vz")) {
+          final boolean trimLeadIn =
+            userPreferences.getCassetteInVzTrimLeadIn();
           cassetteInputSampler =
-            new VZFileSampler(file, wallClockProvider, wallClockTime);
+            new VZFileSampler(file, speed, trimLeadIn,
+                              wallClockProvider, startWallClockTime);
         } else {
+          final boolean invertPhase =
+            userPreferences.getCassetteInInvertPhase();
+          final double volume = userPreferences.getCassetteInVolume();
+          final double dcOffset = userPreferences.getCassetteInDcOffset();
           cassetteInputSampler =
-            new AudioFileSampler(file, wallClockProvider, wallClockTime);
+            new AudioFileSampler(file, invertPhase ? -volume : volume,
+                                 speed, dcOffset,
+                                 wallClockProvider, startWallClockTime);
         }
         play(cassetteInputSampler, true);
       } catch (final IOException e) {

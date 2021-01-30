@@ -54,15 +54,16 @@ public class SpeakerControl extends JPanel
     final double speakerInitialVolume = userPreferences.getSpeakerVolume();
     final boolean speakerInitiallyMuted = userPreferences.getSpeakerMuted();
     final LineControl speakerLineControl =
-      new LineControl(speakerId, speakerBorderTitle,
-                      speakerMixerInfoId, speakerLineInfoId,
-                      speakerInitialVolume, speakerInitiallyMuted,
-                      wallClockProvider,
-                      new SpeakerPreferencesChangeListener(),
-                      owner);
+      LineControl.create(speakerId, speakerBorderTitle,
+                         speakerMixerInfoId, speakerLineInfoId,
+                         speakerInitialVolume, speakerInitiallyMuted,
+                         wallClockProvider,
+                         new SpeakerPreferencesChangeListener(),
+                         owner);
     add(speakerLineControl);
     speakerLineControl.addListener(speaker);
     speakerLineControl.addListener(speakerRenderer);
+    add(Box.createVerticalGlue());
   }
 }
 

@@ -102,6 +102,29 @@ public class IO implements
 
   private boolean isCassInHigh(final long wallClockTime)
   {
+    /*
+     * Note: There is a race condition between this method (called by
+     * the CPU processor thread) and other methods of this class such
+     * as cassetteStartPlaying() (called via the AWT event thread),
+     * since these methods concurrently access variable
+     * cassetteInputSampler.  That is, this method (and all other
+     * concurrent methods) should be declared "synchronized" on a
+     * mutually exclusive lock.  However, since this method is called
+     * extremely often (potentially almost every other microsecond),
+     * using a mutual exclusive lock is a bad idea for performance.
+     * Instead, we introduce a default pseudo cassetteInputSampler
+     * "CLOSED_INPUT_SAMPLER", representing a null sampling source,
+     * such that switching between the pseudo cassetteInputSampler and
+     * a regular cassetteInputSampler basically is an atomic operation
+     * (namely, changing the value of a 64 bit pointer).
+     *
+     * In the following code, in the worst case, cassetteInputSampler
+     * changes from a regular cassetteInputSampler to
+     * CLOSED_INPUT_SAMPLER while this method is executed.  In this
+     * case, we will inadvertently call
+     * CLOSED_INPUT_SAMPLER.getValue(), resulting in a pseudo default
+     * signal value, which should be still ok.
+     */
     if (cassetteInputSampler == CLOSED_INPUT_SAMPLER)
       return false;
     if ((wallClockTime - lastWallClockTime) > 0x04000000) {

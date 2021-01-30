@@ -6,6 +6,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 
 import emulator.z80.WallClockProvider;
 
@@ -49,22 +50,50 @@ public class CassetteControl extends JPanel
   {
     setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     final UserPreferences userPreferences = UserPreferences.getInstance();
+
+    final JTabbedPane tpSettings = new JTabbedPane();
+    add(tpSettings);
+
+    final JPanel cassetteInControl = new JPanel();
+    cassetteInControl.setLayout(new BoxLayout(cassetteInControl,
+                                              BoxLayout.Y_AXIS));
+    tpSettings.addTab("Host File → Cass In", null,
+                      cassetteInControl, "Configure Cassette Input");
+    final CommonFileSampleControl commonFileSampleControl =
+      new CommonFileSampleControl();
+    cassetteInControl.add(commonFileSampleControl);
+
+    final AudioFileSampleControl audioFileSampleControl =
+      new AudioFileSampleControl();
+    cassetteInControl.add(audioFileSampleControl);
+
+    final VZFileSampleControl vzFileSampleControl =
+      new VZFileSampleControl();
+    cassetteInControl.add(vzFileSampleControl);
+
+
+    final JPanel cassetteOutControl = new JPanel();
+    cassetteOutControl.setLayout(new BoxLayout(cassetteOutControl,
+                                               BoxLayout.Y_AXIS));
+    tpSettings.addTab("Cass Out → Host File", null,
+                      cassetteOutControl, "Configure Cassette Output");
+
     final String cassOutId = "Cassette Out";
-    final String cassOutBorderTitle = "Cassette Out";
+    final String cassOutBorderTitle = "Common";
     final String cassOutMixerInfoId = userPreferences.getCassetteOutMixer();
     final String cassOutLineInfoId = userPreferences.getCassetteOutLine();
     final double cassOutInitialVolume = userPreferences.getCassetteOutVolume();
     final boolean cassOutInitiallyMuted = userPreferences.getCassetteOutMuted();
     final LineControl cassOutLineControl =
-      new LineControl(cassOutId, cassOutBorderTitle,
-                      cassOutMixerInfoId, cassOutLineInfoId,
-                      cassOutInitialVolume, cassOutInitiallyMuted,
-                      wallClockProvider,
-                      new CassetteOutPreferencesChangeListener(),
-                      owner);
-    add(cassOutLineControl);
+      LineControl.create(cassOutId, cassOutBorderTitle,
+                         cassOutMixerInfoId, cassOutLineInfoId,
+                         cassOutInitialVolume, cassOutInitiallyMuted,
+                         wallClockProvider,
+                         new CassetteOutPreferencesChangeListener(),
+                         owner);
     cassOutLineControl.addListener(cassetteOut);
     cassOutLineControl.addListener(cassetteOutRenderer);
+    cassetteOutControl.add(cassOutLineControl);
 
     transportControl = new CassetteTransportControl(wallClockProvider);
     add(transportControl);

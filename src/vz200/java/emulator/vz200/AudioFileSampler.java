@@ -39,11 +39,12 @@ public class AudioFileSampler implements CassetteInputSampler
   private final double totalNanoSeconds;
   private long filePos;
   private double volume;
+  private double dcOffset;
   private boolean stopped;
 
   private AudioFileSampler()
   {
-    throw new UnsupportedOperationException("unsupported constructor");
+    throw new UnsupportedOperationException("unsupported empty constructor");
   }
 
   private static boolean checkAudioFileFormat(final AudioFileFormat fileFormat)
@@ -53,15 +54,22 @@ public class AudioFileSampler implements CassetteInputSampler
   }
 
   public AudioFileSampler(final File file,
+                          final double volume,
+                          final double speed,
+                          final double dcOffset,
                           final WallClockProvider wallClockProvider,
-                          final long wallClockTime)
+                          final long startWallClockTime)
     throws IOException
   {
     this.file = file;
+    this.volume = volume < -1.0 ? -1.0 : (volume > 1.0 ? 1.0 : volume);
+    this.dcOffset = (VALUE_HI - VALUE_LO) *
+      ((dcOffset < 0.7 ? 0.7 : (dcOffset > 1.3 ? 1.3 : dcOffset)) - 1.0);
     this.wallClockProvider = wallClockProvider;
-    startWallClockTime = wallClockTime;
+    this.startWallClockTime = startWallClockTime;
     framesPerNanoSecond =
-      ((double)CassetteFileChooser.DEFAULT_SAMPLE_RATE) * 0.000000001;
+      ((double)CassetteFileChooser.DEFAULT_SAMPLE_RATE) * 0.000000001 *
+      (speed < 0.9 ? 0.9 : (speed > 1.1 ? 1.1 : speed));
     nanoSecondsPerFrame = 1.0 / framesPerNanoSecond;
     inputFilter = new SimpleIIRFilter(INPUT_FILTER_ALPHA, Short.MAX_VALUE, 0.0);
     feedLength = inputFilter.getFeedLength();
@@ -81,7 +89,6 @@ public class AudioFileSampler implements CassetteInputSampler
     totalNanoSeconds =
       size * nanoSecondsPerFrame / CassetteFileChooser.DEFAULT_BYTES_PER_FRAME;
     filePos = 0;
-    volume = 1.0;
     stopped = false;
     System.out.printf("%s: start playing with hold time of #%d feed samples%n",
                       file.getName(), feedLength);
@@ -108,17 +115,6 @@ public class AudioFileSampler implements CassetteInputSampler
     inputFilter.reset();
   }
 
-  public void setVolume(final double volume)
-  {
-    if (volume < 0.0) {
-      throw new IllegalArgumentException("volume < 0.0");
-    }
-    if (volume > 1.0) {
-      throw new IllegalArgumentException("volume > 1.0");
-    }
-    this.volume = volume;
-  }
-
   @Override
   public short getValue(final long wallClockTime)
   {
@@ -126,7 +122,7 @@ public class AudioFileSampler implements CassetteInputSampler
       System.out.printf("WARNING: %s: EOF%n", file.getName());
     }
     seek(wallClockTime);
-    final double value = inputFilter.getOutputValue();
+    final double value = inputFilter.getOutputValue() * volume + dcOffset;
     if (value <= VALUE_LO) return VALUE_LO;
     if (value >= VALUE_HI) return VALUE_HI;
     return (short)value;

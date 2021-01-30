@@ -88,7 +88,7 @@ public class VideoPanel extends JPanel
 
   private VideoPanel()
   {
-    throw new UnsupportedOperationException("unsupported constructor");
+    throw new UnsupportedOperationException("unsupported empty constructor");
   }
 
   public VideoPanel(final int baseAddress) throws IOException

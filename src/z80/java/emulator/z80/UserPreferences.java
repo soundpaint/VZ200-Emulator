@@ -13,7 +13,19 @@ public class UserPreferences
 
   private static final String PREFS_PATH_CPU = "/cpu";
   private static final String PREFS_NAME_FREQUENCY = "frequency";
-  private static final int PREFS_DEFAULT_FREQUENCY = 3579545; // [Hz]
+
+  // FIXME: Default frequency is VZ200 specific.  There is no default
+  // Z80 frequency per se.  Actually, this class should completely be
+  // merged into VZ200 UserPreferences class.  Also, the listeners
+  // interface is flawed since it regards very view selected
+  // preference values only, and in most cases, there is only a single
+  // listener for each value, but mostly only exact one listener
+  // implementation per value.  Therefore, the listening calls should
+  // be replaced by direct calls in the code, since this is mostly a
+  // 1:1 communication relation rather than a subscription model of
+  // communication.
+  public static final int PREFS_DEFAULT_FREQUENCY = 3579545; // [Hz]
+
   private static final String PREFS_NAME_STATISTICS_ENABLED =
     "statistics-enabled";
   private static final boolean PREFS_DEFAULT_STATISTICS_ENABLED = false;

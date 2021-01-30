@@ -17,6 +17,24 @@ public class CPUBusyWait extends Box implements PreferencesChangeListener
 {
   private static final long serialVersionUID = 7823489712923369946L;
 
+  private static final String TOOL_TIP_BUSY_WAIT =
+    "<html>\n" +
+    "  Synchronization of the simulation with the emulator host's<br />\n" +
+    "  clock is by default done by emulating CPU instructions<br />\n" +
+    "  until the emulator CPU's wall clock is up with or slightly<br />\n" +
+    "  ahead of the host's clock, and then doing a sleep of a<br />\n" +
+    "  few milliseconds, and then again resuming emulation.<br />\n" +
+    "  This approach leads to jitter at least in the magnitude of<br />\n" +
+    "  the sleeping time.<br />\n" +
+    "  To reduce jitter, instead of doing a sleep, the emulator<br />\n" +
+    "  can alternatively perform busy wait, until time is ready<br />\n" +
+    "  for performing the next CPU instruction.  This alternative<br />\n" +
+    "  approach reduces jitter, but at the same time increases<br />\n" +
+    "  the CPU load to at least 1.0, since there is no more<br />\n" +
+    "  sleep, but the CPU emulation process running all the<br />\n" +
+    "  time.\n" +
+    "</html>\n";
+
   private final JCheckBox cbBusyWait;
   private boolean busyWait;
 
@@ -28,6 +46,7 @@ public class CPUBusyWait extends Box implements PreferencesChangeListener
     final Box bxBusyWait = new Box(BoxLayout.X_AXIS);
     add(bxBusyWait);
     cbBusyWait = new JCheckBox("Busy Wait");
+    cbBusyWait.setToolTipText(TOOL_TIP_BUSY_WAIT);
     bxBusyWait.add(cbBusyWait);
     cbBusyWait.setMnemonic(KeyEvent.VK_W);
     cbBusyWait.addChangeListener((final ChangeEvent event) -> {
