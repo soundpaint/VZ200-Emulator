@@ -19,12 +19,8 @@ import emulator.z80.WallClockProvider;
  */
 public class AudioFileSampler implements CassetteInputSampler
 {
+  private static final long MAX_ACCEPTED_FEED_LENGTH = 10;
   private static final double INPUT_FILTER_ALPHA = 0.9;
-  private static final long MAX_FEED_LENGTH = 10;
-
-  private static final String MSG_FEED_LENGTH_OUT_OF_RANGE =
-    "number of max feed length too high; " +
-    "please choose higher value for alpha";
 
   private final File file;
   private final WallClockProvider wallClockProvider;
@@ -71,11 +67,11 @@ public class AudioFileSampler implements CassetteInputSampler
       ((double)CassetteFileChooser.DEFAULT_SAMPLE_RATE) * 0.000000001 *
       (speed < 0.9 ? 0.9 : (speed > 1.1 ? 1.1 : speed));
     nanoSecondsPerFrame = 1.0 / framesPerNanoSecond;
-    inputFilter = new SimpleIIRFilter(INPUT_FILTER_ALPHA, Short.MAX_VALUE, 0.0);
+    final long resolution = Short.MAX_VALUE;
+    inputFilter =
+      new SimpleIIRFilter(INPUT_FILTER_ALPHA,
+                          resolution, MAX_ACCEPTED_FEED_LENGTH, 0.0);
     feedLength = inputFilter.getFeedLength();
-    if (feedLength > MAX_FEED_LENGTH) {
-      throw new IllegalArgumentException(MSG_FEED_LENGTH_OUT_OF_RANGE);
-    }
     buffer = new byte[2];
     try {
       if (!checkAudioFileFormat(AudioSystem.getAudioFileFormat(file))) {

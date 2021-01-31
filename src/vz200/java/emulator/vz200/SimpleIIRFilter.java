@@ -6,8 +6,8 @@ package emulator.vz200;
 public class SimpleIIRFilter
 {
   private static final String MSG_ALPHA_OUT_OF_RANGE =
-    "alpha too near to 0.0 for acceptable number of feed samples; " +
-    "please choose a higher value for alpha";
+    "number of max feed length too high; " +
+    "please choose higher value for alpha";
 
   private final double alpha;
   private final double beta;
@@ -25,17 +25,26 @@ public class SimpleIIRFilter
    */
   public SimpleIIRFilter(final double alpha,
                          final long resolution,
+                         final long maxAcceptedFeedLength,
                          final double initialValue)
   {
-    if ((alpha < 0.0) || (alpha > 1.0)) {
-      throw new IllegalArgumentException("alpha not in [0,1.0]");
+    if ((alpha <= 0.0) || (alpha > 1.0)) {
+      throw new IllegalArgumentException("alpha not in (0.0,1.0]");
     }
     this.alpha = alpha;
     beta = 1.0 - alpha;
     try {
       feedLength = determineFeedLength(beta, resolution);
     } catch (final RuntimeException e) {
-      throw new IllegalArgumentException(MSG_ALPHA_OUT_OF_RANGE);
+      throw new IllegalArgumentException(MSG_ALPHA_OUT_OF_RANGE, e);
+    }
+    if (feedLength > maxAcceptedFeedLength) {
+      final double maxAlpha =
+        1.0 - Math.exp(-Math.log(resolution) / maxAcceptedFeedLength);
+      throw new IllegalArgumentException(feedLength + " > " +
+                                         maxAcceptedFeedLength + ": " +
+                                         MSG_ALPHA_OUT_OF_RANGE +
+                                         ": 𝛼 > " + maxAlpha);
     }
     this.initialValue = initialValue;
     value = initialValue;
@@ -83,7 +92,7 @@ public class SimpleIIRFilter
   {
     // minimum n such that beta^n < (1 / resolution)
     return (beta <= 0.0) ? 1 :
-      (long)(Math.ceil(-Math.log(resolution) / Math.log(beta)) + 0.5);
+      Math.round(-Math.log(resolution) / Math.log(beta));
   }
 }
 
