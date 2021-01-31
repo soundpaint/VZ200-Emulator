@@ -256,12 +256,23 @@ public class SignalEventQueue
       result.timeSpan = maxTimeSpan;
       event.timeSpan -= maxTimeSpan;
       availableTimeSpan -= maxTimeSpan;
+      /*
+       * FIXME: Currently, buffer underruns occur frequently, when the
+       * CPU emulation thread is not running, since then, the event
+       * queue is effectively stopped (but the audio lines should
+       * still react).  For now, as a workaround, completely disable
+       * buffer underrun warnings.  TODO: Add code such that this
+       * class knows if the CPU is currently running or stopped.  Only
+       * emit buffer underrun warnings while the CPU is running.
+       */
+      /*
       if ((event.timeSpan < 0) && !event.plannedGap) {
         System.out.printf("Warning: %s: buffer underflow, gap=%s, " +
                           "availableTimeSpan=%s%n",
                           label, event.prettyTimeSpanString(),
                           availableTimeSpan);
       }
+      */
     }
   }
 }
