@@ -21,6 +21,52 @@ is already running:
   <figcaption>Preliminary YouTobe Demo Video</caption>
 </figure>
 
+Project History
+---------------
+
+Originally motivated by the desire to archive and keep access to old
+software that I had written in the 80s and that still resided on
+magnetic tape cassettes, I implemented most of the Z80 emulation and
+essential parts of the VZ200 specific components already in 1998, but
+I did not get it to work due to lack of knowledge on several hardware
+details.  Also, the Z80 emulation was disappointingly slow.
+
+In 2010, I resumed work on the Z80 emulation and sucessfully
+implemented a much faster instruction instantiation mechanism, using
+precompiled templates for fast op code decoding and arguments
+extraction and related bit shifting and masking, thus making the Z80
+emulation sufficiently fast.  Also, I got the emulation passing most
+of VZ200's initialization routine.  However, near the end of that
+routine, the CPU got stuck, infinitely waiting for an IRQ of unknown
+source.  I already suspected the video hardware to have to deliver
+video horizontal / vertical sync information to the CPU via an IRQ,
+since the video memory has only a single shared access port and the
+CPU higher access privilege than the video hardware, such that the
+video hardware will shortly stop producing pixels, while the CPU
+accesses the video RAM.  Therefore, the software wants to know when
+sync gaps occur to access video RAM only during these gaps in order to
+not interfere with video output.  Though, I still had not enough
+detail information about the hardware to correctly implement IRQ
+generation and handling.
+
+Finally, in 2018, I found more detailed hardware information to get
+video sync IRQ generation and handling correct, such that the
+emulation now sucessfully passed the initialization routine and
+entered into BASIC mode.  Though, I still found and had to fix lots of
+bugs in almost all relevant parts of the emulator, until, in late
+2018, I got the emulator successfully run its first non-trivial BASIC
+program.
+
+In early 2021, I made some more tiny bugfixes related to exact timing
+of the Z80 emulation, such that reading from and writing to a virtual
+magnetic tape cassette (implemented by reading from / writing to an
+audio file) now works as expected.  Though, I guess, quality of my
+original tape recordings has decayed beneath the threshold of
+readability already a long time ago (there is signal crosstalk caused
+by magnetism from adjacent windings, resulting in kind of echoing
+effect), such that I probably won't be able to read them in ever
+again.
+
 Talk @ GPN19
 ------------
 
